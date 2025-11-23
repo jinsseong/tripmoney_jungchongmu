@@ -56,7 +56,6 @@ export default function AddExpensePage() {
             { name: "기타", icon: "💊", color: "#98D8C8", is_default: true },
           ];
 
-          // @ts-expect-error - Supabase types may not be available during build
           const { data: inserted, error: insertError } = await supabase
             .from("categories")
             .insert(defaultCategories)
