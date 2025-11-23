@@ -8,13 +8,12 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { Input } from "@/components/ui/Input";
-import { Plus, Calendar, MapPin, ArrowRight, Settings, Users } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { Plus, Calendar, MapPin } from "lucide-react";
+import Link from "next/link";
 import { format } from "date-fns";
 import { ko } from "date-fns/locale";
 
-export default function HomePage() {
-  const router = useRouter();
+export default function TripsPage() {
   const { trips, loading, addTrip } = useTrips();
   const [showAddModal, setShowAddModal] = useState(false);
   const [formData, setFormData] = useState({
@@ -30,7 +29,7 @@ export default function HomePage() {
     }
 
     try {
-      const newTrip = await addTrip(
+      await addTrip(
         formData.name.trim(),
         formData.startDate,
         formData.endDate,
@@ -43,18 +42,10 @@ export default function HomePage() {
         description: "",
       });
       setShowAddModal(false);
-      // 여행 추가 후 대시보드로 이동
-      if (newTrip) {
-        router.push(`/dashboard?trip=${newTrip.id}`);
-      }
     } catch (error) {
       console.error("Failed to add trip:", error);
       alert("여행 추가에 실패했습니다.");
     }
-  };
-
-  const handleSelectTrip = (tripId: string) => {
-    router.push(`/dashboard?trip=${tripId}`);
   };
 
   if (loading) {
@@ -68,102 +59,60 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-gray-50 safe-area">
       <div className="max-w-4xl mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            여행 정산 관리
-          </h1>
-          <p className="text-gray-600">
-            여행을 선택하거나 새로 추가하세요
-          </p>
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-3xl font-bold text-gray-900">여행 관리</h1>
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => setShowAddModal(true)}
+          >
+            <Plus className="h-4 w-4 mr-1" />
+            여행 추가
+          </Button>
         </div>
 
-        {/* 여행 목록 */}
         {trips.length === 0 ? (
           <Card>
             <div className="p-12 text-center">
               <Calendar className="h-16 w-16 text-gray-300 mx-auto mb-4" />
               <p className="text-gray-600 mb-4">등록된 여행이 없습니다.</p>
               <Button variant="primary" onClick={() => setShowAddModal(true)}>
-                <Plus className="h-4 w-4 mr-1" />
                 첫 여행 추가하기
               </Button>
             </div>
           </Card>
         ) : (
-          <div className="space-y-4 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {trips.map((trip) => (
-              <Card
-                key={trip.id}
-                className="hover:shadow-lg transition-shadow cursor-pointer"
-                onClick={() => handleSelectTrip(trip.id)}
-              >
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                        {trip.name}
-                      </h3>
-                      <div className="space-y-1 text-sm text-gray-600">
-                        <div className="flex items-center gap-2">
-                          <Calendar className="h-4 w-4" />
-                          <span>
-                            {format(new Date(trip.start_date), "yyyy년 M월 d일", {
-                              locale: ko,
-                            })}{" "}
-                            ~{" "}
-                            {format(new Date(trip.end_date), "yyyy년 M월 d일", {
-                              locale: ko,
-                            })}
-                          </span>
-                        </div>
-                        {trip.description && (
-                          <p className="text-gray-500">{trip.description}</p>
-                        )}
+              <Link key={trip.id} href={`/dashboard?trip=${trip.id}`}>
+                <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
+                  <CardHeader>
+                    <CardTitle className="text-xl">{trip.name}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2 text-sm text-gray-600">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="h-4 w-4" />
+                        <span>
+                          {format(new Date(trip.start_date), "yyyy년 M월 d일", {
+                            locale: ko,
+                          })}{" "}
+                          ~{" "}
+                          {format(new Date(trip.end_date), "yyyy년 M월 d일", {
+                            locale: ko,
+                          })}
+                        </span>
                       </div>
+                      {trip.description && (
+                        <p className="text-gray-500">{trip.description}</p>
+                      )}
                     </div>
-                    <ArrowRight className="h-6 w-6 text-gray-400" />
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              </Link>
             ))}
           </div>
         )}
-
-        {/* 액션 버튼들 */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <Button
-            variant="primary"
-            onClick={() => setShowAddModal(true)}
-            className="h-auto py-4 flex flex-col items-center gap-2"
-          >
-            <Plus className="h-6 w-6" />
-            <span>새 여행 추가</span>
-          </Button>
-          
-          <Button
-            variant="outline"
-            onClick={() => router.push("/participants")}
-            className="h-auto py-4 flex flex-col items-center gap-2"
-          >
-            <Users className="h-6 w-6" />
-            <span>참가자 관리</span>
-          </Button>
-
-          <Button
-            variant="outline"
-            onClick={() => {
-              if (trips.length > 0) {
-                router.push(`/settings?trip=${trips[0].id}`);
-              } else {
-                router.push("/settings");
-              }
-            }}
-            className="h-auto py-4 flex flex-col items-center gap-2"
-          >
-            <Settings className="h-6 w-6" />
-            <span>총무 관리</span>
-          </Button>
-        </div>
 
         {/* 여행 추가 모달 */}
         <Modal
@@ -268,3 +217,4 @@ export default function HomePage() {
     </div>
   );
 }
+
