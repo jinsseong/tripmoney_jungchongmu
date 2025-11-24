@@ -21,7 +21,6 @@ export function useSharedDashboard() {
       const shareKey = generateShareKey();
 
       // Create dashboard
-      // @ts-expect-error - Supabase types may not be available during build
       const { data: dashboard, error: dashboardError } = await supabase
         .from("shared_dashboards")
         .insert([
@@ -34,14 +33,14 @@ export function useSharedDashboard() {
             end_date: endDate,
             password_hash: password ? await hashPassword(password) : null,
           },
-        ])
+        ] as any)
         .select()
         .single();
 
       if (dashboardError) throw dashboardError;
 
       return {
-        ...dashboard,
+        ...(dashboard as any),
         shareUrl: `${window.location.origin}/shared/${shareKey}`,
       };
     } catch (err) {
@@ -57,7 +56,6 @@ export function useSharedDashboard() {
   const getDashboard = async (shareKey: string, password?: string) => {
     try {
       setLoading(true);
-      // @ts-expect-error - Supabase types may not be available during build
       const { data: dashboard, error: dashboardError } = await supabase
         .from("shared_dashboards")
         .select("*")
@@ -67,38 +65,38 @@ export function useSharedDashboard() {
 
       if (dashboardError) throw dashboardError;
 
+      const dashboardData = dashboard as any;
+
       // Check password if exists
-      if (dashboard.password_hash) {
+      if (dashboardData.password_hash) {
         if (!password) {
           throw new Error("비밀번호가 필요합니다.");
         }
         // In production, use proper password verification
         // For now, simple check
-        const isValid = await verifyPassword(password, dashboard.password_hash);
+        const isValid = await verifyPassword(password, dashboardData.password_hash);
         if (!isValid) {
           throw new Error("비밀번호가 올바르지 않습니다.");
         }
       }
 
       // Get snapshots
-      // @ts-expect-error - Supabase types may not be available during build
       const { data: snapshots, error: snapshotsError } = await supabase
         .from("dashboard_snapshots")
         .select("*")
-        .eq("dashboard_id", dashboard.id)
+        .eq("dashboard_id", dashboardData.id)
         .order("created_at", { ascending: false });
 
       if (snapshotsError) throw snapshotsError;
 
       // Update view count
-      // @ts-expect-error - Supabase types may not be available during build
-      await supabase
-        .from("shared_dashboards")
-        .update({ view_count: (dashboard.view_count || 0) + 1 })
-        .eq("id", dashboard.id);
+      await (supabase
+        .from("shared_dashboards") as any)
+        .update({ view_count: (dashboardData.view_count || 0) + 1 })
+        .eq("id", dashboardData.id);
 
       return {
-        dashboard,
+        dashboard: dashboardData,
         snapshots: snapshots || [],
       };
     } catch (err) {
@@ -121,7 +119,6 @@ export function useSharedDashboard() {
     expenseDetails: Record<string, unknown>
   ) => {
     try {
-      // @ts-expect-error - Supabase types may not be available during build
       const { data, error } = await supabase
         .from("dashboard_snapshots")
         .insert([
@@ -134,7 +131,7 @@ export function useSharedDashboard() {
             total_amount: totalAmount,
             expense_details: expenseDetails,
           },
-        ])
+        ] as any)
         .select()
         .single();
 

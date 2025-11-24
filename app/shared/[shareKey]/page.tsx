@@ -191,7 +191,7 @@ export default function SettlementDashboardPage() {
                   participants={snapshots.map((s) => ({
                     id: s.participant_id,
                     name: s.participant_name,
-                    color: "",
+                    avatar_color: "",
                     created_at: "",
                   }))}
                   showDetailModal={false}

@@ -81,7 +81,7 @@ CREATE POLICY "Allow all operations on trip_participants" ON trip_participants
         return;
       }
 
-      const participantIds = tripParticipants.map((tp) => tp.participant_id);
+      const participantIds = tripParticipants.map((tp: any) => tp.participant_id);
 
       // 참가자 정보 조회
       const { data: participantsData, error: participantsError } = await supabase
@@ -137,7 +137,7 @@ CREATE POLICY "Allow all operations on trip_participants" ON trip_participants
         .insert({
           trip_id: tripId,
           participant_id: participantId,
-        })
+        } as any)
         .select();
 
       if (error) {

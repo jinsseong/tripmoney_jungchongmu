@@ -38,18 +38,17 @@ export function useCategories() {
     icon: string,
     color: string,
     isDefault: boolean = false
-  ) => {
+  ): Promise<Category | null> => {
     try {
-      // @ts-expect-error - Supabase types may not be available during build
       const { data, error } = await supabase
         .from("categories")
-        .insert([{ name, icon, color, is_default: isDefault }])
+        .insert([{ name, icon, color, is_default: isDefault }] as any)
         .select()
         .single();
 
       if (error) throw error;
-      setCategories((prev) => [...prev, data]);
-      return data;
+      setCategories((prev) => [...prev, data as Category]);
+      return data as Category;
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "카테고리 추가 실패";
@@ -61,11 +60,10 @@ export function useCategories() {
   const updateCategory = async (
     id: string,
     updates: { name?: string; icon?: string; color?: string }
-  ) => {
+  ): Promise<Category | null> => {
     try {
-      // @ts-expect-error - Supabase types may not be available during build
-      const { data, error } = await supabase
-        .from("categories")
+      const { data, error } = await (supabase
+        .from("categories") as any)
         .update(updates)
         .eq("id", id)
         .select()
@@ -73,9 +71,9 @@ export function useCategories() {
 
       if (error) throw error;
       setCategories((prev) =>
-        prev.map((c) => (c.id === id ? data : c))
+        prev.map((c) => (c.id === id ? (data as Category) : c))
       );
-      return data;
+      return data as Category;
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "카테고리 수정 실패";

@@ -41,7 +41,9 @@ export default function CategoriesPage() {
           onAdd={async (name, icon, color) => {
             await addCategory(name, icon, color, false);
           }}
-          onUpdate={updateCategory}
+          onUpdate={async (id, updates) => {
+            await updateCategory(id, updates);
+          }}
           onDelete={deleteCategory}
         />
       </div>

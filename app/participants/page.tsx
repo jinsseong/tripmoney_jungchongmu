@@ -46,7 +46,7 @@ export default function ParticipantsPage() {
       );
       
       // 여행이 선택되어 있으면 여행에 추가
-      if (tripId && newParticipant) {
+      if (tripId && newParticipant && newParticipant.id) {
         await addParticipantToTrip(newParticipant.id);
       }
       

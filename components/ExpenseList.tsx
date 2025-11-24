@@ -450,7 +450,7 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
                 {onEdit && (
                   <button
                     onClick={() => {
-                      setShowDetailModal(false);
+                      setIsModalOpen(false);
                       onEdit(selectedExpense);
                     }}
                     className="flex-1 px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100"
@@ -461,7 +461,7 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
                 {onDelete && (
                   <button
                     onClick={() => {
-                      setShowDetailModal(false);
+                      setIsModalOpen(false);
                       onDelete(selectedExpense.id);
                     }}
                     className="flex-1 px-4 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100"

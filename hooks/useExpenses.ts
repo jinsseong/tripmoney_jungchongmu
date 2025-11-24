@@ -35,7 +35,7 @@ export function useExpenses(tripId?: string, date?: string) {
 
       // 날짜별 참여자 정보 가져오기 (테이블이 있는 경우)
       const expensesWithDailyParticipants = await Promise.all(
-        (data || []).map(async (expense) => {
+        (data || []).map(async (expense: any) => {
           try {
             const { data: dailyParticipants } = await supabase
               .from("expense_daily_participants")
@@ -52,10 +52,10 @@ export function useExpenses(tripId?: string, date?: string) {
               ...expense,
               daily_participants: dailyParticipants || [],
               category: categoryName,
-            };
+            } as Expense;
           } catch (err) {
             // 테이블이 없으면 무시
-            return expense;
+            return expense as Expense;
           }
         })
       );
@@ -87,10 +87,9 @@ export function useExpenses(tripId?: string, date?: string) {
         trip_id: expenseData.trip_id || null,
       };
 
-      // @ts-expect-error - Supabase types may not be available during build
       const { data: expense, error: expenseError } = await supabase
         .from("expenses")
-        .insert([expenseToInsert])
+        .insert([expenseToInsert] as any)
         .select()
         .single();
 
@@ -99,15 +98,14 @@ export function useExpenses(tripId?: string, date?: string) {
       // Insert expense participants
       if (participantIds.length > 0) {
         const expenseParticipants = participantIds.map((pid) => ({
-          expense_id: expense.id,
+          expense_id: (expense as any).id,
           participant_id: pid,
           custom_amount: customAmounts?.[pid] || undefined,
         }));
 
-        // @ts-expect-error - Supabase types may not be available during build
         const { error: participantsError } = await supabase
           .from("expense_participants")
-          .insert(expenseParticipants);
+          .insert(expenseParticipants as any);
 
         if (participantsError) throw participantsError;
       }
@@ -118,7 +116,7 @@ export function useExpenses(tripId?: string, date?: string) {
         Object.entries(dailyParticipants).forEach(([date, pids]) => {
           pids.forEach((pid) => {
             dailyParticipantsData.push({
-              expense_id: expense.id,
+              expense_id: (expense as any).id,
               participant_id: pid,
               date: date,
             });
@@ -126,10 +124,9 @@ export function useExpenses(tripId?: string, date?: string) {
         });
 
         try {
-          // @ts-expect-error - Supabase types may not be available during build
           const { error: dailyError } = await supabase
             .from("expense_daily_participants")
-            .insert(dailyParticipantsData);
+            .insert(dailyParticipantsData as any);
 
           if (dailyError) {
             const errorCode = dailyError.code || "";
@@ -176,8 +173,8 @@ export function useExpenses(tripId?: string, date?: string) {
   ) => {
     try {
       // Update expense
-      const { data, error } = await supabase
-        .from("expenses")
+      const { data, error } = await (supabase
+        .from("expenses") as any)
         .update(updates)
         .eq("id", id)
         .select()
@@ -201,10 +198,9 @@ export function useExpenses(tripId?: string, date?: string) {
             custom_amount: customAmounts?.[pid] || undefined,
           }));
 
-          // @ts-expect-error - Supabase types may not be available during build
           const { error: participantsError } = await supabase
             .from("expense_participants")
-            .insert(expenseParticipants);
+            .insert(expenseParticipants as any);
 
           if (participantsError) throw participantsError;
         }
@@ -232,10 +228,9 @@ export function useExpenses(tripId?: string, date?: string) {
               });
             });
 
-            // @ts-expect-error - Supabase types may not be available during build
             const { error: dailyError } = await supabase
               .from("expense_daily_participants")
-              .insert(dailyParticipantsData);
+              .insert(dailyParticipantsData as any);
 
             if (dailyError) {
               const errorCode = dailyError.code || "";

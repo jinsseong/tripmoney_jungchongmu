@@ -60,19 +60,18 @@ export function useParticipants() {
     fetchParticipants();
   }, []);
 
-  const addParticipant = async (name: string, phone?: string) => {
+  const addParticipant = async (name: string, phone?: string): Promise<Participant | null> => {
     try {
       const avatarColor = generateAvatarColor(name);
-      // @ts-expect-error - Supabase types may not be available during build
       const { data, error } = await supabase
         .from("participants")
-        .insert([{ name, avatar_color: avatarColor, phone }])
+        .insert([{ name, avatar_color: avatarColor, phone }] as any)
         .select()
         .single();
 
       if (error) throw error;
-      setParticipants((prev) => [...prev, data]);
-      return data;
+      setParticipants((prev) => [...prev, data as Participant]);
+      return data as Participant;
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "참여자 추가 실패";
@@ -86,8 +85,8 @@ export function useParticipants() {
     updates: { name?: string; avatar_color?: string; phone?: string }
   ) => {
     try {
-      const { data, error } = await supabase
-        .from("participants")
+      const { data, error } = await (supabase
+        .from("participants") as any)
         .update(updates)
         .eq("id", id)
         .select()
