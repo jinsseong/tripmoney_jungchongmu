@@ -12,14 +12,13 @@ export function useTrips() {
   const fetchTrips = async () => {
     try {
       setLoading(true);
-      // @ts-expect-error - Supabase types may not be available during build
       const { data, error } = await supabase
         .from("trips")
         .select("*")
         .order("start_date", { ascending: false });
 
       if (error) throw error;
-      setTrips(data || []);
+      setTrips((data || []) as Trip[]);
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "여행 조회 실패");
@@ -38,18 +37,17 @@ export function useTrips() {
     startDate: string,
     endDate: string,
     description?: string
-  ) => {
+  ): Promise<Trip | null> => {
     try {
-      // @ts-expect-error - Supabase types may not be available during build
       const { data, error } = await supabase
         .from("trips")
-        .insert([{ name, start_date: startDate, end_date: endDate, description }])
+        .insert([{ name, start_date: startDate, end_date: endDate, description }] as any)
         .select()
         .single();
 
       if (error) throw error;
       setTrips((prev) => [data, ...prev]);
-      return data;
+      return data as Trip;
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "여행 추가 실패";

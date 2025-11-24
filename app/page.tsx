@@ -35,7 +35,7 @@ export default function HomePage() {
         formData.startDate,
         formData.endDate,
         formData.description || undefined
-      ) as any;
+      );
       setFormData({
         name: "",
         startDate: new Date().toISOString().split("T")[0],
@@ -44,7 +44,7 @@ export default function HomePage() {
       });
       setShowAddModal(false);
       // 여행 추가 후 대시보드로 이동
-      if (newTrip?.id) {
+      if (newTrip && newTrip.id) {
         router.push(`/dashboard?trip=${newTrip.id}`);
       }
     } catch (error) {
