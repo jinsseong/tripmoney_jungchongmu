@@ -2,7 +2,7 @@
 
 export const dynamic = "force-dynamic";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { useTripParticipants } from "@/hooks/useTripParticipants";
 import { useExpenses } from "@/hooks/useExpenses";
 import { ExpenseForm } from "@/components/ExpenseForm";
@@ -15,7 +15,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 
-export default function AddExpensePage() {
+function AddExpenseContent() {
   const searchParams = useSearchParams();
   const tripId = searchParams.get("trip");
   const { participants, loading: participantsLoading } = useTripParticipants(tripId);
@@ -153,6 +153,18 @@ export default function AddExpensePage() {
         </Card>
       </div>
     </div>
+  );
+}
+
+export default function AddExpensePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-gray-500">로딩 중...</div>
+      </div>
+    }>
+      <AddExpenseContent />
+    </Suspense>
   );
 }
 

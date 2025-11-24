@@ -2,7 +2,7 @@
 
 export const dynamic = "force-dynamic";
 
-import React, { useState } from "react";
+import React, { useState, Suspense } from "react";
 import { useParticipants } from "@/hooks/useParticipants";
 import { useTripParticipants } from "@/hooks/useTripParticipants";
 import { useTrips } from "@/hooks/useTrips";
@@ -14,7 +14,7 @@ import { Plus, Users, ArrowLeft, Edit, Trash2, X } from "lucide-react";
 import { getInitials } from "@/lib/utils";
 import { useRouter, useSearchParams } from "next/navigation";
 
-export default function ParticipantsPage() {
+function ParticipantsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const tripId = searchParams.get("trip");
@@ -259,6 +259,18 @@ export default function ParticipantsPage() {
         </Modal>
       </div>
     </div>
+  );
+}
+
+export default function ParticipantsPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-gray-500">로딩 중...</div>
+      </div>
+    }>
+      <ParticipantsContent />
+    </Suspense>
   );
 }
 

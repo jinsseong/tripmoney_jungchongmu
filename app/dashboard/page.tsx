@@ -2,7 +2,7 @@
 
 export const dynamic = "force-dynamic";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import { useParticipants } from "@/hooks/useParticipants";
 import { useTripParticipants } from "@/hooks/useTripParticipants";
 import { useExpenses } from "@/hooks/useExpenses";
@@ -32,7 +32,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { ArrowLeft, Plus, Calendar, Users } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 
-export default function DashboardPage() {
+function DashboardContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [selectedTripId, setSelectedTripId] = useState<string | null>(
@@ -461,6 +461,18 @@ export default function DashboardPage() {
         </div>
       </Modal>
     </div>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-gray-500">로딩 중...</div>
+      </div>
+    }>
+      <DashboardContent />
+    </Suspense>
   );
 }
 

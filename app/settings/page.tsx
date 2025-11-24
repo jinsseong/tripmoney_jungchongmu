@@ -2,7 +2,7 @@
 
 export const dynamic = "force-dynamic";
 
-import React, { useState } from "react";
+import React, { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTrips } from "@/hooks/useTrips";
 import { useCategories } from "@/hooks/useCategories";
@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/Button";
 import { ArrowLeft, Settings, Tag, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
 
-export default function SettingsPage() {
+function SettingsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const tripId = searchParams.get("trip");
@@ -219,6 +219,18 @@ export default function SettingsPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function SettingsPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-gray-500">로딩 중...</div>
+      </div>
+    }>
+      <SettingsContent />
+    </Suspense>
   );
 }
 
