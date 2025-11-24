@@ -86,7 +86,7 @@ export default function AddExpensePage() {
       // trip_id 추가
       const expenseWithTrip = {
         ...expenseData,
-        trip_id: tripId || null,
+        trip_id: tripId || undefined,
       };
       await addExpense(expenseWithTrip, participantIds, customAmounts, dailyParticipants);
       await refetch();
