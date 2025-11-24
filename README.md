@@ -6,7 +6,7 @@
 
 ### 1. 환경 변수 설정
 
-`.env.local` 파일을 생성하고 Supabase 정보를 입력하세요:
+`.env` 파일을 생성하고 Supabase 정보를 입력하세요:
 
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url_here

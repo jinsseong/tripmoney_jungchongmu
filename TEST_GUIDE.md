@@ -3,7 +3,7 @@
 ## ✅ 사전 확인사항
 
 ### 1. 환경 변수 확인
-`.env.local` 파일에 Supabase 정보가 입력되어 있는지 확인:
+`.env` 파일에 Supabase 정보가 입력되어 있는지 확인:
 ```env
 NEXT_PUBLIC_SUPABASE_URL=your_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_key

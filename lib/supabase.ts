@@ -18,7 +18,7 @@ if (supabaseUrl && supabaseAnonKey) {
   // Only warn in browser
   console.error(
     "❌ Supabase URL or Anon Key is missing!",
-    "\nPlease set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in .env.local"
+    "\nPlease set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in .env"
   );
 }
 

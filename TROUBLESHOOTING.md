@@ -40,11 +40,11 @@ ALTER TABLE dashboard_snapshots DISABLE ROW LEVEL SECURITY;
 
 ### 해결 방법 3: 환경 변수 확인
 
-`.env.local` 파일 확인:
+`.env` 파일 확인:
 
 ```bash
 cd travel-expense-pwa
-cat .env.local
+cat .env
 ```
 
 다음과 같이 설정되어 있어야 합니다:
@@ -83,17 +83,17 @@ supabase.from('participants').select('*').then(console.log);
 
 ### 3. "Invalid API key"
 - **원인**: 잘못된 Supabase 키
-- **해결**: `.env.local` 파일의 키 확인
+- **해결**: `.env` 파일의 키 확인
 
 ### 4. "Network error"
 - **원인**: Supabase URL이 잘못됨
-- **해결**: `.env.local` 파일의 URL 확인
+- **해결**: `.env` 파일의 URL 확인
 
 ## ✅ 체크리스트
 
 문제 해결 전 확인사항:
 
-- [ ] `.env.local` 파일에 Supabase URL과 키가 올바르게 설정됨
+- [ ] `.env` 파일에 Supabase URL과 키가 올바르게 설정됨
 - [ ] `supabase-schema.sql` 실행 완료
 - [ ] `supabase-rls-policy.sql` 실행 완료
 - [ ] Supabase 프로젝트가 활성화되어 있음
