@@ -58,7 +58,7 @@ export default function AddExpensePage() {
 
           const { data: inserted, error: insertError } = await supabase
             .from("categories")
-            .insert(defaultCategories)
+            .insert(defaultCategories as any)
             .select();
 
           if (insertError) throw insertError;
