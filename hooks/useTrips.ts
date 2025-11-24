@@ -56,11 +56,29 @@ export function useTrips() {
     }
   };
 
+  const deleteTrip = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from("trips")
+        .delete()
+        .eq("id", id);
+
+      if (error) throw error;
+      setTrips((prev) => prev.filter((t) => t.id !== id));
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "여행 삭제 실패";
+      setError(errorMessage);
+      throw new Error(errorMessage);
+    }
+  };
+
   return {
     trips,
     loading,
     error,
     addTrip,
+    deleteTrip,
     refetch: fetchTrips,
   };
 }

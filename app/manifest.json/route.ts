@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 
 export async function GET() {
   const manifest = {
-    name: "여행 정산 관리",
-    short_name: "여행정산",
+    name: "내 머리속 정총무",
+    short_name: "정총무",
     description: "친구들과 함께하는 여행 비용을 투명하게 정산하는 앱",
     start_url: "/",
     display: "standalone",

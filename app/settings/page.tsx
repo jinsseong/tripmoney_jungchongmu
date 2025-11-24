@@ -8,7 +8,9 @@ import { useTrips } from "@/hooks/useTrips";
 import { useCategories } from "@/hooks/useCategories";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { ArrowLeft, Settings, Tag, Plus, Trash2 } from "lucide-react";
+import { Modal } from "@/components/ui/Modal";
+import { Input } from "@/components/ui/Input";
+import { ArrowLeft, Settings, Tag, Plus, Trash2, Edit2 } from "lucide-react";
 import Link from "next/link";
 
 function SettingsContent() {
@@ -16,10 +18,14 @@ function SettingsContent() {
   const searchParams = useSearchParams();
   const tripId = searchParams.get("trip");
   const { trips, loading: tripsLoading } = useTrips();
-  const { categories, loading: categoriesLoading, addCategory, deleteCategory } = useCategories();
+  const { categories, loading: categoriesLoading, addCategory, updateCategory, deleteCategory } = useCategories();
   const [newCategoryName, setNewCategoryName] = useState("");
   const [newCategoryIcon, setNewCategoryIcon] = useState("💊");
   const [newCategoryColor, setNewCategoryColor] = useState("#6B7280");
+  const [editingCategory, setEditingCategory] = useState<{ id: string; name: string; icon: string; color: string } | null>(null);
+  const [editCategoryName, setEditCategoryName] = useState("");
+  const [editCategoryIcon, setEditCategoryIcon] = useState("💊");
+  const [editCategoryColor, setEditCategoryColor] = useState("#6B7280");
 
   const selectedTrip = tripId
     ? trips.find((t) => t.id === tripId)
@@ -51,6 +57,32 @@ function SettingsContent() {
     } catch (error) {
       console.error("Failed to delete category:", error);
       alert("카테고리 삭제에 실패했습니다.");
+    }
+  };
+
+  const handleEditCategory = (category: { id: string; name: string; icon: string; color: string }) => {
+    setEditingCategory(category);
+    setEditCategoryName(category.name);
+    setEditCategoryIcon(category.icon);
+    setEditCategoryColor(category.color);
+  };
+
+  const handleUpdateCategory = async () => {
+    if (!editingCategory || !editCategoryName.trim()) return;
+
+    try {
+      await updateCategory(editingCategory.id, {
+        name: editCategoryName.trim(),
+        icon: editCategoryIcon,
+        color: editCategoryColor,
+      });
+      setEditingCategory(null);
+      setEditCategoryName("");
+      setEditCategoryIcon("💊");
+      setEditCategoryColor("#6B7280");
+    } catch (error) {
+      console.error("Failed to update category:", error);
+      alert("카테고리 수정에 실패했습니다.");
     }
   };
 
@@ -112,16 +144,37 @@ function SettingsContent() {
                           />
                         </div>
                       </div>
-                      {!category.is_default && (
+                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => handleDeleteCategory(category.id, category.name)}
-                          className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity text-red-600"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEditCategory({
+                              id: category.id,
+                              name: category.name,
+                              icon: category.icon,
+                              color: category.color,
+                            });
+                          }}
+                          className="h-6 w-6 p-0 text-blue-600"
                         >
-                          <Trash2 className="h-3 w-3" />
+                          <Edit2 className="h-3 w-3" />
                         </Button>
-                      )}
+                        {!category.is_default && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteCategory(category.id, category.name);
+                            }}
+                            className="h-6 w-6 p-0 text-red-600"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -195,6 +248,93 @@ function SettingsContent() {
             )}
           </CardContent>
         </Card>
+
+        {/* 카테고리 수정 모달 */}
+        <Modal
+          isOpen={editingCategory !== null}
+          onClose={() => {
+            setEditingCategory(null);
+            setEditCategoryName("");
+            setEditCategoryIcon("💊");
+            setEditCategoryColor("#6B7280");
+          }}
+          title="카테고리 수정"
+        >
+          <div className="space-y-4">
+            <Input
+              label="카테고리 이름"
+              value={editCategoryName}
+              onChange={(e) => setEditCategoryName(e.target.value)}
+              placeholder="카테고리 이름"
+              required
+            />
+            <div className="flex gap-2">
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  아이콘
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {categoryIcons.map((icon) => (
+                    <button
+                      key={icon}
+                      type="button"
+                      onClick={() => setEditCategoryIcon(icon)}
+                      className={`text-2xl p-2 rounded ${
+                        editCategoryIcon === icon
+                          ? "bg-blue-100 ring-2 ring-blue-500"
+                          : "bg-gray-100 hover:bg-gray-200"
+                      }`}
+                    >
+                      {icon}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  색상
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {categoryColors.map((color) => (
+                    <button
+                      key={color}
+                      type="button"
+                      onClick={() => setEditCategoryColor(color)}
+                      className={`w-8 h-8 rounded-full ${
+                        editCategoryColor === color
+                          ? "ring-2 ring-gray-400 ring-offset-2"
+                          : ""
+                      }`}
+                      style={{ backgroundColor: color }}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setEditingCategory(null);
+                  setEditCategoryName("");
+                  setEditCategoryIcon("💊");
+                  setEditCategoryColor("#6B7280");
+                }}
+                className="flex-1"
+              >
+                취소
+              </Button>
+              <Button
+                variant="primary"
+                onClick={handleUpdateCategory}
+                className="flex-1"
+                disabled={!editCategoryName.trim()}
+              >
+                수정하기
+              </Button>
+            </div>
+          </div>
+        </Modal>
 
         {/* 빠른 링크 */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

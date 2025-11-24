@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "여행 정산 관리",
+  title: "내 머리속 정총무",
   description: "친구들과 함께하는 여행 비용을 투명하게 정산하는 앱",
   generator: "Next.js",
   manifest: "/manifest.json",
@@ -46,7 +46,7 @@ export default function RootLayout({
       <head>
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="여행정산" />
+        <meta name="apple-mobile-web-app-title" content="내 머리속 정총무" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="msapplication-TileColor" content="#3b82f6" />
         <meta name="msapplication-tap-highlight" content="no" />

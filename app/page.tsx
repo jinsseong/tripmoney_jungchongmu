@@ -8,14 +8,14 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { Input } from "@/components/ui/Input";
-import { Plus, Calendar, MapPin, ArrowRight, Settings, Users } from "lucide-react";
+import { Plus, Calendar, MapPin, ArrowRight, Settings, Users, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { ko } from "date-fns/locale";
 
 export default function HomePage() {
   const router = useRouter();
-  const { trips, loading, addTrip } = useTrips();
+  const { trips, loading, addTrip, deleteTrip } = useTrips();
   const [showAddModal, setShowAddModal] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -57,6 +57,20 @@ export default function HomePage() {
     router.push(`/dashboard?trip=${tripId}`);
   };
 
+  const handleDeleteTrip = async (e: React.MouseEvent, tripId: string, tripName: string) => {
+    e.stopPropagation();
+    if (!confirm(`${tripName} 여행을 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없으며, 관련된 모든 지출 내역과 정산 데이터가 삭제됩니다.`)) {
+      return;
+    }
+
+    try {
+      await deleteTrip(tripId);
+    } catch (error) {
+      console.error("Failed to delete trip:", error);
+      alert("여행 삭제에 실패했습니다.");
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -70,7 +84,7 @@ export default function HomePage() {
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            여행 정산 관리
+            내 머리속 정총무
           </h1>
           <p className="text-gray-600">
             여행을 선택하거나 새로 추가하세요
@@ -94,7 +108,7 @@ export default function HomePage() {
             {trips.map((trip) => (
               <Card
                 key={trip.id}
-                className="hover:shadow-lg transition-shadow cursor-pointer"
+                className="hover:shadow-lg transition-shadow cursor-pointer group"
                 onClick={() => handleSelectTrip(trip.id)}
               >
                 <CardContent className="p-6">
@@ -121,7 +135,17 @@ export default function HomePage() {
                         )}
                       </div>
                     </div>
-                    <ArrowRight className="h-6 w-6 text-gray-400" />
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => handleDeleteTrip(e, trip.id, trip.name)}
+                        className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity text-red-600 hover:text-red-700 hover:bg-red-50"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                      <ArrowRight className="h-6 w-6 text-gray-400" />
+                    </div>
                   </div>
                 </CardContent>
               </Card>
