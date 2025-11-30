@@ -185,10 +185,15 @@ export function useExpenses(tripId?: string, date?: string) {
       // Update expense participants if provided
       if (participantIds !== undefined) {
         // Delete existing participants
-        await supabase
+        const { error: deleteError } = await supabase
           .from("expense_participants")
           .delete()
           .eq("expense_id", id);
+
+        if (deleteError) {
+          console.error("expense_participants 삭제 오류:", deleteError);
+          throw deleteError;
+        }
 
         // Insert new participants
         if (participantIds.length > 0) {
@@ -207,40 +212,55 @@ export function useExpenses(tripId?: string, date?: string) {
       }
 
       // Update daily participants if provided
+      // dailyParticipants가 undefined가 아니면 항상 업데이트 (빈 객체면 모든 daily participants 삭제)
       if (dailyParticipants !== undefined) {
         try {
           // Delete existing daily participants
-          await supabase
+          const { error: deleteDailyError } = await supabase
             .from("expense_daily_participants")
             .delete()
             .eq("expense_id", id);
 
-          // Insert new daily participants
-          if (Object.keys(dailyParticipants).length > 0) {
+          if (deleteDailyError) {
+            const errorCode = deleteDailyError.code || "";
+            const errorMessage = deleteDailyError.message || "";
+            
+            // 테이블이 없으면 경고만 출력
+            if (errorCode !== "42P01" && !errorMessage.includes("does not exist")) {
+              console.error("expense_daily_participants 삭제 오류:", deleteDailyError);
+            }
+          }
+
+          // Insert new daily participants (빈 객체가 아닐 때만)
+          if (dailyParticipants && Object.keys(dailyParticipants).length > 0) {
             const dailyParticipantsData: any[] = [];
             Object.entries(dailyParticipants).forEach(([date, pids]) => {
-              pids.forEach((pid) => {
-                dailyParticipantsData.push({
-                  expense_id: id,
-                  participant_id: pid,
-                  date: date,
+              if (pids && pids.length > 0) {
+                pids.forEach((pid) => {
+                  dailyParticipantsData.push({
+                    expense_id: id,
+                    participant_id: pid,
+                    date: date,
+                  });
                 });
-              });
+              }
             });
 
-            const { error: dailyError } = await supabase
-              .from("expense_daily_participants")
-              .insert(dailyParticipantsData as any);
+            if (dailyParticipantsData.length > 0) {
+              const { error: dailyError } = await supabase
+                .from("expense_daily_participants")
+                .insert(dailyParticipantsData as any);
 
-            if (dailyError) {
-              const errorCode = dailyError.code || "";
-              const errorMessage = dailyError.message || "";
-              
-              // 테이블이 없으면 경고만 출력
-              if (errorCode === "42P01" || errorMessage.includes("does not exist")) {
-                console.warn("expense_daily_participants 테이블이 없습니다. SCHEMA_UPDATE_V2.sql을 실행해주세요.");
-              } else {
-                throw dailyError;
+              if (dailyError) {
+                const errorCode = dailyError.code || "";
+                const errorMessage = dailyError.message || "";
+                
+                // 테이블이 없으면 경고만 출력
+                if (errorCode === "42P01" || errorMessage.includes("does not exist")) {
+                  console.warn("expense_daily_participants 테이블이 없습니다. SCHEMA_UPDATE_V2.sql을 실행해주세요.");
+                } else {
+                  throw dailyError;
+                }
               }
             }
           }
@@ -248,7 +268,7 @@ export function useExpenses(tripId?: string, date?: string) {
           const errorCode = err?.code || "";
           const errorMessage = err?.message || "";
           
-          // 테이블이 없으면 경고만 출력
+          // 테이블이 없으면 경고만 출력하고 계속 진행
           if (errorCode === "42P01" || errorMessage.includes("does not exist")) {
             console.warn("expense_daily_participants 테이블이 없습니다. SCHEMA_UPDATE_V2.sql을 실행해주세요.");
           } else {
@@ -269,6 +289,33 @@ export function useExpenses(tripId?: string, date?: string) {
 
   const deleteExpense = async (id: string) => {
     try {
+      // 먼저 관련 테이블 데이터 삭제 (CASCADE가 설정되어 있어도 명시적으로 삭제)
+      // expense_daily_participants 삭제
+      try {
+        await supabase
+          .from("expense_daily_participants")
+          .delete()
+          .eq("expense_id", id);
+      } catch (err: any) {
+        // 테이블이 없으면 무시
+        const errorCode = err?.code || "";
+        const errorMessage = err?.message || "";
+        if (errorCode !== "42P01" && !errorMessage.includes("does not exist")) {
+          console.warn("expense_daily_participants 삭제 중 오류:", err);
+        }
+      }
+
+      // expense_participants 삭제
+      try {
+        await supabase
+          .from("expense_participants")
+          .delete()
+          .eq("expense_id", id);
+      } catch (err) {
+        console.error("expense_participants 삭제 중 오류:", err);
+      }
+
+      // expenses 삭제 (CASCADE로 관련 데이터도 자동 삭제되지만 명시적으로 처리)
       const { error } = await supabase
         .from("expenses")
         .delete()

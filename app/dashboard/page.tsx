@@ -44,7 +44,13 @@ function DashboardContent() {
     loading: participantsLoading,
   } = useTripParticipants(selectedTripId);
   const { trips, loading: tripsLoading, updateTrip } = useTrips();
-  const { expenses, loading: expensesLoading } = useExpenses(selectedTripId || undefined);
+  const { 
+    expenses, 
+    loading: expensesLoading, 
+    updateExpense, 
+    deleteExpense,
+    refetch: refetchExpenses 
+  } = useExpenses(selectedTripId || undefined);
   const { categories, loading: categoriesLoading } = useCategories();
   const [userTotals, setUserTotals] = useState<any[]>([]);
   const [transfers, setTransfers] = useState<any[]>([]);
@@ -54,7 +60,6 @@ function DashboardContent() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const { createDashboard, createSnapshot } = useSharedDashboard();
-  const { updateExpense, deleteExpense } = useExpenses(selectedTripId || undefined);
 
   // 선택된 여행 또는 첫 번째 여행
   const currentTrip = selectedTripId
@@ -296,6 +301,7 @@ function DashboardContent() {
                         if (confirm("정말 삭제하시겠습니까?")) {
                           try {
                             await deleteExpense(expenseId);
+                            await refetchExpenses();
                           } catch (error) {
                             console.error("Error deleting expense:", error);
                             alert("지출 삭제에 실패했습니다.");
@@ -326,6 +332,7 @@ function DashboardContent() {
                         if (confirm("정말 삭제하시겠습니까?")) {
                           try {
                             await deleteExpense(expenseId);
+                            await refetchExpenses();
                           } catch (error) {
                             console.error("Error deleting expense:", error);
                             alert("지출 삭제에 실패했습니다.");
@@ -454,6 +461,7 @@ function DashboardContent() {
                     customAmounts,
                     dailyParticipants
                   );
+                  await refetchExpenses();
                   setShowEditModal(false);
                   setEditingExpense(null);
                 } catch (error) {
