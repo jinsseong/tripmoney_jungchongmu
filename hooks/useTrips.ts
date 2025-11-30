@@ -78,9 +78,9 @@ export function useTrips() {
     updates: Partial<Pick<Trip, "name" | "start_date" | "end_date" | "description">>
   ) => {
     try {
-      const { data, error } = await supabase
-        .from("trips")
-        .update(updates as any)
+      const { data, error } = await (supabase
+        .from("trips") as any)
+        .update(updates)
         .eq("id", id)
         .select()
         .single();
