@@ -19,11 +19,14 @@ function AddExpenseContent() {
   const searchParams = useSearchParams();
   const tripId = searchParams.get("trip");
   const { participants, loading: participantsLoading } = useTripParticipants(tripId);
-  const { trips } = useTrips();
+  const { trips, updateTrip } = useTrips();
   const { addExpense, refetch } = useExpenses(tripId || undefined);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
   const router = useRouter();
+
+  // 현재 여행 정보 가져오기
+  const currentTrip = tripId ? trips.find((t) => t.id === tripId) : null;
 
   // 여행이 선택되지 않았으면 대시보드로 리다이렉트
   useEffect(() => {
@@ -75,6 +78,15 @@ function AddExpenseContent() {
 
     fetchCategories();
   }, []);
+
+  const handleTripUpdate = async (tripIdToUpdate: string, startDate: string, endDate: string) => {
+    try {
+      await updateTrip(tripIdToUpdate, { start_date: startDate, end_date: endDate });
+    } catch (error) {
+      console.error("Error updating trip:", error);
+      throw error;
+    }
+  };
 
   const handleSubmit = async (
     expenseData: Partial<Expense>,
@@ -147,6 +159,8 @@ function AddExpenseContent() {
             <ExpenseForm
               participants={participants}
               categories={categories}
+              trip={currentTrip}
+              onTripUpdate={tripId ? handleTripUpdate : undefined}
               onSubmit={handleSubmit}
             />
           </div>

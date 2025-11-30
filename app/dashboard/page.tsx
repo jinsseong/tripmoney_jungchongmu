@@ -43,7 +43,7 @@ function DashboardContent() {
     participants,
     loading: participantsLoading,
   } = useTripParticipants(selectedTripId);
-  const { trips, loading: tripsLoading } = useTrips();
+  const { trips, loading: tripsLoading, updateTrip } = useTrips();
   const { expenses, loading: expensesLoading } = useExpenses(selectedTripId || undefined);
   const { categories, loading: categoriesLoading } = useCategories();
   const [userTotals, setUserTotals] = useState<any[]>([]);
@@ -430,6 +430,15 @@ function DashboardContent() {
             <ExpenseForm
               participants={participants}
               categories={categories}
+              trip={currentTrip}
+              onTripUpdate={currentTrip && selectedTripId ? async (tripId, startDate, endDate) => {
+                try {
+                  await updateTrip(tripId, { start_date: startDate, end_date: endDate });
+                } catch (error) {
+                  console.error("Error updating trip:", error);
+                  throw error;
+                }
+              } : undefined}
               initialExpense={editingExpense}
               onSubmit={async (
                 expenseData: Partial<Expense>,

@@ -1,18 +1,21 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Expense, Participant, Category } from "@/lib/types";
+import { Expense, Participant, Category, Trip } from "@/lib/types";
 import { Input } from "./ui/Input";
 import { Button } from "./ui/Button";
 import { ParticipantSelector } from "./ParticipantSelector";
+import { Modal } from "./ui/Modal";
 import { formatCurrency, formatNumber, cn } from "@/lib/utils";
 import { DollarSign } from "lucide-react";
 
 interface ExpenseFormProps {
   participants: Participant[];
   categories: Category[];
+  trip?: Trip | null;
   defaultPayerId?: string;
   initialExpense?: Expense;
+  onTripUpdate?: (tripId: string, startDate: string, endDate: string) => Promise<void>;
   onSubmit: (
     expense: Partial<Expense>,
     participantIds: string[],
@@ -25,8 +28,10 @@ interface ExpenseFormProps {
 export const ExpenseForm: React.FC<ExpenseFormProps> = ({
   participants,
   categories,
+  trip,
   defaultPayerId,
   initialExpense,
+  onTripUpdate,
   onSubmit,
   onCancel,
 }) => {
@@ -84,6 +89,14 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
   );
   const [currency, setCurrency] = useState(initialExpense?.currency || "KRW");
   const [isLoading, setIsLoading] = useState(false);
+  const [showDateWarningModal, setShowDateWarningModal] = useState(false);
+  const [pendingExpenseData, setPendingExpenseData] = useState<{
+    expense: Partial<Expense>;
+    participantIds: string[];
+    customAmounts?: Record<string, number>;
+    dailyParticipants?: Record<string, string[]>;
+  } | null>(null);
+  const [dateWarningMessage, setDateWarningMessage] = useState("");
   
   // 날짜별 참여자 (교통/숙박 카테고리용)
   const [dailyParticipants, setDailyParticipants] = useState<Record<string, string[]>>(() => {
@@ -147,48 +160,164 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
     }
   }, [isMultiDayCategory, date, endDate, selectedParticipantIds.length]);
 
+  // 날짜가 여행 기간 내에 있는지 확인
+  const isDateWithinTripRange = (checkDate: string): boolean => {
+    if (!trip) return true; // trip 정보가 없으면 검증하지 않음
+    
+    const tripStart = new Date(trip.start_date);
+    const tripEnd = new Date(trip.end_date);
+    const checkDateObj = new Date(checkDate);
+    
+    return checkDateObj >= tripStart && checkDateObj <= tripEnd;
+  };
+
+  // 날짜 범위가 여행 기간과 겹치는지 확인 및 범위 벗어남 여부 체크
+  const getDateRangeValidation = (): {
+    isValid: boolean;
+    message: string;
+    needsStartDateExtend: boolean;
+    needsEndDateExtend: boolean;
+    newStartDate?: string;
+    newEndDate?: string;
+  } => {
+    if (!trip) {
+      return { isValid: true, message: "", needsStartDateExtend: false, needsEndDateExtend: false };
+    }
+
+    const tripStart = new Date(trip.start_date);
+    const tripEnd = new Date(trip.end_date);
+    const expenseStart = new Date(date);
+    const expenseEnd = endDate ? new Date(endDate) : expenseStart;
+    
+    const isStartBeforeTrip = expenseStart < tripStart;
+    const isEndAfterTrip = expenseEnd > tripEnd;
+    
+    if (!isStartBeforeTrip && !isEndAfterTrip) {
+      return { isValid: true, message: "", needsStartDateExtend: false, needsEndDateExtend: false };
+    }
+    
+    const messages: string[] = [];
+    if (isStartBeforeTrip) {
+      messages.push(`${new Date(trip.start_date).toLocaleDateString("ko-KR")} 이전 날짜입니다`);
+    }
+    if (isEndAfterTrip) {
+      messages.push(`${new Date(trip.end_date).toLocaleDateString("ko-KR")} 이후 날짜입니다`);
+    }
+    
+    return {
+      isValid: false,
+      message: messages.join(", "),
+      needsStartDateExtend: isStartBeforeTrip,
+      needsEndDateExtend: isEndAfterTrip,
+      newStartDate: isStartBeforeTrip ? date : trip.start_date,
+      newEndDate: isEndAfterTrip ? (endDate || date) : trip.end_date,
+    };
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!amount || !itemName || !payerId || selectedParticipantIds.length === 0) {
       return;
     }
 
+    // 날짜 범위 검증
+    const validation = getDateRangeValidation();
+    
+    if (!validation.isValid && trip) {
+      // 여행 기간 외 날짜이면 경고 모달 표시
+      setDateWarningMessage(validation.message);
+      setPendingExpenseData({
+        expense: {
+          amount: parseInt(amount.replace(/,/g, "")),
+          item_name: itemName,
+          description: description || undefined,
+          location: location || undefined,
+          memo: memo || undefined,
+          category_id: categoryId || undefined,
+          payer_id: payerId,
+          payment_type: paymentType,
+          currency,
+          settlement_type: settlementType,
+          date,
+          end_date: endDate || date,
+          expense_date: date,
+          ...(isEditMode && initialExpense?.trip_id ? { trip_id: initialExpense.trip_id } : {}),
+        },
+        participantIds: selectedParticipantIds,
+        customAmounts: settlementType === "custom" ? Object.fromEntries(
+          selectedParticipantIds.map((pid) => {
+            const amountValue = customAmounts[pid];
+            return [pid, amountValue ? parseInt(amountValue.replace(/,/g, "")) : 0];
+          })
+        ) : undefined,
+        dailyParticipants: isMultiDayCategory && endDate ? dailyParticipants : undefined,
+      });
+      setShowDateWarningModal(true);
+      return;
+    }
+
+    // 정상 제출 처리
+    await submitExpense();
+  };
+
+  const submitExpense = async (extendTripDates = false) => {
+    if (!pendingExpenseData && !amount) {
+      return;
+    }
+
     setIsLoading(true);
     try {
-      const expenseData: Partial<Expense> = {
-        amount: parseInt(amount.replace(/,/g, "")),
-        item_name: itemName,
-        description: description || undefined,
-        location: location || undefined,
-        memo: memo || undefined,
-        category_id: categoryId || undefined,
-        payer_id: payerId,
-        payment_type: paymentType,
-        currency,
-        settlement_type: settlementType,
-        date,
-        end_date: endDate || date, // end_date가 없으면 date와 동일
-        expense_date: date,
-        // 수정 모드일 때는 trip_id 유지
-        ...(isEditMode && initialExpense?.trip_id ? { trip_id: initialExpense.trip_id } : {}),
-      };
+      let expenseData: Partial<Expense>;
+      let participantIds: string[];
+      let customAmountsMap: Record<string, number> | undefined;
+      let dailyParticipantsData: Record<string, string[]> | undefined;
 
-      const customAmountsMap: Record<string, number> = {};
-      if (settlementType === "custom") {
-        selectedParticipantIds.forEach((pid) => {
-          const amountValue = customAmounts[pid];
-          if (amountValue) {
-            customAmountsMap[pid] = parseInt(amountValue.replace(/,/g, ""));
-          }
-        });
+      if (pendingExpenseData) {
+        expenseData = pendingExpenseData.expense;
+        participantIds = pendingExpenseData.participantIds;
+        customAmountsMap = pendingExpenseData.customAmounts;
+        dailyParticipantsData = pendingExpenseData.dailyParticipants;
+      } else {
+        expenseData = {
+          amount: parseInt(amount.replace(/,/g, "")),
+          item_name: itemName,
+          description: description || undefined,
+          location: location || undefined,
+          memo: memo || undefined,
+          category_id: categoryId || undefined,
+          payer_id: payerId,
+          payment_type: paymentType,
+          currency,
+          settlement_type: settlementType,
+          date,
+          end_date: endDate || date,
+          expense_date: date,
+          ...(isEditMode && initialExpense?.trip_id ? { trip_id: initialExpense.trip_id } : {}),
+        };
+        participantIds = selectedParticipantIds;
+        if (settlementType === "custom") {
+          customAmountsMap = {};
+          selectedParticipantIds.forEach((pid) => {
+            const amountValue = customAmounts[pid];
+            if (amountValue) {
+              customAmountsMap![pid] = parseInt(amountValue.replace(/,/g, ""));
+            }
+          });
+        }
+        dailyParticipantsData = isMultiDayCategory && endDate ? dailyParticipants : undefined;
       }
 
-      await onSubmit(
-        expenseData, 
-        selectedParticipantIds, 
-        customAmountsMap,
-        isMultiDayCategory && endDate ? dailyParticipants : undefined
-      );
+      // 여행 기간 확장이 필요하면 확장
+      if (extendTripDates && trip && onTripUpdate) {
+        const validation = getDateRangeValidation();
+        if (!validation.isValid) {
+          const newStartDate = validation.newStartDate || trip.start_date;
+          const newEndDate = validation.newEndDate || trip.end_date;
+          await onTripUpdate(trip.id, newStartDate, newEndDate);
+        }
+      }
+
+      await onSubmit(expenseData, participantIds, customAmountsMap, dailyParticipantsData);
       
       // Reset form (수정 모드가 아닐 때만)
       if (!isEditMode) {
@@ -200,7 +329,14 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
         setCategoryId("");
         setSelectedParticipantIds([]);
         setCustomAmounts({});
+        setDate(new Date().toISOString().split("T")[0]);
+        setEndDate("");
       }
+      
+      // 모달 및 임시 데이터 초기화
+      setShowDateWarningModal(false);
+      setPendingExpenseData(null);
+      setDateWarningMessage("");
     } catch (error) {
       console.error("Error submitting expense:", error);
     } finally {
@@ -306,31 +442,50 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
       />
 
       {/* 날짜 */}
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            {isMultiDayCategory ? "시작일" : "날짜"}
-          </label>
-          <input
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            className="w-full h-11 rounded-lg border border-gray-300 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required
-          />
-        </div>
-        {isMultiDayCategory && (
+      <div className="space-y-2">
+        <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              종료일
+              {isMultiDayCategory ? "시작일" : "날짜"}
             </label>
             <input
               type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              min={date}
-              className="w-full h-11 rounded-lg border border-gray-300 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              className={cn(
+                "w-full h-11 rounded-lg border px-3 focus:outline-none focus:ring-2 focus:ring-blue-500",
+                trip && !isDateWithinTripRange(date) && !isMultiDayCategory
+                  ? "border-orange-500 bg-orange-50"
+                  : "border-gray-300"
+              )}
+              required
             />
+          </div>
+          {isMultiDayCategory && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                종료일
+              </label>
+              <input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                min={date}
+                className={cn(
+                  "w-full h-11 rounded-lg border px-3 focus:outline-none focus:ring-2 focus:ring-blue-500",
+                  trip && endDate && !isDateWithinTripRange(endDate)
+                    ? "border-orange-500 bg-orange-50"
+                    : "border-gray-300"
+                )}
+              />
+            </div>
+          )}
+        </div>
+        {trip && !getDateRangeValidation().isValid && (
+          <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
+            <p className="text-sm text-orange-800">
+              ⚠️ 이 날짜는 여행 기간({new Date(trip.start_date).toLocaleDateString("ko-KR")} ~ {new Date(trip.end_date).toLocaleDateString("ko-KR")}) 외부입니다. 추가 시 여행 기간이 자동으로 확장됩니다.
+            </p>
           </div>
         )}
       </div>
@@ -603,6 +758,62 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
           {isEditMode ? "수정하기" : "추가하기"}
         </Button>
       </div>
+
+      {/* 날짜 경고 모달 */}
+      <Modal
+        isOpen={showDateWarningModal}
+        onClose={() => {
+          setShowDateWarningModal(false);
+          setPendingExpenseData(null);
+        }}
+        title="여행 기간 외 날짜"
+      >
+        <div className="space-y-4">
+          <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+            <p className="text-sm text-orange-800 font-medium mb-2">
+              선택한 날짜가 여행 기간에 포함되지 않습니다.
+            </p>
+            <p className="text-sm text-orange-700">
+              {trip && (
+                <>
+                  설정된 여행 기간: {new Date(trip.start_date).toLocaleDateString("ko-KR")} ~ {new Date(trip.end_date).toLocaleDateString("ko-KR")}
+                  <br />
+                </>
+              )}
+              {dateWarningMessage && (
+                <>
+                  선택한 날짜: {dateWarningMessage}
+                </>
+              )}
+            </p>
+          </div>
+          <p className="text-sm text-gray-600">
+            지출을 추가하면 여행 기간이 자동으로 확장되어 이 날짜를 포함하도록 업데이트됩니다.
+          </p>
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setShowDateWarningModal(false);
+                setPendingExpenseData(null);
+              }}
+              className="flex-1"
+            >
+              취소
+            </Button>
+            <Button
+              type="button"
+              variant="primary"
+              onClick={() => submitExpense(true)}
+              isLoading={isLoading}
+              className="flex-1"
+            >
+              여행 기간 확장 후 추가
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </form>
   );
 };

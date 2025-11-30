@@ -73,12 +73,38 @@ export function useTrips() {
     }
   };
 
+  const updateTrip = async (
+    id: string,
+    updates: Partial<Pick<Trip, "name" | "start_date" | "end_date" | "description">>
+  ) => {
+    try {
+      const { data, error } = await supabase
+        .from("trips")
+        .update(updates as any)
+        .eq("id", id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      setTrips((prev) =>
+        prev.map((t) => (t.id === id ? (data as Trip) : t))
+      );
+      return data as Trip;
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "여행 수정 실패";
+      setError(errorMessage);
+      throw new Error(errorMessage);
+    }
+  };
+
   return {
     trips,
     loading,
     error,
     addTrip,
     deleteTrip,
+    updateTrip,
     refetch: fetchTrips,
   };
 }
