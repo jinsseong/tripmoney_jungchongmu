@@ -21,67 +21,18 @@ npm install
 
 ### 3. 데이터베이스 설정
 
-Supabase에서 다음 SQL을 실행하여 테이블을 생성하세요:
+Supabase SQL Editor에서 프로젝트 루트의 `supabase-schema-safe.sql` 전체 내용을 실행하세요.
 
-```sql
--- participants 테이블
-CREATE TABLE participants (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  name VARCHAR(100) NOT NULL,
-  avatar_color VARCHAR(7) DEFAULT '#3B82F6',
-  phone VARCHAR(20),
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
+이 스크립트 하나에 현재 앱이 사용하는 테이블, 인덱스, 트리거가 모두 포함되어 있습니다.
 
--- categories 테이블
-CREATE TABLE categories (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  name VARCHAR(50) NOT NULL UNIQUE,
-  icon VARCHAR(10) NOT NULL,
-  color VARCHAR(7) DEFAULT '#6B7280',
-  is_default BOOLEAN DEFAULT false,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
+- 여행/참가자: `trips`, `participants`, `trip_participants`
+- 지출/정산: `expenses`, `expense_participants`, `expense_daily_participants`
+- 지출 제보: `expense_reports`
+- 레거시 공유비용 호환: `shared_expenses`, `daily_participations`
+- 공유 대시보드: `shared_dashboards`, `dashboard_snapshots`
+- Storage: `participant-avatars`, `expense-receipts` 버킷
 
--- expenses 테이블
-CREATE TABLE expenses (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  trip_id UUID,
-  amount INTEGER NOT NULL,
-  item_name VARCHAR(200) NOT NULL,
-  description VARCHAR(200),
-  location VARCHAR(200),
-  memo TEXT,
-  category_id UUID REFERENCES categories(id),
-  category VARCHAR(50),
-  payer_id UUID REFERENCES participants(id) NOT NULL,
-  payment_type VARCHAR(20) DEFAULT 'cash',
-  currency VARCHAR(10) DEFAULT 'KRW',
-  settlement_type VARCHAR(20) DEFAULT 'equal',
-  date DATE NOT NULL,
-  expense_date DATE,
-  receipt_image_url TEXT,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- expense_participants 테이블
-CREATE TABLE expense_participants (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  expense_id UUID REFERENCES expenses(id) ON DELETE CASCADE,
-  participant_id UUID REFERENCES participants(id) ON DELETE CASCADE,
-  custom_amount INTEGER,
-  UNIQUE(expense_id, participant_id)
-);
-
--- 인덱스 생성
-CREATE INDEX idx_expenses_payer_id ON expenses(payer_id);
-CREATE INDEX idx_expenses_category_id ON expenses(category_id);
-CREATE INDEX idx_expenses_date ON expenses(date);
-CREATE INDEX idx_expense_participants_expense_id ON expense_participants(expense_id);
-CREATE INDEX idx_expense_participants_participant_id ON expense_participants(participant_id);
-```
+기존 Supabase DB가 있는 경우에도 같은 파일을 다시 실행할 수 있도록 `IF NOT EXISTS`와 호환 컬럼 보정 구문을 포함했습니다.
 
 ### 4. 개발 서버 실행
 
@@ -94,11 +45,25 @@ npm run dev
 ## 📱 주요 기능
 
 - ✅ 참여자 관리 (추가/수정/삭제)
+- ✅ 여행별 참가자 관리
+- ✅ 여행 초대 링크 및 참가자 셀프 프로필 등록
 - ✅ 지출 입력 (일반 지출, n분의 1 정산, 직접 정산)
+- ✅ 개인별 정산 탭
+- ✅ 참가자 영수증 지출 제보 및 총무 승인 반영
+- ✅ 교통/숙박 다일자 지출 및 날짜별 참여자 정산
 - ✅ 차액 정산 계산
 - ✅ 최적화된 송금 안내
+- ✅ 비밀번호 보호 공유 대시보드 (PBKDF2-SHA256 해시 저장)
 - ✅ PWA 지원 (오프라인 동작, 앱 설치)
 - ✅ 모바일 최적화
+
+## 🔐 보안 참고
+
+- 공유 대시보드 비밀번호는 평문이나 단순 인코딩이 아니라 솔트가 포함된 PBKDF2-SHA256 해시로 저장됩니다.
+- `supabase-rls-policy.sql`은 개발용 전체 허용 정책입니다.
+- 초대 링크, 프로필 사진, 지출 제보를 바로 테스트하려면 `trips.invite_key`, `participants.avatar_url`, `expense_reports`, `participant-avatars`, `expense-receipts` Storage 정책이 필요합니다.
+- 영수증 텍스트 인식은 브라우저 지원 여부에 따라 자동 시도되며, 지원되지 않는 환경에서는 참가자가 품목/금액을 직접 보정합니다.
+- 실제 배포 전에는 Supabase Auth 또는 별도 권한 모델을 기준으로 여행/참가자/공유 링크 단위 RLS 정책을 재설계해야 합니다.
 
 ## 🛠️ 기술 스택
 

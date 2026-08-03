@@ -58,18 +58,18 @@ export const SettlementSummary: React.FC<SettlementSummaryProps> = ({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* 정산 검증 상태 */}
       {validation.settlement.isValid ? (
-        <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
-          <CheckCircle className="h-5 w-5 text-green-600" />
+        <div className="flex items-start gap-2 rounded-lg border border-green-200 bg-green-50 p-3">
+          <CheckCircle className="mt-0.5 h-5 w-5 shrink-0 text-green-600" />
           <span className="text-sm text-green-700 font-medium">
             {validation.settlement.message}
           </span>
         </div>
       ) : (
-        <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
-          <AlertCircle className="h-5 w-5 text-red-600" />
+        <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 p-3">
+          <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-red-600" />
           <span className="text-sm text-red-700 font-medium">
             {validation.settlement.message}
           </span>
@@ -92,11 +92,11 @@ export const SettlementSummary: React.FC<SettlementSummaryProps> = ({
                 <button
                   key={user.id}
                   onClick={() => handleUserClick(user)}
-                  className="w-full flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+                  className="flex w-full flex-col gap-3 rounded-lg bg-gray-50 p-4 text-left transition-colors hover:bg-gray-100 sm:flex-row sm:items-center sm:justify-between"
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex min-w-0 items-center gap-3">
                     <div
-                      className="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-semibold"
+                      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-semibold text-white"
                       style={{
                         backgroundColor: isPositive
                           ? "#10B981"
@@ -107,8 +107,8 @@ export const SettlementSummary: React.FC<SettlementSummaryProps> = ({
                     >
                       {getInitials(user.name)}
                     </div>
-                    <div className="text-left">
-                      <div className="font-semibold">{user.name}</div>
+                    <div className="min-w-0 text-left">
+                      <div className="truncate font-semibold">{user.name}</div>
                       <div className="text-sm text-gray-500">
                         사용한 금액: {formatCurrency(user.totalAmount, currency)}
                       </div>
@@ -119,10 +119,10 @@ export const SettlementSummary: React.FC<SettlementSummaryProps> = ({
                       )}
                     </div>
                   </div>
-                  <div className="text-right">
+                  <div className="text-left sm:text-right">
                     <div
                       className={cn(
-                        "text-lg font-bold",
+                        "break-all text-xl font-bold sm:text-lg",
                         isPositive && "text-green-600",
                         isNegative && "text-red-600",
                         isZero && "text-gray-600"
@@ -143,8 +143,8 @@ export const SettlementSummary: React.FC<SettlementSummaryProps> = ({
               );
             })}
           </div>
-          <p className="text-xs text-gray-500 mt-3 text-center">
-            💡 이름을 클릭하면 상세 정산 내역을 확인할 수 있습니다
+          <p className="mt-3 text-center text-xs text-gray-500">
+            이름을 선택하면 상세 정산 내역을 확인할 수 있습니다
           </p>
         </CardContent>
       </Card>
@@ -187,13 +187,13 @@ export const SettlementSummary: React.FC<SettlementSummaryProps> = ({
           }}
           title={`${selectedUser.name}님의 정산 내역`}
         >
-          <div className="p-4 space-y-6">
+          <div className="space-y-6">
             {/* 요약 정보 */}
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-100">
+            <div className="rounded-lg border border-blue-100 bg-gradient-to-r from-blue-50 to-indigo-50 p-4">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
                   <div
-                    className="w-12 h-12 rounded-full flex items-center justify-center text-white text-base font-semibold"
+                    className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-base font-semibold text-white"
                     style={{
                       backgroundColor:
                         (selectedUser.netBalance || 0) > 0
@@ -212,27 +212,27 @@ export const SettlementSummary: React.FC<SettlementSummaryProps> = ({
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 text-sm">
+              <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2 sm:gap-4">
                 <div className="bg-white rounded-lg p-3">
                   <p className="text-gray-600 mb-1">사용한 금액</p>
-                  <p className="font-bold text-lg">
+                  <p className="break-all text-lg font-bold">
                     {formatCurrency(selectedUser.totalAmount, currency)}
                   </p>
                 </div>
                 <div className="bg-white rounded-lg p-3">
                   <p className="text-gray-600 mb-1">지불한 금액</p>
-                  <p className="font-bold text-lg">
+                  <p className="break-all text-lg font-bold">
                     {formatCurrency(selectedUser.totalPaid || 0, currency)}
                   </p>
                 </div>
               </div>
 
               <div className="mt-4 pt-4 border-t border-blue-200">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                   <span className="text-gray-700 font-medium">최종 정산 금액</span>
                   <span
                     className={cn(
-                      "text-2xl font-bold",
+                      "break-all text-2xl font-bold",
                       (selectedUser.netBalance || 0) > 0 && "text-green-600",
                       (selectedUser.netBalance || 0) < 0 && "text-red-600",
                       (selectedUser.netBalance || 0) === 0 && "text-gray-600"
@@ -268,10 +268,10 @@ export const SettlementSummary: React.FC<SettlementSummaryProps> = ({
                         {toSend.map((transfer, index) => (
                           <div
                             key={index}
-                            className="flex items-center justify-between p-3 bg-red-50 rounded-lg border border-red-200"
+                            className="flex flex-col gap-3 rounded-lg border border-red-200 bg-red-50 p-3 sm:flex-row sm:items-center sm:justify-between"
                           >
                             <div className="flex items-center gap-2">
-                              <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-semibold bg-green-500">
+                              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-green-500 text-xs font-semibold text-white">
                                 {getInitials(transfer.to.name)}
                               </div>
                               <div>
@@ -281,8 +281,8 @@ export const SettlementSummary: React.FC<SettlementSummaryProps> = ({
                                 <p className="text-xs text-gray-600">에게 송금</p>
                               </div>
                             </div>
-                            <div className="text-right">
-                              <p className="text-lg font-bold text-red-600">
+                            <div className="text-left sm:text-right">
+                              <p className="break-all text-lg font-bold text-red-600">
                                 {formatCurrency(transfer.amount, currency)}
                               </p>
                             </div>
@@ -291,7 +291,7 @@ export const SettlementSummary: React.FC<SettlementSummaryProps> = ({
                       </div>
                       <div className="mt-3 p-3 bg-red-50 rounded-lg border border-red-100">
                         <p className="text-sm text-red-800">
-                          💳 <strong>총 {formatCurrency(
+                          <strong>총 {formatCurrency(
                             toSend.reduce((sum, t) => sum + t.amount, 0),
                             currency
                           )}</strong>를 송금해주세요.
@@ -310,10 +310,10 @@ export const SettlementSummary: React.FC<SettlementSummaryProps> = ({
                         {toReceive.map((transfer, index) => (
                           <div
                             key={index}
-                            className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200"
+                            className="flex flex-col gap-3 rounded-lg border border-green-200 bg-green-50 p-3 sm:flex-row sm:items-center sm:justify-between"
                           >
                             <div className="flex items-center gap-2">
-                              <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-semibold bg-blue-500">
+                              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-500 text-xs font-semibold text-white">
                                 {getInitials(transfer.from.name)}
                               </div>
                               <div>
@@ -323,8 +323,8 @@ export const SettlementSummary: React.FC<SettlementSummaryProps> = ({
                                 <p className="text-xs text-gray-600">로부터 수령</p>
                               </div>
                             </div>
-                            <div className="text-right">
-                              <p className="text-lg font-bold text-green-600">
+                            <div className="text-left sm:text-right">
+                              <p className="break-all text-lg font-bold text-green-600">
                                 +{formatCurrency(transfer.amount, currency)}
                               </p>
                             </div>
@@ -333,7 +333,7 @@ export const SettlementSummary: React.FC<SettlementSummaryProps> = ({
                       </div>
                       <div className="mt-3 p-3 bg-green-50 rounded-lg border border-green-100">
                         <p className="text-sm text-green-800">
-                          💰 <strong>총 {formatCurrency(
+                          <strong>총 {formatCurrency(
                             toReceive.reduce((sum, t) => sum + t.amount, 0),
                             currency
                           )}</strong>를 받으시게 됩니다.
@@ -362,4 +362,3 @@ export const SettlementSummary: React.FC<SettlementSummaryProps> = ({
     </div>
   );
 };
-

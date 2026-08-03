@@ -2,7 +2,7 @@
 
 export const dynamic = "force-dynamic";
 
-import React, { useState, Suspense } from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import { useParticipants } from "@/hooks/useParticipants";
 import { useTripParticipants } from "@/hooks/useTripParticipants";
 import { useTrips } from "@/hooks/useTrips";
@@ -10,8 +10,8 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { Input } from "@/components/ui/Input";
-import { Plus, Users, ArrowLeft, Edit, Trash2, X } from "lucide-react";
-import { getInitials } from "@/lib/utils";
+import { ParticipantAvatar } from "@/components/ParticipantAvatar";
+import { Plus, Users, ArrowLeft, X, Link2, Copy, Share2, Check } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 function ParticipantsContent() {
@@ -30,10 +30,55 @@ function ParticipantsContent() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingParticipant, setEditingParticipant] = useState<any>(null);
+  const [origin, setOrigin] = useState("");
+  const [copiedInviteLink, setCopiedInviteLink] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
   });
+
+  useEffect(() => {
+    setOrigin(window.location.origin);
+  }, []);
+
+  const inviteUrl =
+    currentTrip?.invite_key && origin
+      ? `${origin}/join/${currentTrip.invite_key}`
+      : "";
+
+  const handleCopyInviteLink = async () => {
+    if (!inviteUrl) return;
+
+    try {
+      await navigator.clipboard.writeText(inviteUrl);
+      setCopiedInviteLink(true);
+      window.setTimeout(() => setCopiedInviteLink(false), 2000);
+    } catch (error) {
+      console.error("Failed to copy invite link:", error);
+      alert("초대 링크 복사에 실패했습니다.");
+    }
+  };
+
+  const handleShareInviteLink = async () => {
+    if (!inviteUrl) return;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `${currentTrip?.name || "여행"} 참가 초대`,
+          text: "닉네임과 프로필 사진을 설정하고 여행 정산에 참여해주세요.",
+          url: inviteUrl,
+        });
+        return;
+      } catch (error) {
+        if ((error as DOMException).name !== "AbortError") {
+          console.error("Failed to share invite link:", error);
+        }
+      }
+    }
+
+    await handleCopyInviteLink();
+  };
 
   const handleAddParticipant = async () => {
     if (!formData.name.trim()) return;
@@ -103,6 +148,63 @@ function ParticipantsContent() {
           </h1>
         </div>
 
+        {tripId && currentTrip && (
+          <Card className="mb-6">
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <Link2 className="h-5 w-5 text-blue-500" />
+                <CardTitle>초대 링크</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {inviteUrl ? (
+                <div className="space-y-3">
+                  <div className="rounded-lg border border-blue-100 bg-blue-50 p-3">
+                    <p className="text-sm font-medium text-blue-900">
+                      참가자는 이 링크에서 닉네임과 프로필 사진을 직접 설정할 수 있습니다.
+                    </p>
+                  </div>
+                  <div className="flex flex-col gap-2 sm:flex-row">
+                    <div className="min-h-[44px] flex-1 break-all rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700">
+                      {inviteUrl}
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 sm:flex">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleCopyInviteLink}
+                        className="gap-2"
+                      >
+                        {copiedInviteLink ? (
+                          <Check className="h-4 w-4" />
+                        ) : (
+                          <Copy className="h-4 w-4" />
+                        )}
+                        {copiedInviteLink ? "복사됨" : "복사"}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="primary"
+                        size="sm"
+                        onClick={handleShareInviteLink}
+                        className="gap-2"
+                      >
+                        <Share2 className="h-4 w-4" />
+                        공유
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="rounded-lg border border-orange-200 bg-orange-50 p-3 text-sm leading-6 text-orange-800">
+                  초대 링크를 사용하려면 Supabase 스키마에 trips.invite_key 컬럼을 먼저 적용해야 합니다.
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
         <Card className="mb-6">
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -134,12 +236,7 @@ function ParticipantsContent() {
                     key={participant.id}
                     className="flex flex-col items-center p-4 bg-gray-50 rounded-lg relative group"
                   >
-                    <div
-                      className="w-16 h-16 rounded-full flex items-center justify-center text-white text-lg font-semibold mb-2"
-                      style={{ backgroundColor: participant.avatar_color }}
-                    >
-                      {getInitials(participant.name)}
-                    </div>
+                    <ParticipantAvatar participant={participant} size="lg" className="mb-2" />
                     <div className="font-semibold text-center mb-1">
                       {participant.name}
                     </div>
@@ -182,12 +279,7 @@ function ParticipantsContent() {
                     key={participant.id}
                     className="flex flex-col items-center p-4 bg-gray-50 rounded-lg relative group"
                   >
-                    <div
-                      className="w-16 h-16 rounded-full flex items-center justify-center text-white text-lg font-semibold mb-2"
-                      style={{ backgroundColor: participant.avatar_color }}
-                    >
-                      {getInitials(participant.name)}
-                    </div>
+                    <ParticipantAvatar participant={participant} size="lg" className="mb-2" />
                     <div className="font-semibold text-center mb-1">
                       {participant.name}
                     </div>
@@ -273,4 +365,3 @@ export default function ParticipantsPage() {
     </Suspense>
   );
 }
-

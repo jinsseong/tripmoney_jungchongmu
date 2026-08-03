@@ -12,25 +12,30 @@ import { TripDateSelector } from "@/components/TripDateSelector";
 import { ExpenseChart } from "@/components/ExpenseChart";
 import { CreateSharedDashboardModal } from "@/components/CreateSharedDashboardModal";
 import { ExpenseForm } from "@/components/ExpenseForm";
+import { ExpenseReportInbox } from "@/components/ExpenseReportInbox";
+import { PersonalSettlementPanel } from "@/components/PersonalSettlementPanel";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
 import { Modal } from "@/components/ui/Modal";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import { useSharedDashboard } from "@/hooks/useSharedDashboard";
 import { useCategories } from "@/hooks/useCategories";
 import { useTrips } from "@/hooks/useTrips";
+import { useExpenseReports } from "@/hooks/useExpenseReports";
 import {
   calculateConsolidatedSettlement,
   calculateSettlementBalance,
   optimizeTransfers,
 } from "@/lib/settlement-calculator";
-import { Expense, DailyParticipation } from "@/lib/types";
+import { Expense, ExpenseReport } from "@/lib/types";
 import { formatCurrency, getDateRange, cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { ko } from "date-fns/locale";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
-import { ArrowLeft, Plus, Calendar, Users } from "lucide-react";
+import { ArrowLeft, ClipboardList, Plus, ReceiptText, Settings, Share2, UserRound, Users } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+
+type DashboardTab = "overview" | "personal" | "reports";
 
 function DashboardContent() {
   const searchParams = useSearchParams();
@@ -47,15 +52,26 @@ function DashboardContent() {
   const { 
     expenses, 
     loading: expensesLoading, 
+    addExpense,
     updateExpense, 
     deleteExpense,
     refetch: refetchExpenses 
-  } = useExpenses(selectedTripId || undefined);
+  } = useExpenses(selectedTripId || undefined, undefined, {
+    enabled: Boolean(selectedTripId),
+  });
   const { categories, loading: categoriesLoading } = useCategories();
+  const {
+    reports,
+    loading: reportsLoading,
+    error: reportsError,
+    updateReportStatus,
+    refetch: refetchReports,
+  } = useExpenseReports(selectedTripId || undefined, Boolean(selectedTripId));
   const [userTotals, setUserTotals] = useState<any[]>([]);
   const [transfers, setTransfers] = useState<any[]>([]);
   const [totalAmount, setTotalAmount] = useState(0);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [activeTab, setActiveTab] = useState<DashboardTab>("overview");
   const [showShareModal, setShowShareModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
@@ -123,6 +139,9 @@ function DashboardContent() {
     tripsLoading ||
     expensesLoading ||
     categoriesLoading;
+  const pendingReportCount = reports.filter(
+    (report) => report.status === "pending"
+  ).length;
 
   // 여행이 없으면 기본 날짜 범위 설정
   const defaultStartDate = currentTrip?.start_date || new Date().toISOString().split("T")[0];
@@ -158,17 +177,57 @@ function DashboardContent() {
     }
   }, [searchParams, trips, selectedTripId, router]);
 
+  const handleApproveReport = async (report: ExpenseReport) => {
+    if (!selectedTripId) {
+      throw new Error("여행이 선택되지 않았습니다.");
+    }
+
+    const payerId = report.payer_id || report.reporter_id;
+    if (!payerId) {
+      throw new Error("결제자 정보가 없는 제보입니다.");
+    }
+
+    const createdExpense = await addExpense(
+      {
+        trip_id: selectedTripId,
+        amount: report.amount,
+        item_name: report.item_name,
+        category_id: report.category_id || undefined,
+        payer_id: payerId,
+        payment_type: report.payment_type,
+        currency: report.currency,
+        settlement_type: "equal",
+        date: report.date,
+        end_date: report.date,
+        expense_date: report.date,
+        receipt_image_url: report.receipt_image_url,
+        memo: report.ocr_text ? `지출 제보 OCR:\n${report.ocr_text}` : undefined,
+      },
+      report.participant_ids
+    );
+
+    await updateReportStatus(report.id, "approved", createdExpense.id);
+    await refetchExpenses();
+    await refetchReports();
+  };
+
+  const handleRejectReport = async (report: ExpenseReport) => {
+    await updateReportStatus(report.id, "rejected");
+    await refetchReports();
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 safe-area">
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-6">
+      <div className="mx-auto max-w-4xl px-4 pb-28 pt-4 sm:py-8">
+        <div className="mb-4 space-y-3 sm:mb-6">
+          <div className="flex items-center justify-between gap-3">
           <Link href="/">
             <Button variant="ghost" size="sm">
               <ArrowLeft className="h-4 w-4 mr-1" />
               뒤로
             </Button>
           </Link>
-          <div className="flex gap-2">
+          <div className="hidden gap-2 sm:flex">
             <Link
               href={
                 selectedTripId
@@ -183,6 +242,7 @@ function DashboardContent() {
             </Link>
             <Link href={selectedTripId ? `/settings?trip=${selectedTripId}` : "/settings"}>
               <Button variant="outline" size="sm">
+                <Settings className="h-4 w-4 mr-1" />
                 총무 관리
               </Button>
             </Link>
@@ -191,6 +251,7 @@ function DashboardContent() {
               size="sm"
               onClick={() => setShowShareModal(true)}
             >
+              <Share2 className="h-4 w-4 mr-1" />
               정산 대시보드
             </Button>
             <Link
@@ -206,6 +267,36 @@ function DashboardContent() {
               </Button>
             </Link>
           </div>
+          </div>
+          <div className="grid grid-cols-3 gap-2 sm:hidden">
+            <Link
+              href={
+                selectedTripId
+                  ? `/participants?trip=${selectedTripId}`
+                  : "/participants"
+              }
+            >
+              <Button variant="outline" size="sm" className="w-full flex-col gap-1 px-2 text-xs">
+                <Users className="h-4 w-4" />
+                참가자
+              </Button>
+            </Link>
+            <Link href={selectedTripId ? `/settings?trip=${selectedTripId}` : "/settings"}>
+              <Button variant="outline" size="sm" className="w-full flex-col gap-1 px-2 text-xs">
+                <Settings className="h-4 w-4" />
+                총무
+              </Button>
+            </Link>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowShareModal(true)}
+              className="w-full flex-col gap-1 px-2 text-xs"
+            >
+              <Share2 className="h-4 w-4" />
+              공유
+            </Button>
+          </div>
         </div>
 
         {/* 여행이 없으면 홈으로 리다이렉트 */}
@@ -218,21 +309,71 @@ function DashboardContent() {
           </div>
         ) : currentTrip ? (
           <>
-            <h1 className="text-3xl font-bold text-gray-900 mb-6">
+            <h1 className="mb-4 break-words text-2xl font-bold text-gray-900 sm:mb-6 sm:text-3xl">
               {currentTrip.name}
             </h1>
+
+            <div className="mb-4 grid grid-cols-3 gap-2">
+              <button
+                type="button"
+                onClick={() => setActiveTab("overview")}
+                className={cn(
+                  "flex min-h-[44px] items-center justify-center gap-2 rounded-lg border-2 px-2 text-sm font-medium transition-colors",
+                  activeTab === "overview"
+                    ? "border-blue-500 bg-blue-50 text-blue-700"
+                    : "border-gray-200 bg-white text-gray-700"
+                )}
+              >
+                <ClipboardList className="h-4 w-4" />
+                <span className="hidden sm:inline">전체 대시보드</span>
+                <span className="sm:hidden">전체</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab("personal")}
+                className={cn(
+                  "flex min-h-[44px] items-center justify-center gap-2 rounded-lg border-2 px-2 text-sm font-medium transition-colors",
+                  activeTab === "personal"
+                    ? "border-blue-500 bg-blue-50 text-blue-700"
+                    : "border-gray-200 bg-white text-gray-700"
+                )}
+              >
+                <UserRound className="h-4 w-4" />
+                <span className="hidden sm:inline">개인별 정산</span>
+                <span className="sm:hidden">개인</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab("reports")}
+                className={cn(
+                  "relative flex min-h-[44px] items-center justify-center gap-2 rounded-lg border-2 px-2 text-sm font-medium transition-colors",
+                  activeTab === "reports"
+                    ? "border-blue-500 bg-blue-50 text-blue-700"
+                    : "border-gray-200 bg-white text-gray-700"
+                )}
+              >
+                <ReceiptText className="h-4 w-4" />
+                <span className="hidden sm:inline">지출 제보함</span>
+                <span className="sm:hidden">제보</span>
+                {pendingReportCount > 0 && (
+                  <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-xs font-bold text-white">
+                    {pendingReportCount}
+                  </span>
+                )}
+              </button>
+            </div>
 
 
         {loading ? (
           <div className="text-center py-12 text-gray-500">로딩 중...</div>
-        ) : (
+        ) : activeTab === "overview" ? (
           <>
             {/* 총 사용금액 카드 */}
             <Card className="mb-4">
-              <div className="flex items-center justify-between p-4">
+              <div className="flex items-center justify-between gap-3">
                 <div>
                   <div className="text-sm text-gray-600 mb-1">총쓴돈</div>
-                  <div className="text-2xl font-bold text-gray-900">
+                  <div className="break-all text-2xl font-bold text-gray-900 sm:text-3xl">
                     {formatCurrency(totalAmount, "KRW")}
                   </div>
                 </div>
@@ -283,7 +424,7 @@ function DashboardContent() {
               {selectedDate ? (
                 <>
                   <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-xl font-semibold">
+                    <h2 className="text-lg font-semibold sm:text-xl">
                       {format(selectedDate, "yyyy년 M월 d일 (EEE)", {
                         locale: ko,
                       })}
@@ -365,7 +506,7 @@ function DashboardContent() {
 
             {/* 지출 패턴 분석 */}
             {expenses.length > 0 && categories.length > 0 && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div className="grid grid-cols-1 gap-4 mb-6 md:grid-cols-2 md:gap-6">
                   <ExpenseChart
                     expenses={expenses}
                     categories={categories}
@@ -379,11 +520,43 @@ function DashboardContent() {
                 </div>
               )}
           </>
+        ) : activeTab === "personal" ? (
+          <PersonalSettlementPanel
+            participants={participants}
+            expenses={expenses}
+            userTotals={userTotals}
+            transfers={transfers}
+          />
+        ) : (
+          <ExpenseReportInbox
+            reports={reports}
+            participants={participants}
+            loading={reportsLoading}
+            error={reportsError}
+            onApprove={handleApproveReport}
+            onReject={handleRejectReport}
+          />
         )}
         </>
         ) : null}
       </div>
       <PWAInstallPrompt />
+      {currentTrip && (
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-gray-200 bg-white/95 px-4 pt-3 shadow-[0_-8px_24px_rgba(15,23,42,0.08)] backdrop-blur bottom-safe sm:hidden">
+          <Link
+            href={
+              selectedTripId
+                ? `/add-expense?trip=${selectedTripId}`
+                : "/add-expense"
+            }
+          >
+            <Button variant="primary" size="lg" className="w-full">
+              <Plus className="h-5 w-5 mr-2" />
+              지출 추가
+            </Button>
+          </Link>
+        </div>
+      )}
       <CreateSharedDashboardModal
         isOpen={showShareModal}
         onClose={() => setShowShareModal(false)}
@@ -432,7 +605,7 @@ function DashboardContent() {
         title="지출 수정"
         size="lg"
       >
-        <div className="p-4">
+        <div>
           {editingExpense && (
             <ExpenseForm
               participants={participants}
@@ -492,4 +665,3 @@ export default function DashboardPage() {
     </Suspense>
   );
 }
-

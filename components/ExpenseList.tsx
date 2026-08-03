@@ -127,7 +127,7 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
   }, {} as Record<string, Expense[]>);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {Object.entries(groupedByDate).map(([date, dateExpenses]) => (
         <div key={date}>
           <div className="space-y-3">
@@ -155,21 +155,21 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
                     }
                   }}
                 >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <h4 className="font-semibold text-lg">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="min-w-0 flex-1">
+                      <div className="mb-2 flex flex-wrap items-center gap-2">
+                        <h4 className="min-w-0 break-words text-base font-semibold sm:text-lg">
                           {expense.item_name}
                         </h4>
                         {expense.category && (
-                          <span className="text-sm text-gray-500">
+                          <span className="rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-600 sm:text-sm">
                             {expense.category}
                           </span>
                         )}
                       </div>
                       <div className="space-y-1 text-sm text-gray-600">
-                        <div className="flex items-center gap-2">
-                          <span className="font-semibold text-base text-gray-900">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="break-all text-base font-semibold text-gray-900">
                             {formatCurrency(expense.amount, expense.currency)}
                           </span>
                           <span className="text-xs">
@@ -198,14 +198,14 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
                       </div>
                     </div>
                     {(onEdit || onDelete) && (
-                      <div className="flex gap-2 ml-4">
+                      <div className="flex gap-2 sm:ml-4">
                         {onEdit && (
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
                               onEdit(expense);
                             }}
-                            className="px-3 py-1 text-sm text-blue-600 hover:bg-blue-50 rounded-lg"
+                            className="min-h-[40px] flex-1 rounded-lg px-3 py-1 text-sm text-blue-600 hover:bg-blue-50 sm:flex-none"
                           >
                             수정
                           </button>
@@ -216,7 +216,7 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
                               e.stopPropagation();
                               onDelete(expense.id);
                             }}
-                            className="px-3 py-1 text-sm text-red-600 hover:bg-red-50 rounded-lg"
+                            className="min-h-[40px] flex-1 rounded-lg px-3 py-1 text-sm text-red-600 hover:bg-red-50 sm:flex-none"
                           >
                             삭제
                           </button>
@@ -246,14 +246,14 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
           }}
           title="지출 상세 내역"
         >
-          <div className="p-4 space-y-4">
+          <div className="space-y-4">
             {/* 기본 정보 */}
             <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-100">
-              <h3 className="text-xl font-bold text-gray-900 mb-2">
+              <h3 className="mb-2 break-words text-xl font-bold text-gray-900">
                 {selectedExpense.item_name}
               </h3>
-              <div className="flex items-center gap-2 mb-3">
-                <span className="text-2xl font-bold text-blue-600">
+              <div className="mb-3 flex flex-wrap items-center gap-2">
+                <span className="break-all text-2xl font-bold text-blue-600">
                   {formatCurrency(selectedExpense.amount, selectedExpense.currency)}
                 </span>
                 {selectedExpense.category && (
@@ -262,7 +262,7 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
                   </span>
                 )}
               </div>
-              <div className="grid grid-cols-2 gap-2 text-sm">
+              <div className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
                 <div>
                   <span className="text-gray-600">결제일:</span>
                   <span className="ml-2 font-medium">
@@ -275,20 +275,20 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
                     {selectedExpense.payment_type === "cash" ? "현금" : "카드"}
                   </span>
                 </div>
-                <div className="col-span-2">
+                <div className="sm:col-span-2">
                   <span className="text-gray-600">결제자:</span>
                   <span className="ml-2 font-medium">
                     {getParticipant(selectedExpense.payer_id)?.name}
                   </span>
                 </div>
                 {selectedExpense.location && (
-                  <div className="col-span-2">
+                  <div className="sm:col-span-2">
                     <span className="text-gray-600">📍 위치:</span>
                     <span className="ml-2 font-medium">{selectedExpense.location}</span>
                   </div>
                 )}
                 {selectedExpense.memo && (
-                  <div className="col-span-2">
+                  <div className="sm:col-span-2">
                     <span className="text-gray-600">메모:</span>
                     <div className="ml-2 text-gray-700 mt-1 text-xs">
                       {selectedExpense.memo}
@@ -325,7 +325,7 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
                         <>
                           <div className="p-3 bg-white rounded border border-yellow-300">
                             <div className="text-xs text-gray-600 mb-2">1단계: 총 금액을 날짜 수로 분배</div>
-                            <div className="font-mono text-sm">
+                            <div className="break-words font-mono text-xs sm:text-sm">
                               {formatCurrency(selectedExpense.amount, selectedExpense.currency)} ÷ {dates.length}일 
                               = {formatCurrency(dailyAmount, selectedExpense.currency)}/일
                               {dailyRemainder > 0 && <span className="text-xs text-gray-500"> (+나머지 {formatCurrency(dailyRemainder, selectedExpense.currency)})</span>}
@@ -345,7 +345,7 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
                                   <div className="text-xs font-medium text-gray-700 mb-1">
                                     {format(new Date(date), "M월 d일", { locale: ko })} ({dayParticipants.length}명)
                                   </div>
-                                  <div className="font-mono text-xs text-gray-600">
+                                  <div className="break-words font-mono text-xs text-gray-600">
                                     {formatCurrency(dateAmount, selectedExpense.currency)} ÷ {dayParticipants.length}명 
                                     = {formatCurrency(perPerson, selectedExpense.currency)}/인
                                     {remainder > 0 && <span className="text-gray-400"> (+나머지 {formatCurrency(remainder, selectedExpense.currency)})</span>}
@@ -372,7 +372,7 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
                     {selectedExpense.settlement_type === "equal" ? (
                       <>
                         <div className="p-3 bg-white rounded border border-yellow-300">
-                          <div className="font-mono text-sm">
+                          <div className="break-words font-mono text-xs sm:text-sm">
                             {formatCurrency(selectedExpense.amount, selectedExpense.currency)} ÷ {selectedExpense.expense_participants?.length || 0}명
                             = {formatCurrency(
                               Math.floor(selectedExpense.amount / (selectedExpense.expense_participants?.length || 1)),
@@ -411,7 +411,7 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
                 {calculateSplitDetails(selectedExpense).map((detail) => (
                   <div
                     key={detail.participantId}
-                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                    className="flex flex-col gap-2 rounded-lg bg-gray-50 p-3 sm:flex-row sm:items-center sm:justify-between"
                   >
                     <div>
                       <div className="font-medium">{detail.participantName}</div>
@@ -423,7 +423,7 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
                         </div>
                       )}
                     </div>
-                    <div className="text-lg font-bold text-blue-600">
+                    <div className="break-all text-lg font-bold text-blue-600">
                       {formatCurrency(detail.amount, selectedExpense.currency)}
                     </div>
                   </div>
@@ -432,7 +432,7 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
               
               {/* 총합 확인 */}
               <div className="mt-3 pt-3 border-t border-gray-200">
-                <div className="flex justify-between text-sm text-gray-600">
+                <div className="flex flex-col gap-1 text-sm text-gray-600 sm:flex-row sm:justify-between">
                   <span>합계:</span>
                   <span className="font-semibold">
                     {formatCurrency(
@@ -453,7 +453,7 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
                       setIsModalOpen(false);
                       onEdit(selectedExpense);
                     }}
-                    className="flex-1 px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100"
+                    className="min-h-[44px] flex-1 rounded-lg bg-blue-50 px-4 py-2 text-sm font-medium text-blue-600 hover:bg-blue-100"
                   >
                     수정
                   </button>
@@ -464,7 +464,7 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
                       setIsModalOpen(false);
                       onDelete(selectedExpense.id);
                     }}
-                    className="flex-1 px-4 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100"
+                    className="min-h-[44px] flex-1 rounded-lg bg-red-50 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-100"
                   >
                     삭제
                   </button>
@@ -477,4 +477,3 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
     </div>
   );
 };
-

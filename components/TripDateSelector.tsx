@@ -40,9 +40,9 @@ export const TripDateSelector: React.FC<TripDateSelectorProps> = ({
   const canGoNext = visibleStartIndex + 7 < dates.length;
 
   return (
-    <div className="bg-white rounded-xl p-4 shadow-sm">
+    <div className="rounded-lg bg-white p-3 shadow-sm sm:p-4">
       {/* 요일 표시 */}
-      <div className="flex gap-1 mb-2">
+      <div className="ml-9 mr-9 hidden gap-1 mb-2 sm:flex">
         {visibleDates.map((date, index) => {
           const dayOfWeek = getDay(date);
           return (
@@ -57,12 +57,12 @@ export const TripDateSelector: React.FC<TripDateSelectorProps> = ({
       </div>
 
       {/* 날짜 선택기 */}
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-2">
         <button
           onClick={() => setVisibleStartIndex(Math.max(0, visibleStartIndex - 7))}
           disabled={!canGoPrev}
           className={cn(
-            "p-1 rounded-lg transition-colors",
+            "min-h-[44px] min-w-[32px] rounded-lg transition-colors sm:min-w-[36px]",
             canGoPrev
               ? "hover:bg-gray-100 text-gray-600"
               : "text-gray-300 cursor-not-allowed"
@@ -72,7 +72,7 @@ export const TripDateSelector: React.FC<TripDateSelectorProps> = ({
           <ChevronLeft className="h-5 w-5" />
         </button>
 
-        <div className="flex-1 flex gap-1">
+        <div className="no-scrollbar -mx-1 flex flex-1 gap-1 overflow-x-auto px-1 sm:overflow-visible">
           {visibleDates.map((date) => {
             const isSelected = selectedDate && isSameDay(date, selectedDate);
             const hasExpense = hasExpenses(date);
@@ -84,8 +84,7 @@ export const TripDateSelector: React.FC<TripDateSelectorProps> = ({
                 key={date.toISOString()}
                 onClick={() => onDateSelect(date)}
                 className={cn(
-                  "flex-1 flex flex-col items-center justify-center p-2 rounded-lg transition-all relative",
-                  "min-h-[60px]",
+                  "relative flex min-h-[66px] min-w-[56px] flex-1 flex-col items-center justify-center rounded-lg p-2 transition-all sm:min-w-0",
                   isSelected
                     ? "bg-green-500 text-white"
                     : hasExpense
@@ -93,11 +92,14 @@ export const TripDateSelector: React.FC<TripDateSelectorProps> = ({
                     : "bg-gray-50 border-2 border-transparent text-gray-600 hover:bg-gray-100"
                 )}
               >
+                <span className="text-[11px] font-medium sm:hidden">
+                  {weekDays[getDay(date)]}
+                </span>
                 <span className="text-sm font-semibold">
                   {format(date, "d")}
                 </span>
                 {hasExpense && !isSelected && (
-                  <span className="text-xs mt-0.5 text-green-600 font-medium">
+                  <span className="mt-0.5 max-w-full truncate text-[10px] font-medium leading-tight text-green-600 sm:text-xs">
                     {expenseAmount > 0 && formatCurrency(expenseAmount, "KRW").replace("₩", "").trim()}
                   </span>
                 )}
@@ -117,7 +119,7 @@ export const TripDateSelector: React.FC<TripDateSelectorProps> = ({
           }
           disabled={!canGoNext}
           className={cn(
-            "p-1 rounded-lg transition-colors",
+            "min-h-[44px] min-w-[32px] rounded-lg transition-colors sm:min-w-[36px]",
             canGoNext
               ? "hover:bg-gray-100 text-gray-600"
               : "text-gray-300 cursor-not-allowed"
@@ -130,4 +132,3 @@ export const TripDateSelector: React.FC<TripDateSelectorProps> = ({
     </div>
   );
 };
-

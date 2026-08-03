@@ -1,14 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { SharedDashboard, DashboardSnapshot } from "@/lib/types";
+import {
+  createPasswordHash,
+  generateShareKey,
+  verifyPasswordHash,
+} from "@/lib/security";
 
 export function useSharedDashboard() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const createDashboard = async (
+  const createDashboard = useCallback(async (
     tripId: string | null,
     title: string,
     description: string,
@@ -31,7 +35,7 @@ export function useSharedDashboard() {
             description,
             start_date: startDate,
             end_date: endDate,
-            password_hash: password ? await hashPassword(password) : null,
+            password_hash: password ? await createPasswordHash(password) : null,
           },
         ] as any)
         .select()
@@ -51,9 +55,9 @@ export function useSharedDashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const getDashboard = async (shareKey: string, password?: string) => {
+  const getDashboard = useCallback(async (shareKey: string, password?: string) => {
     try {
       setLoading(true);
       const { data: dashboard, error: dashboardError } = await supabase
@@ -72,11 +76,17 @@ export function useSharedDashboard() {
         if (!password) {
           throw new Error("비밀번호가 필요합니다.");
         }
-        // In production, use proper password verification
-        // For now, simple check
-        const isValid = await verifyPassword(password, dashboardData.password_hash);
-        if (!isValid) {
+        const verification = await verifyPasswordHash(
+          password,
+          dashboardData.password_hash
+        );
+        if (!verification.isValid) {
           throw new Error("비밀번호가 올바르지 않습니다.");
+        }
+        if (verification.needsUpgrade) {
+          await (supabase.from("shared_dashboards") as any)
+            .update({ password_hash: await createPasswordHash(password) })
+            .eq("id", dashboardData.id);
         }
       }
 
@@ -95,8 +105,11 @@ export function useSharedDashboard() {
         .update({ view_count: (dashboardData.view_count || 0) + 1 })
         .eq("id", dashboardData.id);
 
+      const safeDashboard = { ...dashboardData };
+      delete safeDashboard.password_hash;
+
       return {
-        dashboard: dashboardData,
+        dashboard: safeDashboard,
         snapshots: snapshots || [],
       };
     } catch (err) {
@@ -107,9 +120,9 @@ export function useSharedDashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const createSnapshot = async (
+  const createSnapshot = useCallback(async (
     dashboardId: string,
     participantId: string | null,
     participantName: string,
@@ -143,7 +156,7 @@ export function useSharedDashboard() {
       setError(errorMessage);
       throw new Error(errorMessage);
     }
-  };
+  }, []);
 
   return {
     loading,
@@ -153,27 +166,3 @@ export function useSharedDashboard() {
     createSnapshot,
   };
 }
-
-function generateShareKey(): string {
-  const chars =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  let result = "";
-  for (let i = 0; i < 12; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return result;
-}
-
-async function hashPassword(password: string): Promise<string> {
-  // Simple hash for demo - in production use bcrypt or similar
-  return btoa(password);
-}
-
-async function verifyPassword(
-  password: string,
-  hash: string
-): Promise<boolean> {
-  // Simple verification for demo
-  return btoa(password) === hash;
-}
-

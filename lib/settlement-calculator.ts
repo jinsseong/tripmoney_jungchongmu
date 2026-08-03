@@ -6,7 +6,6 @@ import {
   SettlementBalance,
   SettlementTransfer,
 } from "./types";
-import { getDateRange } from "./utils";
 
 /**
  * 통합 정산 계산 (각 참여자가 부담해야 할 금액 계산)
@@ -192,10 +191,12 @@ export function optimizeTransfers(
 ): SettlementTransfer[] {
   const receivers = balances
     .filter((b) => b.net_balance > 0)
+    .map((b) => ({ ...b }))
     .sort((a, b) => b.net_balance - a.net_balance);
 
   const payers = balances
     .filter((b) => b.net_balance < 0)
+    .map((b) => ({ ...b }))
     .sort((a, b) => a.net_balance - b.net_balance);
 
   const transfers: SettlementTransfer[] = [];
@@ -288,4 +289,3 @@ export function validateTransfers(
       : "오류: 송금 계산이 정확하지 않습니다.",
   };
 }
-

@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS participants (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   name VARCHAR(100) NOT NULL,
   avatar_color VARCHAR(7) DEFAULT '#3B82F6',
+  avatar_url TEXT,
   phone VARCHAR(20),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -20,8 +21,18 @@ CREATE TABLE IF NOT EXISTS trips (
   end_date DATE NOT NULL,
   description TEXT,
   cover_image_url TEXT,
+  invite_key UUID DEFAULT gen_random_uuid() UNIQUE NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 2-1. trip_participants (여행별 참가자)
+CREATE TABLE IF NOT EXISTS trip_participants (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  trip_id UUID REFERENCES trips(id) ON DELETE CASCADE,
+  participant_id UUID REFERENCES participants(id) ON DELETE CASCADE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(trip_id, participant_id)
 );
 
 -- 3. categories (카테고리)
@@ -51,6 +62,7 @@ CREATE TABLE IF NOT EXISTS expenses (
   currency VARCHAR(10) DEFAULT 'KRW',
   settlement_type VARCHAR(20) DEFAULT 'equal',
   date DATE NOT NULL,
+  end_date DATE,
   expense_date DATE,
   receipt_image_url TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
@@ -66,7 +78,18 @@ CREATE TABLE IF NOT EXISTS expense_participants (
   UNIQUE(expense_id, participant_id)
 );
 
--- 6. shared_expenses (기간별 공유비용)
+-- 6. expense_daily_participants (다일자 지출 날짜별 참여자)
+-- 교통/숙박처럼 여러 날짜에 걸친 일반 지출을 날짜별 참여자로 나누어 정산합니다.
+CREATE TABLE IF NOT EXISTS expense_daily_participants (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  expense_id UUID REFERENCES expenses(id) ON DELETE CASCADE,
+  participant_id UUID REFERENCES participants(id) ON DELETE CASCADE,
+  date DATE NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(expense_id, participant_id, date)
+);
+
+-- 7. shared_expenses (기간별 공유비용, 레거시 호환)
 CREATE TABLE IF NOT EXISTS shared_expenses (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   trip_id UUID REFERENCES trips(id) ON DELETE CASCADE,
@@ -74,11 +97,12 @@ CREATE TABLE IF NOT EXISTS shared_expenses (
   total_amount INTEGER NOT NULL,
   start_date DATE NOT NULL,
   end_date DATE NOT NULL,
+  payer_id UUID REFERENCES participants(id),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- 7. daily_participations (공유비용 일별 참여자)
+-- 8. daily_participations (공유비용 일별 참여자, 레거시 호환)
 CREATE TABLE IF NOT EXISTS daily_participations (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   shared_expense_id UUID REFERENCES shared_expenses(id) ON DELETE CASCADE,
@@ -88,7 +112,7 @@ CREATE TABLE IF NOT EXISTS daily_participations (
   UNIQUE(shared_expense_id, date, participant_id)
 );
 
--- 8. shared_dashboards (공유 대시보드)
+-- 9. shared_dashboards (공유 대시보드)
 CREATE TABLE IF NOT EXISTS shared_dashboards (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   trip_id UUID REFERENCES trips(id) ON DELETE CASCADE,
@@ -105,7 +129,7 @@ CREATE TABLE IF NOT EXISTS shared_dashboards (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- 9. dashboard_snapshots (대시보드 스냅샷)
+-- 10. dashboard_snapshots (대시보드 스냅샷)
 CREATE TABLE IF NOT EXISTS dashboard_snapshots (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   dashboard_id UUID REFERENCES shared_dashboards(id) ON DELETE CASCADE,
@@ -118,19 +142,81 @@ CREATE TABLE IF NOT EXISTS dashboard_snapshots (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- 11. expense_reports (참가자 지출 제보)
+CREATE TABLE IF NOT EXISTS expense_reports (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  trip_id UUID REFERENCES trips(id) ON DELETE CASCADE,
+  reporter_id UUID REFERENCES participants(id) ON DELETE SET NULL,
+  item_name VARCHAR(200) NOT NULL,
+  amount INTEGER NOT NULL,
+  category_id UUID REFERENCES categories(id),
+  payer_id UUID REFERENCES participants(id) ON DELETE SET NULL,
+  payment_type VARCHAR(20) DEFAULT 'card',
+  currency VARCHAR(10) DEFAULT 'KRW',
+  date DATE NOT NULL,
+  receipt_image_url TEXT,
+  ocr_text TEXT,
+  participant_ids JSONB DEFAULT '[]'::jsonb,
+  status VARCHAR(20) DEFAULT 'pending',
+  approved_expense_id UUID REFERENCES expenses(id) ON DELETE SET NULL,
+  reviewed_at TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- ============================================
+-- 기존 DB 호환 컬럼 보정
+-- ============================================
+ALTER TABLE expenses
+ADD COLUMN IF NOT EXISTS end_date DATE;
+
+ALTER TABLE participants
+ADD COLUMN IF NOT EXISTS avatar_url TEXT;
+
+ALTER TABLE trips
+ADD COLUMN IF NOT EXISTS invite_key UUID DEFAULT gen_random_uuid();
+
+UPDATE trips
+SET invite_key = gen_random_uuid()
+WHERE invite_key IS NULL;
+
+ALTER TABLE trips
+ALTER COLUMN invite_key SET DEFAULT gen_random_uuid();
+
+ALTER TABLE trips
+ALTER COLUMN invite_key SET NOT NULL;
+
+ALTER TABLE shared_expenses
+ADD COLUMN IF NOT EXISTS payer_id UUID REFERENCES participants(id);
+
+ALTER TABLE expense_reports
+ADD COLUMN IF NOT EXISTS payer_id UUID REFERENCES participants(id) ON DELETE SET NULL;
+
+ALTER TABLE expense_reports
+ADD COLUMN IF NOT EXISTS approved_expense_id UUID REFERENCES expenses(id) ON DELETE SET NULL;
+
 -- ============================================
 -- 인덱스 생성
 -- ============================================
+CREATE INDEX IF NOT EXISTS idx_trip_participants_trip_id ON trip_participants(trip_id);
+CREATE INDEX IF NOT EXISTS idx_trip_participants_participant_id ON trip_participants(participant_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_trips_invite_key ON trips(invite_key);
 CREATE INDEX IF NOT EXISTS idx_expenses_trip_id ON expenses(trip_id);
 CREATE INDEX IF NOT EXISTS idx_expenses_payer_id ON expenses(payer_id);
 CREATE INDEX IF NOT EXISTS idx_expenses_category_id ON expenses(category_id);
 CREATE INDEX IF NOT EXISTS idx_expenses_date ON expenses(date);
 CREATE INDEX IF NOT EXISTS idx_expense_participants_expense_id ON expense_participants(expense_id);
 CREATE INDEX IF NOT EXISTS idx_expense_participants_participant_id ON expense_participants(participant_id);
+CREATE INDEX IF NOT EXISTS idx_expense_daily_participants_expense_id ON expense_daily_participants(expense_id);
+CREATE INDEX IF NOT EXISTS idx_expense_daily_participants_participant_id ON expense_daily_participants(participant_id);
+CREATE INDEX IF NOT EXISTS idx_expense_daily_participants_date ON expense_daily_participants(date);
 CREATE INDEX IF NOT EXISTS idx_shared_expenses_trip_id ON shared_expenses(trip_id);
 CREATE INDEX IF NOT EXISTS idx_daily_participations_shared_expense_id ON daily_participations(shared_expense_id);
 CREATE INDEX IF NOT EXISTS idx_shared_dashboards_share_key ON shared_dashboards(share_key);
 CREATE INDEX IF NOT EXISTS idx_dashboard_snapshots_dashboard_id ON dashboard_snapshots(dashboard_id);
+CREATE INDEX IF NOT EXISTS idx_expense_reports_trip_id ON expense_reports(trip_id);
+CREATE INDEX IF NOT EXISTS idx_expense_reports_reporter_id ON expense_reports(reporter_id);
+CREATE INDEX IF NOT EXISTS idx_expense_reports_status ON expense_reports(status);
 
 -- ============================================
 -- updated_at 자동 업데이트 함수 및 트리거
@@ -139,6 +225,16 @@ CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
   NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION set_default_end_date()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF NEW.end_date IS NULL THEN
+    NEW.end_date := NEW.date;
+  END IF;
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -159,6 +255,11 @@ CREATE TRIGGER update_expenses_updated_at
   BEFORE UPDATE ON expenses
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS trigger_set_default_end_date ON expenses;
+CREATE TRIGGER trigger_set_default_end_date
+  BEFORE INSERT OR UPDATE ON expenses
+  FOR EACH ROW EXECUTE FUNCTION set_default_end_date();
+
 DROP TRIGGER IF EXISTS update_shared_expenses_updated_at ON shared_expenses;
 CREATE TRIGGER update_shared_expenses_updated_at 
   BEFORE UPDATE ON shared_expenses
@@ -167,6 +268,11 @@ CREATE TRIGGER update_shared_expenses_updated_at
 DROP TRIGGER IF EXISTS update_shared_dashboards_updated_at ON shared_dashboards;
 CREATE TRIGGER update_shared_dashboards_updated_at 
   BEFORE UPDATE ON shared_dashboards
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_expense_reports_updated_at ON expense_reports;
+CREATE TRIGGER update_expense_reports_updated_at
+  BEFORE UPDATE ON expense_reports
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- ============================================
@@ -183,3 +289,31 @@ INSERT INTO categories (name, icon, color, is_default) VALUES
   ('기타', '💊', '#98D8C8', true)
 ON CONFLICT (name) DO NOTHING;
 
+-- ============================================
+-- 참가자 프로필 사진 Storage 버킷
+-- ============================================
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES (
+  'participant-avatars',
+  'participant-avatars',
+  true,
+  5242880,
+  ARRAY['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+)
+ON CONFLICT (id) DO UPDATE SET
+  public = true,
+  file_size_limit = 5242880,
+  allowed_mime_types = ARRAY['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES (
+  'expense-receipts',
+  'expense-receipts',
+  true,
+  8388608,
+  ARRAY['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+)
+ON CONFLICT (id) DO UPDATE SET
+  public = true,
+  file_size_limit = 8388608,
+  allowed_mime_types = ARRAY['image/jpeg', 'image/png', 'image/webp', 'image/gif'];

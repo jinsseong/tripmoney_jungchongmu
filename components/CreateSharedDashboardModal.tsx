@@ -111,8 +111,8 @@ export const CreateSharedDashboardModal: React.FC<
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          placeholder="비밀번호를 설정하면 보호됩니다"
-          helperText="비밀번호를 설정하지 않으면 누구나 링크로 접근할 수 있습니다"
+          placeholder="공유받을 사람에게 알려줄 비밀번호"
+          helperText="비밀번호를 설정하면 링크와 비밀번호가 모두 필요합니다"
         />
         <div className="flex gap-2">
           <Button
@@ -137,4 +137,3 @@ export const CreateSharedDashboardModal: React.FC<
     </Modal>
   );
 };
-

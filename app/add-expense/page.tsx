@@ -20,7 +20,9 @@ function AddExpenseContent() {
   const tripId = searchParams.get("trip");
   const { participants, loading: participantsLoading } = useTripParticipants(tripId);
   const { trips, updateTrip } = useTrips();
-  const { addExpense, refetch } = useExpenses(tripId || undefined);
+  const { addExpense, refetch } = useExpenses(tripId || undefined, undefined, {
+    enabled: Boolean(tripId),
+  });
   const [categories, setCategories] = useState<Category[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
   const router = useRouter();
@@ -120,7 +122,7 @@ function AddExpenseContent() {
   if (participants.length === 0) {
     return (
       <div className="min-h-screen bg-gray-50 safe-area">
-        <div className="max-w-2xl mx-auto px-4 py-8">
+        <div className="mx-auto max-w-2xl px-4 pb-8 pt-4 sm:py-8">
           <Link href={tripId ? `/dashboard?trip=${tripId}` : "/"}>
             <Button variant="ghost" size="sm" className="mb-4">
               <ArrowLeft className="h-4 w-4 mr-1" />
@@ -128,7 +130,7 @@ function AddExpenseContent() {
             </Button>
           </Link>
           <Card>
-            <div className="p-8 text-center">
+            <div className="py-8 text-center">
               <p className="text-gray-600 mb-4">
                 이 여행에 참여자가 없습니다. 먼저 참여자를 추가해주세요.
               </p>
@@ -144,26 +146,24 @@ function AddExpenseContent() {
 
   return (
     <div className="min-h-screen bg-gray-50 safe-area">
-      <div className="max-w-2xl mx-auto px-4 py-8">
+      <div className="mx-auto max-w-2xl px-4 pb-8 pt-4 sm:py-8">
         <Link href={tripId ? `/dashboard?trip=${tripId}` : "/dashboard"}>
-          <Button variant="ghost" size="sm" className="mb-6">
+          <Button variant="ghost" size="sm" className="mb-4 sm:mb-6">
             <ArrowLeft className="h-4 w-4 mr-1" />
             뒤로
           </Button>
         </Link>
 
-        <h1 className="text-3xl font-bold text-gray-900 mb-6">지출 추가</h1>
+        <h1 className="mb-4 text-2xl font-bold text-gray-900 sm:mb-6 sm:text-3xl">지출 추가</h1>
 
         <Card>
-          <div className="p-6">
-            <ExpenseForm
-              participants={participants}
-              categories={categories}
-              trip={currentTrip}
-              onTripUpdate={tripId ? handleTripUpdate : undefined}
-              onSubmit={handleSubmit}
-            />
-          </div>
+          <ExpenseForm
+            participants={participants}
+            categories={categories}
+            trip={currentTrip}
+            onTripUpdate={tripId ? handleTripUpdate : undefined}
+            onSubmit={handleSubmit}
+          />
         </Card>
       </div>
     </div>
@@ -181,4 +181,3 @@ export default function AddExpensePage() {
     </Suspense>
   );
 }
-

@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useMemo } from "react";
-import { Expense, Category, SharedExpense } from "@/lib/types";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { Expense, Category } from "@/lib/types";
 import {
   BarChart,
   Bar,
@@ -13,9 +13,8 @@ import {
   CartesianGrid,
   Tooltip,
   Legend,
-  ResponsiveContainer,
 } from "recharts";
-import { formatCurrency, getDateRange } from "@/lib/utils";
+import { formatCurrency } from "@/lib/utils";
 import { Card, CardHeader, CardTitle, CardContent } from "./ui/Card";
 
 interface ExpenseChartProps {
@@ -24,11 +23,41 @@ interface ExpenseChartProps {
   type?: "category" | "daily";
 }
 
+function useChartWidth() {
+  const ref = useRef<HTMLDivElement | null>(null);
+  const [width, setWidth] = useState(0);
+
+  useEffect(() => {
+    const element = ref.current;
+    if (!element) return;
+
+    const updateWidth = () => {
+      setWidth(Math.max(240, Math.floor(element.getBoundingClientRect().width)));
+    };
+
+    updateWidth();
+
+    if (typeof ResizeObserver === "undefined") {
+      window.addEventListener("resize", updateWidth);
+      return () => window.removeEventListener("resize", updateWidth);
+    }
+
+    const observer = new ResizeObserver(updateWidth);
+    observer.observe(element);
+
+    return () => observer.disconnect();
+  }, []);
+
+  return { ref, width };
+}
+
 export const ExpenseChart: React.FC<ExpenseChartProps> = ({
   expenses,
   categories,
   type = "category",
 }) => {
+  const { ref: chartRef, width: chartWidth } = useChartWidth();
+
   const categoryData = useMemo(() => {
     const categoryMap = new Map<string, number>();
 
@@ -84,14 +113,17 @@ export const ExpenseChart: React.FC<ExpenseChartProps> = ({
 
   if (type === "category") {
     return (
-      <Card>
+      <Card className="min-w-0 overflow-hidden">
         <CardHeader>
           <CardTitle>카테고리별 지출</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-80 min-h-[320px] w-full">
-            <ResponsiveContainer width="100%" height="100%" minHeight={320}>
-              <PieChart>
+          <div
+            ref={chartRef}
+            className="h-80 min-h-[320px] min-w-0 w-full overflow-hidden"
+          >
+            {chartWidth > 0 && (
+              <PieChart width={chartWidth} height={320}>
                 <Pie
                   data={categoryData}
                   cx="50%"
@@ -112,7 +144,7 @@ export const ExpenseChart: React.FC<ExpenseChartProps> = ({
                   formatter={(value: number) => formatCurrency(value, "KRW")}
                 />
               </PieChart>
-            </ResponsiveContainer>
+            )}
           </div>
           <div className="mt-4 space-y-2">
             {categoryData.map((item, index) => (
@@ -136,14 +168,22 @@ export const ExpenseChart: React.FC<ExpenseChartProps> = ({
   }
 
   return (
-    <Card>
+      <Card className="min-w-0 overflow-hidden">
       <CardHeader>
         <CardTitle>일별 지출 추이</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="h-80 min-h-[320px] w-full">
-          <ResponsiveContainer width="100%" height="100%" minHeight={320}>
-            <BarChart data={dailyData}>
+        <div
+          ref={chartRef}
+          className="h-80 min-h-[320px] min-w-0 w-full overflow-hidden"
+        >
+          {chartWidth > 0 && (
+            <BarChart
+              data={dailyData}
+              height={320}
+              margin={{ top: 8, right: 8, bottom: 8, left: -8 }}
+              width={chartWidth}
+            >
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="date" />
               <YAxis
@@ -157,10 +197,9 @@ export const ExpenseChart: React.FC<ExpenseChartProps> = ({
               <Legend />
               <Bar dataKey="amount" fill="#3b82f6" name="지출액" />
             </BarChart>
-          </ResponsiveContainer>
+          )}
         </div>
       </CardContent>
     </Card>
   );
 };
-

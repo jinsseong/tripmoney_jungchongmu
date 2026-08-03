@@ -17,7 +17,7 @@ export const Card = React.forwardRef<HTMLDivElement, CardProps>(
       <div
         ref={ref}
         className={cn(
-          "rounded-xl p-4 md:p-6",
+          "rounded-lg p-4 md:p-6",
           variants[variant],
           className
         )}
@@ -65,4 +65,3 @@ export const CardContent = React.forwardRef<
 ));
 
 CardContent.displayName = "CardContent";
-

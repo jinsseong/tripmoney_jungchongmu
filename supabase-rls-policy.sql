@@ -58,7 +58,16 @@ CREATE POLICY "Allow all operations on expense_participants" ON expense_particip
   USING (true)
   WITH CHECK (true);
 
--- 6. shared_expenses 테이블
+-- 6. expense_daily_participants 테이블
+ALTER TABLE expense_daily_participants ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow all operations on expense_daily_participants" ON expense_daily_participants;
+CREATE POLICY "Allow all operations on expense_daily_participants" ON expense_daily_participants
+  FOR ALL
+  USING (true)
+  WITH CHECK (true);
+
+-- 7. shared_expenses 테이블
 ALTER TABLE shared_expenses ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Allow all operations on shared_expenses" ON shared_expenses;
@@ -67,7 +76,7 @@ CREATE POLICY "Allow all operations on shared_expenses" ON shared_expenses
   USING (true)
   WITH CHECK (true);
 
--- 7. daily_participations 테이블
+-- 8. daily_participations 테이블
 ALTER TABLE daily_participations ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Allow all operations on daily_participations" ON daily_participations;
@@ -76,7 +85,7 @@ CREATE POLICY "Allow all operations on daily_participations" ON daily_participat
   USING (true)
   WITH CHECK (true);
 
--- 8. shared_dashboards 테이블
+-- 9. shared_dashboards 테이블
 ALTER TABLE shared_dashboards ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Allow all operations on shared_dashboards" ON shared_dashboards;
@@ -85,7 +94,7 @@ CREATE POLICY "Allow all operations on shared_dashboards" ON shared_dashboards
   USING (true)
   WITH CHECK (true);
 
--- 9. dashboard_snapshots 테이블
+-- 10. dashboard_snapshots 테이블
 ALTER TABLE dashboard_snapshots ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Allow all operations on dashboard_snapshots" ON dashboard_snapshots;
@@ -93,6 +102,69 @@ CREATE POLICY "Allow all operations on dashboard_snapshots" ON dashboard_snapsho
   FOR ALL
   USING (true)
   WITH CHECK (true);
+
+-- 11. expense_reports 테이블
+ALTER TABLE expense_reports ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow all operations on expense_reports" ON expense_reports;
+CREATE POLICY "Allow all operations on expense_reports" ON expense_reports
+  FOR ALL
+  USING (true)
+  WITH CHECK (true);
+
+-- 12. participant-avatars Storage 버킷
+-- 개발/MVP 단계에서 초대받은 참가자가 직접 프로필 사진을 업로드할 수 있게 허용합니다.
+DROP POLICY IF EXISTS "Allow public read on participant avatars" ON storage.objects;
+CREATE POLICY "Allow public read on participant avatars" ON storage.objects
+  FOR SELECT
+  TO anon, authenticated
+  USING (bucket_id = 'participant-avatars');
+
+DROP POLICY IF EXISTS "Allow public upload on participant avatars" ON storage.objects;
+CREATE POLICY "Allow public upload on participant avatars" ON storage.objects
+  FOR INSERT
+  TO anon, authenticated
+  WITH CHECK (bucket_id = 'participant-avatars');
+
+DROP POLICY IF EXISTS "Allow public update on participant avatars" ON storage.objects;
+CREATE POLICY "Allow public update on participant avatars" ON storage.objects
+  FOR UPDATE
+  TO anon, authenticated
+  USING (bucket_id = 'participant-avatars')
+  WITH CHECK (bucket_id = 'participant-avatars');
+
+DROP POLICY IF EXISTS "Allow public delete on participant avatars" ON storage.objects;
+CREATE POLICY "Allow public delete on participant avatars" ON storage.objects
+  FOR DELETE
+  TO anon, authenticated
+  USING (bucket_id = 'participant-avatars');
+
+-- 13. expense-receipts Storage 버킷
+-- 개발/MVP 단계에서 참가자가 영수증 이미지를 제보할 수 있게 허용합니다.
+DROP POLICY IF EXISTS "Allow public read on expense receipts" ON storage.objects;
+CREATE POLICY "Allow public read on expense receipts" ON storage.objects
+  FOR SELECT
+  TO anon, authenticated
+  USING (bucket_id = 'expense-receipts');
+
+DROP POLICY IF EXISTS "Allow public upload on expense receipts" ON storage.objects;
+CREATE POLICY "Allow public upload on expense receipts" ON storage.objects
+  FOR INSERT
+  TO anon, authenticated
+  WITH CHECK (bucket_id = 'expense-receipts');
+
+DROP POLICY IF EXISTS "Allow public update on expense receipts" ON storage.objects;
+CREATE POLICY "Allow public update on expense receipts" ON storage.objects
+  FOR UPDATE
+  TO anon, authenticated
+  USING (bucket_id = 'expense-receipts')
+  WITH CHECK (bucket_id = 'expense-receipts');
+
+DROP POLICY IF EXISTS "Allow public delete on expense receipts" ON storage.objects;
+CREATE POLICY "Allow public delete on expense receipts" ON storage.objects
+  FOR DELETE
+  TO anon, authenticated
+  USING (bucket_id = 'expense-receipts');
 
 -- ============================================
 -- 참고: RLS를 완전히 비활성화하려면 (개발용)
@@ -102,8 +174,9 @@ CREATE POLICY "Allow all operations on dashboard_snapshots" ON dashboard_snapsho
 -- ALTER TABLE categories DISABLE ROW LEVEL SECURITY;
 -- ALTER TABLE expenses DISABLE ROW LEVEL SECURITY;
 -- ALTER TABLE expense_participants DISABLE ROW LEVEL SECURITY;
+-- ALTER TABLE expense_daily_participants DISABLE ROW LEVEL SECURITY;
 -- ALTER TABLE shared_expenses DISABLE ROW LEVEL SECURITY;
 -- ALTER TABLE daily_participations DISABLE ROW LEVEL SECURITY;
 -- ALTER TABLE shared_dashboards DISABLE ROW LEVEL SECURITY;
 -- ALTER TABLE dashboard_snapshots DISABLE ROW LEVEL SECURITY;
-
+-- ALTER TABLE expense_reports DISABLE ROW LEVEL SECURITY;

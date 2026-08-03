@@ -89,6 +89,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
   );
   const [currency, setCurrency] = useState(initialExpense?.currency || "KRW");
   const [isLoading, setIsLoading] = useState(false);
+  const [formError, setFormError] = useState("");
   const [showDateWarningModal, setShowDateWarningModal] = useState(false);
   const [pendingExpenseData, setPendingExpenseData] = useState<{
     expense: Partial<Expense>;
@@ -214,9 +215,80 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
     };
   };
 
+  const parseMoneyInput = (value: string) =>
+    parseInt(value.replace(/,/g, "") || "0");
+
+  const totalAmount = parseMoneyInput(amount);
+  const customAmountTotal =
+    settlementType === "custom"
+      ? selectedParticipantIds.reduce(
+          (sum, pid) => sum + parseMoneyInput(customAmounts[pid] || ""),
+          0
+        )
+      : 0;
+  const customAmountDiff = totalAmount - customAmountTotal;
+  const hasMissingCustomAmount =
+    settlementType === "custom" &&
+    selectedParticipantIds.some(
+      (id) => parseMoneyInput(customAmounts[id] || "") <= 0
+    );
+  const hasCustomAmountMismatch =
+    settlementType === "custom" &&
+    totalAmount > 0 &&
+    selectedParticipantIds.length > 0 &&
+    customAmountTotal !== totalAmount;
+  const missingDailyParticipantDates =
+    isMultiDayCategory && endDate
+      ? getDateRange(date, endDate).filter(
+          (dateStr) => (dailyParticipants[dateStr] || []).length === 0
+        )
+      : [];
+
+  const getFormValidationMessage = () => {
+    if (totalAmount <= 0) {
+      return "금액은 1원 이상 입력해주세요.";
+    }
+    if (!itemName.trim()) {
+      return "지출 내용을 입력해주세요.";
+    }
+    if (!payerId) {
+      return "결제자를 선택해주세요.";
+    }
+    if (selectedParticipantIds.length === 0) {
+      return "참여자를 한 명 이상 선택해주세요.";
+    }
+    if (missingDailyParticipantDates.length > 0) {
+      return "날짜별 참여자가 비어 있는 날짜가 있습니다.";
+    }
+    if (hasMissingCustomAmount) {
+      return "직접 정산 금액은 선택한 참여자마다 1원 이상 입력해주세요.";
+    }
+    if (hasCustomAmountMismatch) {
+      return "직접 정산 금액의 합계가 총 금액과 일치해야 합니다.";
+    }
+
+    return "";
+  };
+
+  const validationMessage = getFormValidationMessage();
+  const isSubmitDisabled = Boolean(validationMessage) || isLoading;
+  const hasStartedForm =
+    Boolean(amount) ||
+    Boolean(itemName.trim()) ||
+    Boolean(categoryId) ||
+    Boolean(payerId) ||
+    selectedParticipantIds.length > 0 ||
+    Boolean(location.trim()) ||
+    Boolean(memo.trim());
+  const visibleValidationMessage =
+    formError || (hasStartedForm ? validationMessage : "");
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!amount || !itemName || !payerId || selectedParticipantIds.length === 0) {
+    setFormError("");
+
+    if (validationMessage) {
+      setFormError(validationMessage);
       return;
     }
 
@@ -247,7 +319,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
         customAmounts: settlementType === "custom" ? Object.fromEntries(
           selectedParticipantIds.map((pid) => {
             const amountValue = customAmounts[pid];
-            return [pid, amountValue ? parseInt(amountValue.replace(/,/g, "")) : 0];
+            return [pid, parseMoneyInput(amountValue || "")];
           })
         ) : undefined,
         dailyParticipants: isMultiDayCategory && endDate ? dailyParticipants : undefined,
@@ -279,7 +351,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
         dailyParticipantsData = pendingExpenseData.dailyParticipants;
       } else {
         expenseData = {
-          amount: parseInt(amount.replace(/,/g, "")),
+          amount: totalAmount,
           item_name: itemName,
           description: description || undefined,
           location: location || undefined,
@@ -300,7 +372,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
           selectedParticipantIds.forEach((pid) => {
             const amountValue = customAmounts[pid];
             if (amountValue) {
-              customAmountsMap![pid] = parseInt(amountValue.replace(/,/g, ""));
+              customAmountsMap![pid] = parseMoneyInput(amountValue);
             }
           });
         }
@@ -347,6 +419,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
   const handleAmountChange = (value: string) => {
     const numericValue = value.replace(/[^0-9]/g, "");
     setAmount(numericValue);
+    setFormError("");
   };
 
   const handleCustomAmountChange = (participantId: string, value: string) => {
@@ -355,9 +428,9 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
       ...prev,
       [participantId]: numericValue,
     }));
+    setFormError("");
   };
 
-  const totalAmount = parseInt(amount.replace(/,/g, "") || "0");
   const perPersonAmount =
     settlementType === "equal" && selectedParticipantIds.length > 0
       ? Math.floor(totalAmount / selectedParticipantIds.length)
@@ -368,7 +441,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
       : 0;
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-6 pb-1">
       {/* 금액 입력 */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -381,15 +454,20 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
             value={amount ? formatNumber(parseInt(amount.replace(/,/g, ""))) : ""}
             onChange={(e) => handleAmountChange(e.target.value)}
             placeholder="0"
-            className="w-full h-14 text-2xl font-bold text-center border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full h-14 rounded-lg border-2 border-gray-300 text-center text-2xl font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             required
           />
         </div>
-        <div className="flex gap-2 mt-2">
+        {amount && totalAmount <= 0 && (
+          <p className="mt-2 text-sm text-red-600">
+            금액은 1원 이상 입력해주세요.
+          </p>
+        )}
+        <div className="mt-2 grid grid-cols-2 gap-2">
           <select
             value={currency}
             onChange={(e) => setCurrency(e.target.value)}
-            className="px-3 py-1 border border-gray-300 rounded-lg text-sm"
+            className="h-11 min-w-0 rounded-lg border border-gray-300 px-3 text-sm"
           >
             <option value="KRW">KRW</option>
             <option value="USD">USD</option>
@@ -399,7 +477,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
           <select
             value={paymentType}
             onChange={(e) => setPaymentType(e.target.value as "cash" | "card")}
-            className="px-3 py-1 border border-gray-300 rounded-lg text-sm"
+            className="h-11 min-w-0 rounded-lg border border-gray-300 px-3 text-sm"
           >
             <option value="cash">현금</option>
             <option value="card">카드</option>
@@ -412,14 +490,17 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
         <label className="block text-sm font-medium text-gray-700 mb-2">
           카테고리
         </label>
-        <div className="flex gap-2 overflow-x-auto pb-2">
+        <div className="no-scrollbar -mx-1 flex snap-x gap-2 overflow-x-auto px-1 pb-2">
           {categories.map((category) => (
             <button
               key={category.id}
               type="button"
-              onClick={() => setCategoryId(category.id)}
+              onClick={() => {
+                setCategoryId(category.id);
+                setFormError("");
+              }}
               className={cn(
-                "flex flex-col items-center gap-1 px-4 py-3 rounded-lg border-2 min-w-[80px] transition-all",
+                "flex min-h-[76px] min-w-[76px] snap-start flex-col items-center justify-center gap-1 rounded-lg border-2 px-3 py-3 transition-all",
                 categoryId === category.id
                   ? "border-blue-500 bg-blue-50"
                   : "border-gray-200 bg-white hover:border-gray-300"
@@ -436,14 +517,17 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
       <Input
         label="지출 내용"
         value={itemName}
-        onChange={(e) => setItemName(e.target.value)}
+        onChange={(e) => {
+          setItemName(e.target.value);
+          setFormError("");
+        }}
         placeholder="예: 점심 식사"
         required
       />
 
       {/* 날짜 */}
       <div className="space-y-2">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               {isMultiDayCategory ? "시작일" : "날짜"}
@@ -451,7 +535,10 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
             <input
               type="date"
               value={date}
-              onChange={(e) => setDate(e.target.value)}
+              onChange={(e) => {
+                setDate(e.target.value);
+                setFormError("");
+              }}
               className={cn(
                 "w-full h-11 rounded-lg border px-3 focus:outline-none focus:ring-2 focus:ring-blue-500",
                 trip && !isDateWithinTripRange(date) && !isMultiDayCategory
@@ -469,7 +556,10 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
               <input
                 type="date"
                 value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
+                onChange={(e) => {
+                  setEndDate(e.target.value);
+                  setFormError("");
+                }}
                 min={date}
                 className={cn(
                   "w-full h-11 rounded-lg border px-3 focus:outline-none focus:ring-2 focus:ring-blue-500",
@@ -483,8 +573,8 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
         </div>
         {trip && !getDateRangeValidation().isValid && (
           <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
-            <p className="text-sm text-orange-800">
-              ⚠️ 이 날짜는 여행 기간({new Date(trip.start_date).toLocaleDateString("ko-KR")} ~ {new Date(trip.end_date).toLocaleDateString("ko-KR")}) 외부입니다. 추가 시 여행 기간이 자동으로 확장됩니다.
+            <p className="text-sm leading-6 text-orange-800">
+              이 날짜는 여행 기간({new Date(trip.start_date).toLocaleDateString("ko-KR")} ~ {new Date(trip.end_date).toLocaleDateString("ko-KR")}) 외부입니다. 추가 시 여행 기간이 자동으로 확장됩니다.
             </p>
           </div>
         )}
@@ -497,7 +587,10 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
         </label>
         <select
           value={payerId}
-          onChange={(e) => setPayerId(e.target.value)}
+          onChange={(e) => {
+            setPayerId(e.target.value);
+            setFormError("");
+          }}
           className="w-full h-11 rounded-lg border border-gray-300 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
           required
         >
@@ -515,12 +608,15 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
         <label className="block text-sm font-medium text-gray-700 mb-2">
           정산 방법
         </label>
-        <div className="flex gap-2">
+        <div className="grid grid-cols-2 gap-2">
           <button
             type="button"
-            onClick={() => setSettlementType("equal")}
+            onClick={() => {
+              setSettlementType("equal");
+              setFormError("");
+            }}
             className={cn(
-              "flex-1 h-11 rounded-lg border-2 font-medium transition-all",
+              "min-h-[44px] rounded-lg border-2 px-2 font-medium transition-all",
               settlementType === "equal"
                 ? "border-blue-500 bg-blue-50 text-blue-700"
                 : "border-gray-200 bg-white text-gray-700"
@@ -530,9 +626,12 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
           </button>
           <button
             type="button"
-            onClick={() => setSettlementType("custom")}
+            onClick={() => {
+              setSettlementType("custom");
+              setFormError("");
+            }}
             className={cn(
-              "flex-1 h-11 rounded-lg border-2 font-medium transition-all",
+              "min-h-[44px] rounded-lg border-2 px-2 font-medium transition-all",
               settlementType === "custom"
                 ? "border-blue-500 bg-blue-50 text-blue-700"
                 : "border-gray-200 bg-white text-gray-700"
@@ -549,6 +648,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
           participants={participants}
           selectedIds={selectedParticipantIds}
           onToggle={(id) => {
+            setFormError("");
             if (selectedParticipantIds.includes(id)) {
               setSelectedParticipantIds(
                 selectedParticipantIds.filter((pid) => pid !== id)
@@ -574,6 +674,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
               participants={participants}
               selectedIds={selectedParticipantIds}
               onToggle={(id) => {
+                setFormError("");
                 if (selectedParticipantIds.includes(id)) {
                   const newIds = selectedParticipantIds.filter((pid) => pid !== id);
                   setSelectedParticipantIds(newIds);
@@ -604,7 +705,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
           </div>
 
           {/* 날짜별 참여자 선택 */}
-          <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
+          <div className="space-y-4 rounded-lg bg-gray-50 p-3 sm:p-4">
             <h3 className="text-sm font-medium text-gray-700">
               날짜별 참여자 선택
             </h3>
@@ -627,6 +728,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                         key={pid}
                         type="button"
                         onClick={() => {
+                          setFormError("");
                           setDailyParticipants((prev) => {
                             const updated = { ...prev };
                             if (isSelected) {
@@ -643,7 +745,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                           });
                         }}
                         className={cn(
-                          "px-3 py-1 text-sm rounded-lg border-2 transition-all",
+                          "min-h-[40px] rounded-lg border-2 px-3 py-1 text-sm transition-all",
                           isSelected
                             ? "border-blue-500 bg-blue-50 text-blue-700"
                             : "border-gray-200 bg-white text-gray-600"
@@ -656,6 +758,19 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                 </div>
               </div>
             ))}
+            {missingDailyParticipantDates.length > 0 && (
+              <p className="text-sm text-red-600">
+                참여자가 없는 날짜:{" "}
+                {missingDailyParticipantDates
+                  .map((dateStr) =>
+                    new Date(dateStr).toLocaleDateString("ko-KR", {
+                      month: "short",
+                      day: "numeric",
+                    })
+                  )
+                  .join(", ")}
+              </p>
+            )}
           </div>
         </>
       )}
@@ -669,8 +784,8 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
           {selectedParticipantIds.map((pid) => {
             const participant = participants.find((p) => p.id === pid);
             return (
-              <div key={pid} className="flex items-center gap-2">
-                <span className="w-20 text-sm font-medium">
+              <div key={pid} className="grid grid-cols-1 gap-2 sm:grid-cols-[5rem_1fr] sm:items-center">
+                <span className="text-sm font-medium sm:w-20">
                   {participant?.name}
                 </span>
                 <input
@@ -686,11 +801,34 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                     handleCustomAmountChange(pid, e.target.value)
                   }
                   placeholder="0"
-                  className="flex-1 h-11 rounded-lg border border-gray-300 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="h-11 min-w-0 rounded-lg border border-gray-300 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
             );
           })}
+          <div
+            className={cn(
+              "rounded-lg border p-3 text-sm",
+              hasMissingCustomAmount || hasCustomAmountMismatch
+                ? "border-red-200 bg-red-50 text-red-700"
+                : "border-green-200 bg-green-50 text-green-700"
+            )}
+          >
+            <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+              <span>직접 정산 합계</span>
+              <strong>
+                {formatCurrency(customAmountTotal, currency)} /{" "}
+                {formatCurrency(totalAmount, currency)}
+              </strong>
+            </div>
+            {hasCustomAmountMismatch && (
+              <p className="mt-1">
+                {customAmountDiff > 0
+                  ? `${formatCurrency(customAmountDiff, currency)} 부족합니다.`
+                  : `${formatCurrency(Math.abs(customAmountDiff), currency)} 초과했습니다.`}
+              </p>
+            )}
+          </div>
         </div>
       )}
 
@@ -700,7 +838,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
         selectedParticipantIds.length > 0 && (
           <div className="bg-blue-50 rounded-lg p-4">
             <p className="text-sm text-gray-600 mb-1">정산 미리보기</p>
-            <p className="text-lg font-semibold text-blue-700">
+            <p className="break-words text-base font-semibold text-blue-700 sm:text-lg">
               인당 {formatCurrency(perPersonAmount, currency)}
               {remainder > 0 && ` (+${formatCurrency(remainder, currency)} 첫 번째 참여자)`}
             </p>
@@ -711,7 +849,10 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
       <Input
         label="장소 (선택)"
         value={location}
-        onChange={(e) => setLocation(e.target.value)}
+        onChange={(e) => {
+          setLocation(e.target.value);
+          setFormError("");
+        }}
         placeholder="예: 강남역"
       />
 
@@ -721,14 +862,23 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
         </label>
         <textarea
           value={memo}
-          onChange={(e) => setMemo(e.target.value)}
+          onChange={(e) => {
+            setMemo(e.target.value);
+            setFormError("");
+          }}
           placeholder="추가 메모를 입력하세요"
           className="w-full h-24 rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
       </div>
 
+      {visibleValidationMessage && (
+        <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm font-medium text-red-700">
+          {visibleValidationMessage}
+        </div>
+      )}
+
       {/* 버튼 */}
-      <div className="flex gap-2">
+      <div className="sticky bottom-0 z-10 -mx-4 flex flex-col-reverse gap-2 border-t border-gray-100 bg-white/95 px-4 py-3 backdrop-blur sm:static sm:mx-0 sm:flex-row sm:border-t-0 sm:bg-transparent sm:px-0 sm:py-0 sm:backdrop-blur-none">
         {onCancel && (
           <Button
             type="button"
@@ -744,16 +894,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
           variant="primary"
           isLoading={isLoading}
           className="flex-1"
-          disabled={
-            !amount ||
-            !itemName ||
-            !payerId ||
-            selectedParticipantIds.length === 0 ||
-            (settlementType === "custom" &&
-              selectedParticipantIds.some(
-                (id) => !customAmounts[id] || parseInt(customAmounts[id].replace(/,/g, "") || "0") === 0
-              ))
-          }
+          disabled={isSubmitDisabled}
         >
           {isEditMode ? "수정하기" : "추가하기"}
         </Button>
@@ -817,4 +958,3 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
     </form>
   );
 };
-

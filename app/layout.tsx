@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { NetworkStatusBanner } from "@/components/NetworkStatusBanner";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -19,11 +20,20 @@ export const metadata: Metadata = {
   manifest: "/manifest.json",
   keywords: ["여행", "정산", "가계부", "비용관리", "친구", "여행경비"],
   authors: [{ name: "Travel Expense Team" }],
-  // icons: {
-  //   icon: "/icons/icon-192x192.png",
-  //   shortcut: "/icons/icon-192x192.png",
-  //   apple: "/icons/icon-192x192.png",
-  // },
+  appleWebApp: {
+    capable: true,
+    title: "내 머리속 정총무",
+    statusBarStyle: "default",
+  },
+  icons: {
+    icon: [
+      { url: "/icons/icon.svg", type: "image/svg+xml" },
+      { url: "/icons/icon-192x192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icons/icon-512x512.png", sizes: "512x512", type: "image/png" },
+    ],
+    shortcut: "/icons/icon-192x192.png",
+    apple: "/icons/icon-192x192.png",
+  },
 };
 
 export const viewport: Viewport = {
@@ -44,9 +54,6 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <head>
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="내 머리속 정총무" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="msapplication-TileColor" content="#3b82f6" />
         <meta name="msapplication-tap-highlight" content="no" />
@@ -54,6 +61,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <NetworkStatusBanner />
         {children}
       </body>
     </html>

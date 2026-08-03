@@ -108,19 +108,28 @@ export default function HomePage() {
             {trips.map((trip) => (
               <Card
                 key={trip.id}
-                className="hover:shadow-lg transition-shadow cursor-pointer group"
+                className="group cursor-pointer transition-shadow hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 active:scale-[0.99]"
                 onClick={() => handleSelectTrip(trip.id)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    handleSelectTrip(trip.id);
+                  }
+                }}
+                role="button"
+                tabIndex={0}
+                aria-label={`${trip.name} 대시보드 열기`}
               >
                 <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <h3 className="mb-2 break-words text-xl font-semibold text-gray-900">
                         {trip.name}
                       </h3>
                       <div className="space-y-1 text-sm text-gray-600">
-                        <div className="flex items-center gap-2">
-                          <Calendar className="h-4 w-4" />
-                          <span>
+                        <div className="flex items-start gap-2">
+                          <Calendar className="mt-0.5 h-4 w-4 shrink-0" />
+                          <span className="break-words">
                             {format(new Date(trip.start_date), "yyyy년 M월 d일", {
                               locale: ko,
                             })}{" "}
@@ -139,12 +148,13 @@ export default function HomePage() {
                       <Button
                         variant="outline"
                         size="sm"
+                        aria-label={`${trip.name} 삭제`}
                         onClick={(e) => handleDeleteTrip(e, trip.id, trip.name)}
-                        className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity text-red-600 hover:text-red-700 hover:bg-red-50"
+                        className="h-10 w-10 p-0 text-red-600 opacity-100 transition-opacity hover:bg-red-50 hover:text-red-700 sm:h-8 sm:w-8 sm:opacity-0 sm:group-hover:opacity-100"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
-                      <ArrowRight className="h-6 w-6 text-gray-400" />
+                      <ArrowRight className="mt-2 h-6 w-6 shrink-0 text-gray-400 sm:mt-1" />
                     </div>
                   </div>
                 </CardContent>

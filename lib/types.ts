@@ -2,6 +2,7 @@ export interface Participant {
   id: string;
   name: string;
   avatar_color: string;
+  avatar_url?: string;
   phone?: string;
   created_at: string;
 }
@@ -13,6 +14,7 @@ export interface Trip {
   end_date: string;
   description?: string;
   cover_image_url?: string;
+  invite_key?: string;
   created_at: string;
   updated_at: string;
 }
@@ -64,6 +66,29 @@ export interface ExpenseDailyParticipant {
   participant_id: string;
   date: string;
   created_at: string;
+}
+
+export type ExpenseReportStatus = "pending" | "approved" | "rejected";
+
+export interface ExpenseReport {
+  id: string;
+  trip_id: string;
+  reporter_id?: string;
+  item_name: string;
+  amount: number;
+  category_id?: string;
+  payer_id?: string;
+  payment_type: "cash" | "card";
+  currency: string;
+  date: string;
+  receipt_image_url?: string;
+  ocr_text?: string;
+  participant_ids: string[];
+  status: ExpenseReportStatus;
+  approved_expense_id?: string;
+  reviewed_at?: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface SharedExpense {
@@ -144,4 +169,3 @@ export interface UserTotal {
   totalOwed?: number;
   netBalance?: number;
 }
-

@@ -2,7 +2,7 @@
 
 export const dynamic = "force-dynamic";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useSharedDashboard } from "@/hooks/useSharedDashboard";
 import { useExpenses } from "@/hooks/useExpenses";
@@ -15,49 +15,96 @@ import { Modal } from "@/components/ui/Modal";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { formatCurrency } from "@/lib/utils";
+import {
+  calculateConsolidatedSettlement,
+  calculateSettlementBalance,
+  optimizeTransfers,
+} from "@/lib/settlement-calculator";
+import {
+  DashboardSnapshot,
+  SettlementTransfer,
+  SharedDashboard,
+  UserTotal,
+  Participant,
+} from "@/lib/types";
+
+type SharedDashboardResult = {
+  dashboard: SharedDashboard;
+  snapshots: DashboardSnapshot[];
+};
 
 export default function SettlementDashboardPage() {
   const params = useParams();
   const router = useRouter();
-  const shareKey = params.shareKey as string;
+  const shareKeyParam = params.shareKey;
+  const shareKey = Array.isArray(shareKeyParam)
+    ? shareKeyParam[0]
+    : shareKeyParam;
   const { getDashboard, loading } = useSharedDashboard();
-  const [dashboard, setDashboard] = useState<any>(null);
-  const [snapshots, setSnapshots] = useState<any[]>([]);
+  const [dashboard, setDashboard] = useState<SharedDashboard | null>(null);
+  const [snapshots, setSnapshots] = useState<DashboardSnapshot[]>([]);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [password, setPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
   
   // 정산 계산용 상태 (모든 useState는 최상단에!)
-  const [userTotals, setUserTotals] = useState<any[]>([]);
-  const [transfers, setTransfers] = useState<any[]>([]);
+  const [userTotals, setUserTotals] = useState<UserTotal[]>([]);
+  const [transfers, setTransfers] = useState<SettlementTransfer[]>([]);
   
   // trip_id가 있으면 지출 데이터 가져오기
   const tripId = dashboard?.trip_id || undefined;
-  const { expenses, loading: expensesLoading } = useExpenses(tripId);
+  const { expenses, loading: expensesLoading } = useExpenses(
+    tripId,
+    undefined,
+    { enabled: Boolean(tripId) }
+  );
   const { categories, loading: categoriesLoading } = useCategories();
 
-  useEffect(() => {
-    if (shareKey) {
-      loadDashboard();
-    }
-  }, [shareKey]);
-
-  const loadDashboard = async (providedPassword?: string) => {
+  const loadDashboard = useCallback(async (providedPassword?: string) => {
     try {
-      const result = await getDashboard(shareKey, providedPassword);
+      if (!shareKey) return;
+      const result = (await getDashboard(
+        shareKey,
+        providedPassword
+      )) as SharedDashboardResult;
       setDashboard(result.dashboard);
       setSnapshots(result.snapshots);
       setShowPasswordModal(false);
-    } catch (error: any) {
-      if (error.message.includes("비밀번호")) {
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "대시보드를 불러올 수 없습니다.";
+
+      if (message.includes("비밀번호")) {
         setShowPasswordModal(true);
-        setPasswordError(error.message);
+        setPasswordError(message);
       } else {
         alert("대시보드를 불러올 수 없습니다.");
         router.push("/");
       }
     }
-  };
+  }, [getDashboard, router, shareKey]);
+
+  useEffect(() => {
+    if (shareKey) {
+      loadDashboard();
+    }
+  }, [loadDashboard, shareKey]);
+
+  const snapshotParticipants: Participant[] = useMemo(
+    () =>
+      snapshots
+        .filter(
+          (snapshot): snapshot is DashboardSnapshot & { participant_id: string } =>
+            Boolean(snapshot.participant_id)
+        )
+        .map((snapshot) => ({
+          id: snapshot.participant_id,
+          name: snapshot.participant_name,
+          avatar_color: "",
+          created_at: "",
+        })),
+    [snapshots]
+  );
 
   const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,15 +115,11 @@ export default function SettlementDashboardPage() {
   // 실제 지출 데이터가 있으면 정산 계산, 없으면 스냅샷 데이터 사용
   useEffect(() => {
     if (dashboard?.trip_id && expenses.length > 0) {
-      // 실시간 정산 계산
-      const { calculateConsolidatedSettlement, calculateSettlementBalance, optimizeTransfers } = 
-        require("@/lib/settlement-calculator");
-      
-      const participants = snapshots.map((s) => ({
-        id: s.participant_id,
-        name: s.participant_name,
+      const participants = snapshotParticipants.map((participant) => ({
+        id: participant.id,
+        name: participant.name,
       }));
-      
+
       const totals = calculateConsolidatedSettlement(
         expenses,
         [],
@@ -86,8 +129,8 @@ export default function SettlementDashboardPage() {
       
       const balances = calculateSettlementBalance(expenses, [], totals);
       
-      const totalsWithBalance = totals.map((total: any) => {
-        const balance = balances.find((b: any) => b.participant_id === total.id);
+      const totalsWithBalance = totals.map((total) => {
+        const balance = balances.find((b) => b.participant_id === total.id);
         return {
           ...total,
           totalPaid: balance?.total_paid || 0,
@@ -107,12 +150,13 @@ export default function SettlementDashboardPage() {
         sharedAmount: snapshot.shared_amount,
         totalAmount: snapshot.total_amount,
         totalPaid: 0,
+        totalOwed: snapshot.total_amount,
         netBalance: 0,
       }));
       setUserTotals(snapshotTotals);
       setTransfers([]);
     }
-  }, [dashboard, expenses, snapshots]);
+  }, [dashboard, expenses, snapshotParticipants, snapshots]);
 
   // 모든 Hook 호출 이후에 early return
   if (loading && !dashboard) {
@@ -127,10 +171,12 @@ export default function SettlementDashboardPage() {
     return null;
   }
 
-  const totalAmount = snapshots.reduce(
-    (sum, s) => sum + s.total_amount,
-    0
-  );
+  const totalAmount =
+    expenses.length > 0
+      ? expenses.reduce((sum, expense) => sum + expense.amount, 0)
+      : snapshots.reduce((sum, snapshot) => sum + snapshot.total_amount, 0);
+  const isRefreshingDetails =
+    Boolean(dashboard?.trip_id) && (expensesLoading || categoriesLoading);
 
   return (
     <div className="min-h-screen bg-gray-50 safe-area">
@@ -155,6 +201,12 @@ export default function SettlementDashboardPage() {
             </div>
           </CardContent>
         </Card>
+
+        {isRefreshingDetails && (
+          <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm font-medium text-blue-700">
+            최신 지출 내역을 불러오는 중...
+          </div>
+        )}
 
         {/* 총 사용금액 */}
         <Card className="mb-6">
@@ -188,12 +240,7 @@ export default function SettlementDashboardPage() {
               <CardContent>
                 <ExpenseList
                   expenses={expenses}
-                  participants={snapshots.map((s) => ({
-                    id: s.participant_id,
-                    name: s.participant_name,
-                    avatar_color: "",
-                    created_at: "",
-                  }))}
+                  participants={snapshotParticipants}
                   showDetailModal={false}
                 />
               </CardContent>
@@ -258,4 +305,3 @@ export default function SettlementDashboardPage() {
     </div>
   );
 }
-

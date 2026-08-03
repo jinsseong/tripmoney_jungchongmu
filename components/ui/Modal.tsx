@@ -23,11 +23,11 @@ export const Modal: React.FC<ModalProps> = ({
   showCloseButton = true,
 }) => {
   const sizes = {
-    sm: "max-w-md",
-    md: "max-w-lg",
-    lg: "max-w-2xl",
-    xl: "max-w-4xl",
-    full: "max-w-full mx-4",
+    sm: "sm:max-w-md",
+    md: "sm:max-w-lg",
+    lg: "sm:max-w-2xl",
+    xl: "sm:max-w-4xl",
+    full: "sm:max-w-full",
   };
 
   return (
@@ -46,7 +46,7 @@ export const Modal: React.FC<ModalProps> = ({
         </Transition.Child>
 
         <div className="fixed inset-0 overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-4 text-center">
+          <div className="flex min-h-full items-end justify-center p-0 text-center sm:items-center sm:p-4">
             <Transition.Child
               as={Fragment}
               enter="ease-out duration-300"
@@ -58,16 +58,17 @@ export const Modal: React.FC<ModalProps> = ({
             >
               <Dialog.Panel
                 className={cn(
-                  "w-full transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all",
+                  "w-full transform overflow-hidden rounded-t-2xl bg-white text-left align-middle shadow-xl transition-all sm:rounded-2xl",
+                  "max-h-[92dvh] sm:max-h-[88dvh]",
                   sizes[size]
                 )}
               >
                 {(title || showCloseButton) && (
-                  <div className="flex items-center justify-between mb-4">
+                  <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-100 bg-white px-4 py-3 sm:px-6 sm:py-4">
                     {title && (
                       <Dialog.Title
                         as="h3"
-                        className="text-lg font-medium leading-6 text-gray-900"
+                        className="min-w-0 pr-3 text-base font-semibold leading-6 text-gray-900 sm:text-lg"
                       >
                         {title}
                       </Dialog.Title>
@@ -75,7 +76,7 @@ export const Modal: React.FC<ModalProps> = ({
                     {showCloseButton && (
                       <button
                         onClick={onClose}
-                        className="rounded-lg p-2 hover:bg-gray-100 transition-colors"
+                        className="min-h-[44px] min-w-[44px] rounded-lg p-2 hover:bg-gray-100 transition-colors"
                         aria-label="닫기"
                       >
                         <X className="h-5 w-5" />
@@ -83,7 +84,9 @@ export const Modal: React.FC<ModalProps> = ({
                     )}
                   </div>
                 )}
-                {children}
+                <div className="max-h-[calc(92dvh-68px)] overflow-y-auto px-4 py-4 pb-[calc(env(safe-area-inset-bottom)+1rem)] sm:max-h-[calc(88dvh-76px)] sm:px-6 sm:py-5">
+                  {children}
+                </div>
               </Dialog.Panel>
             </Transition.Child>
           </div>
@@ -92,4 +95,3 @@ export const Modal: React.FC<ModalProps> = ({
     </Transition>
   );
 };
-

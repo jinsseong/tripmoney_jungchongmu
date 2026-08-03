@@ -20,6 +20,8 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+  overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .safe-area {
@@ -27,4 +29,16 @@ body {
   padding-bottom: env(safe-area-inset-bottom);
   padding-left: env(safe-area-inset-left);
   padding-right: env(safe-area-inset-right);
+}
+
+.bottom-safe {
+  padding-bottom: calc(env(safe-area-inset-bottom) + 0.75rem);
+}
+
+.no-scrollbar {
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
 }

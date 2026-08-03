@@ -60,12 +60,16 @@ export function useParticipants() {
     fetchParticipants();
   }, []);
 
-  const addParticipant = async (name: string, phone?: string): Promise<Participant | null> => {
+  const addParticipant = async (
+    name: string,
+    phone?: string,
+    avatarUrl?: string
+  ): Promise<Participant | null> => {
     try {
       const avatarColor = generateAvatarColor(name);
       const { data, error } = await supabase
         .from("participants")
-        .insert([{ name, avatar_color: avatarColor, phone }] as any)
+        .insert([{ name, avatar_color: avatarColor, phone, avatar_url: avatarUrl }] as any)
         .select()
         .single();
 
@@ -82,7 +86,7 @@ export function useParticipants() {
 
   const updateParticipant = async (
     id: string,
-    updates: { name?: string; avatar_color?: string; phone?: string }
+    updates: { name?: string; avatar_color?: string; avatar_url?: string; phone?: string }
   ) => {
     try {
       const { data, error } = await (supabase
@@ -132,4 +136,3 @@ export function useParticipants() {
     refetch: fetchParticipants,
   };
 }
-

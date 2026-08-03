@@ -12,7 +12,38 @@ export async function GET() {
     orientation: "portrait-primary",
     categories: ["travel", "finance", "productivity"],
     lang: "ko-KR",
-    icons: [],
+    icons: [
+      {
+        src: "/icons/icon.svg",
+        sizes: "any",
+        type: "image/svg+xml",
+        purpose: "any",
+      },
+      {
+        src: "/icons/icon-192x192.png",
+        sizes: "192x192",
+        type: "image/png",
+        purpose: "any",
+      },
+      {
+        src: "/icons/icon-512x512.png",
+        sizes: "512x512",
+        type: "image/png",
+        purpose: "any",
+      },
+      {
+        src: "/icons/maskable-icon-192x192.png",
+        sizes: "192x192",
+        type: "image/png",
+        purpose: "maskable",
+      },
+      {
+        src: "/icons/maskable-icon-512x512.png",
+        sizes: "512x512",
+        type: "image/png",
+        purpose: "maskable",
+      },
+    ],
     shortcuts: [
       {
         name: "지출 추가",
@@ -37,4 +68,3 @@ export async function GET() {
     },
   });
 }
-
