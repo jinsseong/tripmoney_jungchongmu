@@ -21,24 +21,24 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     ref
   ) => {
     const baseStyles =
-      "inline-flex items-center justify-center rounded-lg font-medium leading-tight transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none";
+      "inline-flex items-center justify-center rounded-lg font-semibold leading-tight transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-45 active:scale-[0.985]";
     
     const variants = {
       primary:
-        "bg-blue-500 text-white hover:bg-blue-600 focus:ring-blue-500",
+        "bg-[#3182f6] text-white shadow-[0_8px_18px_rgba(49,130,246,0.22)] hover:bg-[#1b64da] focus:ring-[#3182f6]",
       secondary:
-        "bg-gray-200 text-gray-900 hover:bg-gray-300 focus:ring-gray-500",
+        "bg-[#eef2f6] text-[#171719] hover:bg-[#e5e8eb] focus:ring-[#8b95a1]",
       outline:
-        "border-2 border-gray-300 text-gray-700 hover:bg-gray-50 focus:ring-gray-500",
-      ghost: "text-gray-700 hover:bg-gray-100 focus:ring-gray-500",
+        "border border-[#d1d6db] bg-white text-[#4e5968] hover:bg-[#f6f8fb] focus:ring-[#8b95a1]",
+      ghost: "text-[#4e5968] hover:bg-[#eef2f6] focus:ring-[#8b95a1]",
       danger:
-        "bg-red-500 text-white hover:bg-red-600 focus:ring-red-500",
+        "bg-[#f04452] text-white shadow-[0_8px_18px_rgba(240,68,82,0.18)] hover:bg-[#d93d4a] focus:ring-[#f04452]",
     };
 
     const sizes = {
       sm: "min-h-[44px] px-3 py-2 text-sm",
-      md: "h-11 px-4 text-base min-h-[44px]",
-      lg: "h-14 px-6 text-lg min-h-[44px]",
+      md: "min-h-[48px] px-4 py-2.5 text-base",
+      lg: "min-h-[56px] px-6 py-3 text-base sm:text-lg",
     };
 
     return (

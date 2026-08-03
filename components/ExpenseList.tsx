@@ -147,7 +147,7 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
                 <Card 
                   key={expense.id} 
                   variant="outline"
-                  className={showDetailModal ? "cursor-pointer hover:shadow-md transition-shadow" : ""}
+                  className={showDetailModal ? "tap-card cursor-pointer p-0" : "p-0"}
                   onClick={() => {
                     if (showDetailModal) {
                       setSelectedExpense(expense);
@@ -155,21 +155,21 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
                     }
                   }}
                 >
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-start sm:justify-between sm:p-5">
                     <div className="min-w-0 flex-1">
                       <div className="mb-2 flex flex-wrap items-center gap-2">
-                        <h4 className="min-w-0 break-words text-base font-semibold sm:text-lg">
+                        <h4 className="min-w-0 break-words text-base font-bold text-[#171719] sm:text-lg">
                           {expense.item_name}
                         </h4>
                         {expense.category && (
-                          <span className="rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-600 sm:text-sm">
+                          <span className="rounded-md bg-[#eef2f6] px-2 py-0.5 text-xs font-bold text-[#6b7684] sm:text-sm">
                             {expense.category}
                           </span>
                         )}
                       </div>
-                      <div className="space-y-1 text-sm text-gray-600">
+                      <div className="space-y-1 text-sm text-[#6b7684]">
                         <div className="flex flex-wrap items-center gap-2">
-                          <span className="break-all text-base font-semibold text-gray-900">
+                          <span className="break-all text-lg font-extrabold text-[#171719]">
                             {formatCurrency(expense.amount, expense.currency)}
                           </span>
                           <span className="text-xs">
@@ -191,7 +191,7 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
                           </div>
                         )}
                         {expense.memo && (
-                          <div className="text-xs text-gray-500 mt-1">
+                          <div className="mt-1 text-xs text-[#8b95a1]">
                             {expense.memo}
                           </div>
                         )}
@@ -205,7 +205,7 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
                               e.stopPropagation();
                               onEdit(expense);
                             }}
-                            className="min-h-[40px] flex-1 rounded-lg px-3 py-1 text-sm text-blue-600 hover:bg-blue-50 sm:flex-none"
+                            className="min-h-[40px] flex-1 rounded-lg px-3 py-1 text-sm font-bold text-[#3182f6] hover:bg-[#e8f3ff] sm:flex-none"
                           >
                             수정
                           </button>
@@ -216,7 +216,7 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
                               e.stopPropagation();
                               onDelete(expense.id);
                             }}
-                            className="min-h-[40px] flex-1 rounded-lg px-3 py-1 text-sm text-red-600 hover:bg-red-50 sm:flex-none"
+                            className="min-h-[40px] flex-1 rounded-lg px-3 py-1 text-sm font-bold text-[#f04452] hover:bg-[#fff0f1] sm:flex-none"
                           >
                             삭제
                           </button>
@@ -231,7 +231,7 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
         </div>
       ))}
       {expenses.length === 0 && (
-        <div className="text-center py-12 text-gray-500">
+        <div className="py-12 text-center text-[#6b7684]">
           지출 내역이 없습니다.
         </div>
       )}

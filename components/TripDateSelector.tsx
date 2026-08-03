@@ -40,7 +40,7 @@ export const TripDateSelector: React.FC<TripDateSelectorProps> = ({
   const canGoNext = visibleStartIndex + 7 < dates.length;
 
   return (
-    <div className="rounded-lg bg-white p-3 shadow-sm sm:p-4">
+    <div className="rounded-lg border border-[#e5e8eb] bg-white p-3 shadow-[var(--shadow-card)] sm:p-4">
       {/* 요일 표시 */}
       <div className="ml-9 mr-9 hidden gap-1 mb-2 sm:flex">
         {visibleDates.map((date, index) => {
@@ -48,7 +48,7 @@ export const TripDateSelector: React.FC<TripDateSelectorProps> = ({
           return (
             <div
               key={date.toISOString()}
-              className="flex-1 text-center text-xs text-gray-500 font-medium"
+              className="flex-1 text-center text-xs font-bold text-[#8b95a1]"
             >
               {weekDays[dayOfWeek]}
             </div>
@@ -64,8 +64,8 @@ export const TripDateSelector: React.FC<TripDateSelectorProps> = ({
           className={cn(
             "min-h-[44px] min-w-[32px] rounded-lg transition-colors sm:min-w-[36px]",
             canGoPrev
-              ? "hover:bg-gray-100 text-gray-600"
-              : "text-gray-300 cursor-not-allowed"
+              ? "text-[#4e5968] hover:bg-[#eef2f6]"
+              : "cursor-not-allowed text-[#d1d6db]"
           )}
           aria-label="이전"
         >
@@ -86,10 +86,10 @@ export const TripDateSelector: React.FC<TripDateSelectorProps> = ({
                 className={cn(
                   "relative flex min-h-[66px] min-w-[56px] flex-1 flex-col items-center justify-center rounded-lg p-2 transition-all sm:min-w-0",
                   isSelected
-                    ? "bg-green-500 text-white"
+                    ? "bg-[#3182f6] text-white shadow-[0_8px_18px_rgba(49,130,246,0.20)]"
                     : hasExpense
-                    ? "bg-green-50 border-2 border-green-200 text-gray-700"
-                    : "bg-gray-50 border-2 border-transparent text-gray-600 hover:bg-gray-100"
+                    ? "border border-[#c9e2ff] bg-[#e8f3ff] text-[#171719]"
+                    : "border border-transparent bg-[#f6f8fb] text-[#4e5968] hover:bg-[#eef2f6]"
                 )}
               >
                 <span className="text-[11px] font-medium sm:hidden">
@@ -99,12 +99,12 @@ export const TripDateSelector: React.FC<TripDateSelectorProps> = ({
                   {format(date, "d")}
                 </span>
                 {hasExpense && !isSelected && (
-                  <span className="mt-0.5 max-w-full truncate text-[10px] font-medium leading-tight text-green-600 sm:text-xs">
+                  <span className="mt-0.5 max-w-full truncate text-[10px] font-bold leading-tight text-[#1b64da] sm:text-xs">
                     {expenseAmount > 0 && formatCurrency(expenseAmount, "KRW").replace("₩", "").trim()}
                   </span>
                 )}
                 {hasExpense && (
-                  <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-green-500 rounded-full" />
+                  <div className="absolute bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-[#00a86b]" />
                 )}
               </button>
             );
@@ -121,8 +121,8 @@ export const TripDateSelector: React.FC<TripDateSelectorProps> = ({
           className={cn(
             "min-h-[44px] min-w-[32px] rounded-lg transition-colors sm:min-w-[36px]",
             canGoNext
-              ? "hover:bg-gray-100 text-gray-600"
-              : "text-gray-300 cursor-not-allowed"
+              ? "text-[#4e5968] hover:bg-[#eef2f6]"
+              : "cursor-not-allowed text-[#d1d6db]"
           )}
           aria-label="다음"
         >

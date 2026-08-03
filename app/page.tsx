@@ -2,27 +2,49 @@
 
 export const dynamic = "force-dynamic";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useTrips } from "@/hooks/useTrips";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { Input } from "@/components/ui/Input";
-import { Plus, Calendar, MapPin, ArrowRight, Settings, Users, Trash2 } from "lucide-react";
+import { Plus, Calendar, ArrowRight, Trash2, WalletCards, Link2, ShieldCheck, UserRound } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { ko } from "date-fns/locale";
+import {
+  extractInviteKeyFromInput,
+  hasParticipantAccess,
+  rememberAdminTrip,
+} from "@/lib/trip-access";
+
+type HomeMode = "admin" | "participant";
 
 export default function HomePage() {
   const router = useRouter();
   const { trips, loading, addTrip, deleteTrip } = useTrips();
+  const [activeMode, setActiveMode] = useState<HomeMode>("admin");
   const [showAddModal, setShowAddModal] = useState(false);
+  const [inviteInput, setInviteInput] = useState("");
+  const [participantTripIds, setParticipantTripIds] = useState<string[]>([]);
   const [formData, setFormData] = useState({
     name: "",
     startDate: new Date().toISOString().split("T")[0],
     endDate: new Date().toISOString().split("T")[0],
     description: "",
   });
+
+  useEffect(() => {
+    setParticipantTripIds(
+      trips
+        .filter((trip) => hasParticipantAccess(trip.id))
+        .map((trip) => trip.id)
+    );
+  }, [trips]);
+
+  const participantTrips = trips.filter((trip) =>
+    participantTripIds.includes(trip.id)
+  );
 
   const handleAddTrip = async () => {
     if (!formData.name.trim() || !formData.startDate || !formData.endDate) {
@@ -45,7 +67,8 @@ export default function HomePage() {
       setShowAddModal(false);
       // 여행 추가 후 대시보드로 이동
       if (newTrip && newTrip.id) {
-        router.push(`/dashboard?trip=${newTrip.id}`);
+        rememberAdminTrip(newTrip);
+        router.push(`/dashboard?trip=${newTrip.id}&mode=admin`);
       }
     } catch (error) {
       console.error("Failed to add trip:", error);
@@ -54,7 +77,20 @@ export default function HomePage() {
   };
 
   const handleSelectTrip = (tripId: string) => {
-    router.push(`/dashboard?trip=${tripId}`);
+    router.push(`/dashboard?trip=${tripId}&mode=admin`);
+  };
+
+  const handleSelectParticipantTrip = (tripId: string) => {
+    router.push(`/dashboard?trip=${tripId}&mode=participant`);
+  };
+
+  const handleOpenInvite = () => {
+    const inviteKey = extractInviteKeyFromInput(inviteInput);
+    if (!inviteKey) {
+      alert("초대 링크 또는 초대 코드를 입력해주세요.");
+      return;
+    }
+    router.push(`/join/${inviteKey}`);
   };
 
   const handleDeleteTrip = async (e: React.MouseEvent, tripId: string, tripName: string) => {
@@ -73,42 +109,179 @@ export default function HomePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-gray-500">로딩 중...</div>
+      <div className="app-screen flex items-center justify-center">
+        <div className="text-[#6b7684]">로딩 중...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 safe-area">
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            내 머리속 정총무
-          </h1>
-          <p className="text-gray-600">
-            여행을 선택하거나 새로 추가하세요
-          </p>
+    <div className="app-screen safe-area">
+      <div className="page-container">
+        <div className="mb-6 flex flex-col gap-5 sm:mb-8">
+          <div className="top-bar">
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-[#171719] text-white">
+                <WalletCards className="h-5 w-5" />
+              </div>
+              <div className="min-w-0">
+                <div className="page-kicker">여행 정산</div>
+                <h1 className="truncate text-xl font-extrabold text-[#171719] sm:text-2xl">
+                  정총무
+                </h1>
+              </div>
+            </div>
+            {activeMode === "admin" && trips.length > 0 && (
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => setShowAddModal(true)}
+                className="shrink-0 gap-1.5"
+              >
+                <Plus className="h-4 w-4" />
+                새 여행
+              </Button>
+            )}
+          </div>
+          <div>
+            <h2 className="page-title mb-2">
+              여행별 정산을<br className="sm:hidden" /> 바로 시작하세요
+            </h2>
+            <p className="page-subtitle">
+              지출별 참석 인원을 다르게 골라도 정산 금액을 자동으로 맞춰줍니다.
+            </p>
+          </div>
+        </div>
+
+        <div className="segment-control mb-5" data-count={2}>
+          <button
+            type="button"
+            onClick={() => setActiveMode("admin")}
+            className="segment-item"
+            data-active={activeMode === "admin"}
+          >
+            <ShieldCheck className="h-4 w-4" />
+            관리자
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveMode("participant")}
+            className="segment-item"
+            data-active={activeMode === "participant"}
+          >
+            <UserRound className="h-4 w-4" />
+            참가자
+          </button>
         </div>
 
         {/* 여행 목록 */}
-        {trips.length === 0 ? (
-          <Card>
-            <div className="p-12 text-center">
-              <Calendar className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-600 mb-4">등록된 여행이 없습니다.</p>
-              <Button variant="primary" onClick={() => setShowAddModal(true)}>
-                <Plus className="h-4 w-4 mr-1" />
+        {activeMode === "participant" ? (
+          <>
+            <Card className="mb-5">
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <Link2 className="h-5 w-5 text-[#3182f6]" />
+                  <CardTitle>초대 링크로 참여</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <Input
+                    value={inviteInput}
+                    onChange={(event) => setInviteInput(event.target.value)}
+                    placeholder="초대 링크 또는 초대 코드"
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") {
+                        handleOpenInvite();
+                      }
+                    }}
+                  />
+                  <Button
+                    type="button"
+                    variant="primary"
+                    onClick={handleOpenInvite}
+                    className="shrink-0 gap-1.5"
+                  >
+                    참여하기
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {participantTrips.length === 0 ? (
+              <Card className="border-dashed">
+                <div className="py-12 text-center sm:py-16">
+                  <UserRound className="mx-auto mb-4 h-14 w-14 text-[#b0b8c1]" />
+                  <p className="text-[#6b7684]">
+                    아직 이 기기에서 참여한 여행이 없습니다.
+                  </p>
+                </div>
+              </Card>
+            ) : (
+              <div className="mb-6 space-y-3">
+                {participantTrips.map((trip) => (
+                  <Card
+                    key={trip.id}
+                    className="tap-card cursor-pointer p-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3182f6] focus-visible:ring-offset-2"
+                    onClick={() => handleSelectParticipantTrip(trip.id)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        handleSelectParticipantTrip(trip.id);
+                      }
+                    }}
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`${trip.name} 참가자 대시보드 열기`}
+                  >
+                    <CardContent className="p-4 sm:p-5">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="min-w-0 flex-1">
+                          <div className="mb-2 flex items-center gap-2">
+                            <span className="status-pill">참가 중</span>
+                          </div>
+                          <h3 className="mb-2 break-words text-xl font-extrabold text-[#171719]">
+                            {trip.name}
+                          </h3>
+                          <div className="flex items-start gap-2 text-sm text-[#6b7684]">
+                            <Calendar className="mt-0.5 h-4 w-4 shrink-0 text-[#8b95a1]" />
+                            <span className="break-words">
+                              {format(new Date(trip.start_date), "yyyy년 M월 d일", {
+                                locale: ko,
+                              })}{" "}
+                              ~{" "}
+                              {format(new Date(trip.end_date), "yyyy년 M월 d일", {
+                                locale: ko,
+                              })}
+                            </span>
+                          </div>
+                        </div>
+                        <ArrowRight className="mt-2 h-5 w-5 shrink-0 text-[#8b95a1] sm:mt-1" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </>
+        ) : trips.length === 0 ? (
+          <Card className="border-dashed">
+            <div className="py-12 text-center sm:py-16">
+              <Calendar className="mx-auto mb-4 h-14 w-14 text-[#b0b8c1]" />
+              <p className="mb-5 text-[#6b7684]">등록된 여행이 없습니다.</p>
+              <Button variant="primary" onClick={() => setShowAddModal(true)} className="gap-2">
+                <Plus className="h-4 w-4" />
                 첫 여행 추가하기
               </Button>
             </div>
           </Card>
         ) : (
-          <div className="space-y-4 mb-6">
+          <div className="mb-6 space-y-3">
             {trips.map((trip) => (
               <Card
                 key={trip.id}
-                className="group cursor-pointer transition-shadow hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 active:scale-[0.99]"
+                className="tap-card group cursor-pointer p-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3182f6] focus-visible:ring-offset-2"
                 onClick={() => handleSelectTrip(trip.id)}
                 onKeyDown={(event) => {
                   if (event.key === "Enter" || event.key === " ") {
@@ -120,15 +293,15 @@ export default function HomePage() {
                 tabIndex={0}
                 aria-label={`${trip.name} 대시보드 열기`}
               >
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0 flex-1">
-                      <h3 className="mb-2 break-words text-xl font-semibold text-gray-900">
-                        {trip.name}
-                      </h3>
-                      <div className="space-y-1 text-sm text-gray-600">
+                <CardContent className="p-4 sm:p-5">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="min-w-0 flex-1">
+                          <h3 className="mb-2 break-words text-xl font-extrabold text-[#171719]">
+                            {trip.name}
+                          </h3>
+                      <div className="space-y-1 text-sm text-[#6b7684]">
                         <div className="flex items-start gap-2">
-                          <Calendar className="mt-0.5 h-4 w-4 shrink-0" />
+                          <Calendar className="mt-0.5 h-4 w-4 shrink-0 text-[#8b95a1]" />
                           <span className="break-words">
                             {format(new Date(trip.start_date), "yyyy년 M월 d일", {
                               locale: ko,
@@ -140,21 +313,21 @@ export default function HomePage() {
                           </span>
                         </div>
                         {trip.description && (
-                          <p className="text-gray-500">{trip.description}</p>
+                          <p className="line-clamp-2 text-[#8b95a1]">{trip.description}</p>
                         )}
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex shrink-0 items-center gap-1">
                       <Button
                         variant="outline"
                         size="sm"
                         aria-label={`${trip.name} 삭제`}
                         onClick={(e) => handleDeleteTrip(e, trip.id, trip.name)}
-                        className="h-10 w-10 p-0 text-red-600 opacity-100 transition-opacity hover:bg-red-50 hover:text-red-700 sm:h-8 sm:w-8 sm:opacity-0 sm:group-hover:opacity-100"
+                        className="hidden h-9 w-9 p-0 text-[#f04452] opacity-0 transition-opacity hover:bg-[#fff0f1] sm:inline-flex sm:group-hover:opacity-100"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
-                      <ArrowRight className="mt-2 h-6 w-6 shrink-0 text-gray-400 sm:mt-1" />
+                      <ArrowRight className="mt-2 h-5 w-5 shrink-0 text-[#8b95a1] sm:mt-1" />
                     </div>
                   </div>
                 </CardContent>
@@ -162,42 +335,6 @@ export default function HomePage() {
             ))}
           </div>
         )}
-
-        {/* 액션 버튼들 */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <Button
-            variant="primary"
-            onClick={() => setShowAddModal(true)}
-            className="h-auto py-4 flex flex-col items-center gap-2"
-          >
-            <Plus className="h-6 w-6" />
-            <span>새 여행 추가</span>
-          </Button>
-          
-          <Button
-            variant="outline"
-            onClick={() => router.push("/participants")}
-            className="h-auto py-4 flex flex-col items-center gap-2"
-          >
-            <Users className="h-6 w-6" />
-            <span>참가자 관리</span>
-          </Button>
-
-          <Button
-            variant="outline"
-            onClick={() => {
-              if (trips.length > 0) {
-                router.push(`/settings?trip=${trips[0].id}`);
-              } else {
-                router.push("/settings");
-              }
-            }}
-            className="h-auto py-4 flex flex-col items-center gap-2"
-          >
-            <Settings className="h-6 w-6" />
-            <span>총무 관리</span>
-          </Button>
-        </div>
 
         {/* 여행 추가 모달 */}
         <Modal
@@ -223,9 +360,9 @@ export default function HomePage() {
               placeholder="예: 제주도 여행"
               required
             />
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="mb-1.5 block text-sm font-bold text-[#4e5968]">
                   시작일
                 </label>
                 <input
@@ -234,12 +371,12 @@ export default function HomePage() {
                   onChange={(e) =>
                     setFormData({ ...formData, startDate: e.target.value })
                   }
-                  className="w-full h-11 rounded-lg border border-gray-300 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="min-h-[48px] w-full rounded-lg border border-[#d1d6db] px-3.5 text-base focus:border-[#3182f6] focus:outline-none focus:ring-3 focus:ring-[#3182f6]/15"
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="mb-1.5 block text-sm font-bold text-[#4e5968]">
                   종료일
                 </label>
                 <input
@@ -249,13 +386,13 @@ export default function HomePage() {
                     setFormData({ ...formData, endDate: e.target.value })
                   }
                   min={formData.startDate}
-                  className="w-full h-11 rounded-lg border border-gray-300 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="min-h-[48px] w-full rounded-lg border border-[#d1d6db] px-3.5 text-base focus:border-[#3182f6] focus:outline-none focus:ring-3 focus:ring-[#3182f6]/15"
                   required
                 />
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="mb-1.5 block text-sm font-bold text-[#4e5968]">
                 설명 (선택)
               </label>
               <textarea
@@ -264,10 +401,10 @@ export default function HomePage() {
                   setFormData({ ...formData, description: e.target.value })
                 }
                 placeholder="여행에 대한 간단한 설명을 입력하세요"
-                className="w-full h-24 rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="min-h-24 w-full rounded-lg border border-[#d1d6db] px-3.5 py-2.5 text-base focus:border-[#3182f6] focus:outline-none focus:ring-3 focus:ring-[#3182f6]/15"
               />
             </div>
-            <div className="flex gap-2">
+            <div className="grid grid-cols-2 gap-2">
               <Button
                 variant="outline"
                 onClick={() => {

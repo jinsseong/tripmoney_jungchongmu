@@ -93,11 +93,11 @@ function SettingsContent() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 safe-area">
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <div className="flex items-center gap-4 mb-6">
+    <div className="app-screen safe-area">
+      <div className="page-container">
+        <div className="mb-6 space-y-4">
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
             onClick={() => {
               if (selectedTrip) {
@@ -106,11 +106,18 @@ function SettingsContent() {
                 router.push("/");
               }
             }}
+            className="gap-1.5"
           >
-            <ArrowLeft className="h-4 w-4 mr-1" />
+            <ArrowLeft className="h-4 w-4" />
             뒤로
           </Button>
-          <h1 className="text-3xl font-bold text-gray-900">총무 관리</h1>
+          <div>
+            <div className="page-kicker mb-1">관리</div>
+            <h1 className="page-title">총무 관리</h1>
+            <p className="page-subtitle mt-2">
+              여행 중 자주 쓰는 지출 카테고리를 정리하세요.
+            </p>
+          </div>
         </div>
 
         {/* 카테고리 관리 */}
@@ -118,33 +125,37 @@ function SettingsContent() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Tag className="h-5 w-5 text-blue-500" />
+                <Tag className="h-5 w-5 text-[#3182f6]" />
                 <CardTitle>지출 카테고리</CardTitle>
               </div>
             </div>
           </CardHeader>
           <CardContent>
             {categoriesLoading ? (
-              <div className="text-center py-8 text-gray-500">로딩 중...</div>
+              <div className="py-8 text-center text-[#6b7684]">로딩 중...</div>
             ) : (
               <div className="space-y-4">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                   {categories.map((category) => (
                     <div
                       key={category.id}
-                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg group"
+                      className="group flex items-center justify-between gap-3 rounded-lg border border-[#e5e8eb] bg-[#f6f8fb] p-4"
                     >
-                      <div className="flex items-center gap-2">
-                        <span className="text-2xl">{category.icon}</span>
-                        <div>
-                          <div className="font-medium text-sm">{category.name}</div>
+                      <div className="flex min-w-0 items-center gap-3">
+                        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-white text-2xl shadow-sm">
+                          {category.icon}
+                        </span>
+                        <div className="min-w-0">
+                          <div className="truncate text-sm font-bold text-[#171719]">
+                            {category.name}
+                          </div>
                           <div
-                            className="w-4 h-4 rounded-full mt-1"
+                            className="mt-1 h-4 w-4 rounded-full border border-black/5"
                             style={{ backgroundColor: category.color }}
                           />
                         </div>
                       </div>
-                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex shrink-0 items-center gap-1 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100">
                         <Button
                           variant="outline"
                           size="sm"
@@ -157,9 +168,10 @@ function SettingsContent() {
                               color: category.color,
                             });
                           }}
-                          className="h-6 w-6 p-0 text-blue-600"
+                          className="h-10 w-10 p-0 text-[#3182f6] hover:bg-[#e8f3ff]"
+                          aria-label={`${category.name} 수정`}
                         >
-                          <Edit2 className="h-3 w-3" />
+                          <Edit2 className="h-4 w-4" />
                         </Button>
                         {!category.is_default && (
                           <Button
@@ -169,9 +181,10 @@ function SettingsContent() {
                               e.stopPropagation();
                               handleDeleteCategory(category.id, category.name);
                             }}
-                            className="h-6 w-6 p-0 text-red-600"
+                            className="h-10 w-10 p-0 text-[#f04452] hover:bg-[#fff0f1]"
+                            aria-label={`${category.name} 삭제`}
                           >
-                            <Trash2 className="h-3 w-3" />
+                            <Trash2 className="h-4 w-4" />
                           </Button>
                         )}
                       </div>
@@ -180,19 +193,19 @@ function SettingsContent() {
                 </div>
 
                 {/* 카테고리 추가 */}
-                <div className="border-t pt-4 mt-4">
-                  <h3 className="font-semibold mb-3">새 카테고리 추가</h3>
+                <div className="mt-4 border-t border-[#e5e8eb] pt-4">
+                  <h3 className="mb-3 font-bold text-[#171719]">새 카테고리 추가</h3>
                   <div className="space-y-3">
                     <input
                       type="text"
                       value={newCategoryName}
                       onChange={(e) => setNewCategoryName(e.target.value)}
                       placeholder="카테고리 이름"
-                      className="w-full h-11 rounded-lg border border-gray-300 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="min-h-[48px] w-full rounded-lg border border-[#d1d6db] px-3.5 text-base focus:border-[#3182f6] focus:outline-none focus:ring-3 focus:ring-[#3182f6]/15"
                     />
-                    <div className="flex gap-2">
-                      <div className="flex-1">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                      <div>
+                        <label className="mb-2 block text-sm font-bold text-[#4e5968]">
                           아이콘
                         </label>
                         <div className="flex flex-wrap gap-2">
@@ -201,10 +214,10 @@ function SettingsContent() {
                               key={icon}
                               type="button"
                               onClick={() => setNewCategoryIcon(icon)}
-                              className={`text-2xl p-2 rounded ${
+                              className={`min-h-[44px] min-w-[44px] rounded-lg border text-2xl transition-all ${
                                 newCategoryIcon === icon
-                                  ? "bg-blue-100 ring-2 ring-blue-500"
-                                  : "bg-gray-100 hover:bg-gray-200"
+                                  ? "border-[#3182f6] bg-[#e8f3ff]"
+                                  : "border-[#e5e8eb] bg-white hover:bg-[#f6f8fb]"
                               }`}
                             >
                               {icon}
@@ -212,8 +225,8 @@ function SettingsContent() {
                           ))}
                         </div>
                       </div>
-                      <div className="flex-1">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <div>
+                        <label className="mb-2 block text-sm font-bold text-[#4e5968]">
                           색상
                         </label>
                         <div className="flex flex-wrap gap-2">
@@ -222,12 +235,13 @@ function SettingsContent() {
                               key={color}
                               type="button"
                               onClick={() => setNewCategoryColor(color)}
-                              className={`w-8 h-8 rounded-full ${
+                              className={`h-9 w-9 rounded-lg border border-black/5 ${
                                 newCategoryColor === color
-                                  ? "ring-2 ring-gray-400 ring-offset-2"
+                                  ? "ring-2 ring-[#3182f6] ring-offset-2"
                                   : ""
                               }`}
                               style={{ backgroundColor: color }}
+                              aria-label={`색상 ${color}`}
                             />
                           ))}
                         </div>
@@ -239,7 +253,7 @@ function SettingsContent() {
                       disabled={!newCategoryName.trim()}
                       className="w-full"
                     >
-                      <Plus className="h-4 w-4 mr-1" />
+                      <Plus className="h-4 w-4" />
                       카테고리 추가
                     </Button>
                   </div>
@@ -268,9 +282,9 @@ function SettingsContent() {
               placeholder="카테고리 이름"
               required
             />
-            <div className="flex gap-2">
-              <div className="flex-1">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div>
+                <label className="mb-2 block text-sm font-bold text-[#4e5968]">
                   아이콘
                 </label>
                 <div className="flex flex-wrap gap-2">
@@ -279,10 +293,10 @@ function SettingsContent() {
                       key={icon}
                       type="button"
                       onClick={() => setEditCategoryIcon(icon)}
-                      className={`text-2xl p-2 rounded ${
+                      className={`min-h-[44px] min-w-[44px] rounded-lg border text-2xl transition-all ${
                         editCategoryIcon === icon
-                          ? "bg-blue-100 ring-2 ring-blue-500"
-                          : "bg-gray-100 hover:bg-gray-200"
+                          ? "border-[#3182f6] bg-[#e8f3ff]"
+                          : "border-[#e5e8eb] bg-white hover:bg-[#f6f8fb]"
                       }`}
                     >
                       {icon}
@@ -290,8 +304,8 @@ function SettingsContent() {
                   ))}
                 </div>
               </div>
-              <div className="flex-1">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+              <div>
+                <label className="mb-2 block text-sm font-bold text-[#4e5968]">
                   색상
                 </label>
                 <div className="flex flex-wrap gap-2">
@@ -300,18 +314,19 @@ function SettingsContent() {
                       key={color}
                       type="button"
                       onClick={() => setEditCategoryColor(color)}
-                      className={`w-8 h-8 rounded-full ${
+                      className={`h-9 w-9 rounded-lg border border-black/5 ${
                         editCategoryColor === color
-                          ? "ring-2 ring-gray-400 ring-offset-2"
+                          ? "ring-2 ring-[#3182f6] ring-offset-2"
                           : ""
                       }`}
                       style={{ backgroundColor: color }}
+                      aria-label={`색상 ${color}`}
                     />
                   ))}
                 </div>
               </div>
             </div>
-            <div className="flex gap-2">
+            <div className="grid grid-cols-2 gap-2">
               <Button
                 variant="outline"
                 onClick={() => {
@@ -337,22 +352,22 @@ function SettingsContent() {
         </Modal>
 
         {/* 빠른 링크 */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {selectedTrip && (
             <Link href={`/dashboard?trip=${selectedTrip.id}`}>
-              <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-                <CardContent className="p-6 text-center">
-                  <h3 className="text-lg font-semibold mb-2">대시보드로 돌아가기</h3>
-                  <p className="text-gray-600 text-sm">{selectedTrip.name}</p>
+              <Card className="tap-card cursor-pointer">
+                <CardContent>
+                  <h3 className="mb-1 text-lg font-bold text-[#171719]">대시보드로 돌아가기</h3>
+                  <p className="text-sm text-[#6b7684]">{selectedTrip.name}</p>
                 </CardContent>
               </Card>
             </Link>
           )}
           <Link href="/participants">
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-              <CardContent className="p-6 text-center">
-                <h3 className="text-lg font-semibold mb-2">참가자 관리</h3>
-                <p className="text-gray-600 text-sm">참가자를 추가하고 관리하세요</p>
+            <Card className="tap-card cursor-pointer">
+              <CardContent>
+                <h3 className="mb-1 text-lg font-bold text-[#171719]">참가자 관리</h3>
+                <p className="text-sm text-[#6b7684]">참가자를 추가하고 관리하세요</p>
               </CardContent>
             </Card>
           </Link>
@@ -365,12 +380,11 @@ function SettingsContent() {
 export default function SettingsPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-gray-500">로딩 중...</div>
+      <div className="app-screen flex items-center justify-center">
+        <div className="text-[#6b7684]">로딩 중...</div>
       </div>
     }>
       <SettingsContent />
     </Suspense>
   );
 }
-

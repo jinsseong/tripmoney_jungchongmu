@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS trips (
   description TEXT,
   cover_image_url TEXT,
   invite_key UUID DEFAULT gen_random_uuid() UNIQUE NOT NULL,
+  admin_key UUID DEFAULT gen_random_uuid() UNIQUE NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -30,6 +31,7 @@ CREATE TABLE IF NOT EXISTS trip_participants (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   trip_id UUID REFERENCES trips(id) ON DELETE CASCADE,
   participant_id UUID REFERENCES participants(id) ON DELETE CASCADE,
+  role VARCHAR(20) DEFAULT 'participant' CHECK (role IN ('admin', 'participant')),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   UNIQUE(trip_id, participant_id)
 );
@@ -175,15 +177,38 @@ ADD COLUMN IF NOT EXISTS avatar_url TEXT;
 ALTER TABLE trips
 ADD COLUMN IF NOT EXISTS invite_key UUID DEFAULT gen_random_uuid();
 
+ALTER TABLE trips
+ADD COLUMN IF NOT EXISTS admin_key UUID DEFAULT gen_random_uuid();
+
 UPDATE trips
 SET invite_key = gen_random_uuid()
 WHERE invite_key IS NULL;
+
+UPDATE trips
+SET admin_key = gen_random_uuid()
+WHERE admin_key IS NULL;
 
 ALTER TABLE trips
 ALTER COLUMN invite_key SET DEFAULT gen_random_uuid();
 
 ALTER TABLE trips
 ALTER COLUMN invite_key SET NOT NULL;
+
+ALTER TABLE trips
+ALTER COLUMN admin_key SET DEFAULT gen_random_uuid();
+
+ALTER TABLE trips
+ALTER COLUMN admin_key SET NOT NULL;
+
+ALTER TABLE trip_participants
+ADD COLUMN IF NOT EXISTS role VARCHAR(20) DEFAULT 'participant';
+
+ALTER TABLE trip_participants
+DROP CONSTRAINT IF EXISTS trip_participants_role_check;
+
+ALTER TABLE trip_participants
+ADD CONSTRAINT trip_participants_role_check
+CHECK (role IN ('admin', 'participant'));
 
 ALTER TABLE shared_expenses
 ADD COLUMN IF NOT EXISTS payer_id UUID REFERENCES participants(id);
@@ -200,6 +225,7 @@ ADD COLUMN IF NOT EXISTS approved_expense_id UUID REFERENCES expenses(id) ON DEL
 CREATE INDEX IF NOT EXISTS idx_trip_participants_trip_id ON trip_participants(trip_id);
 CREATE INDEX IF NOT EXISTS idx_trip_participants_participant_id ON trip_participants(participant_id);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_trips_invite_key ON trips(invite_key);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_trips_admin_key ON trips(admin_key);
 CREATE INDEX IF NOT EXISTS idx_expenses_trip_id ON expenses(trip_id);
 CREATE INDEX IF NOT EXISTS idx_expenses_payer_id ON expenses(payer_id);
 CREATE INDEX IF NOT EXISTS idx_expenses_category_id ON expenses(category_id);

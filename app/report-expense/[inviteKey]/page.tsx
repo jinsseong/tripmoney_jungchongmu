@@ -11,6 +11,7 @@ import { ParticipantSelector } from "@/components/ParticipantSelector";
 import { Card } from "@/components/ui/Card";
 import { supabase } from "@/lib/supabase";
 import { Category, Participant, Trip } from "@/lib/types";
+import { getParticipantIdForTrip, getTripAccessSession } from "@/lib/trip-access";
 import { formatCurrency } from "@/lib/utils";
 import { useExpenseReports } from "@/hooks/useExpenseReports";
 
@@ -71,6 +72,7 @@ export default function ReportExpensePage() {
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [reporterId, setReporterId] = useState("");
+  const [lockedReporterId, setLockedReporterId] = useState("");
   const [selectedParticipantIds, setSelectedParticipantIds] = useState<string[]>([]);
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [ocrText, setOcrText] = useState("");
@@ -150,14 +152,16 @@ export default function ReportExpensePage() {
           setSelectedParticipantIds(tripParticipantData.map((participant) => participant.id));
 
           try {
-            const storedParticipantId = localStorage.getItem(
-              `jungchongmu-participant:${currentTrip.id}`
-            );
+            const accessSession = getTripAccessSession(currentTrip.id);
+            const storedParticipantId = getParticipantIdForTrip(currentTrip.id);
             if (
               storedParticipantId &&
               tripParticipantData.some((participant) => participant.id === storedParticipantId)
             ) {
               setReporterId(storedParticipantId);
+              if (accessSession?.mode === "participant") {
+                setLockedReporterId(storedParticipantId);
+              }
             }
           } catch {
             // localStorage를 사용할 수 없으면 제보자 선택 UI로 대체합니다.
@@ -260,6 +264,10 @@ export default function ReportExpensePage() {
       setFormError("제보자를 선택해주세요.");
       return;
     }
+    if (lockedReporterId && reporterId !== lockedReporterId) {
+      setFormError("참가자 모드에서는 본인 이름으로만 지출을 제보할 수 있습니다.");
+      return;
+    }
     if (!itemName.trim()) {
       setFormError("품목을 입력해주세요.");
       return;
@@ -329,8 +337,8 @@ export default function ReportExpensePage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-gray-50 safe-area">
-        <div className="mx-auto flex min-h-screen max-w-md items-center justify-center px-4 text-gray-500">
+      <main className="app-screen safe-area">
+        <div className="mx-auto flex min-h-screen max-w-md items-center justify-center px-4 text-[#6b7684]">
           지출 제보 화면을 준비하는 중...
         </div>
       </main>
@@ -339,21 +347,25 @@ export default function ReportExpensePage() {
 
   if (isSubmitted && trip) {
     return (
-      <main className="min-h-screen bg-gray-50 safe-area">
-        <div className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-4 py-8">
+      <main className="app-screen safe-area">
+        <div className="page-container flex min-h-screen max-w-md flex-col justify-center">
           <Card className="text-center">
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-green-100 text-green-700">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-lg bg-[#ebfff6] text-[#00a86b]">
               <Check className="h-7 w-7" />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900">제보 완료</h1>
-            <p className="mt-2 text-sm leading-6 text-gray-600">
+            <h1 className="text-2xl font-extrabold text-[#171719]">제보 완료</h1>
+            <p className="mt-2 text-sm leading-6 text-[#6b7684]">
               총무가 확인 후 정산에 반영합니다.
             </p>
             <Button
               type="button"
               variant="primary"
               className="mt-6 w-full"
-              onClick={() => router.push(`/dashboard?trip=${trip.id}`)}
+              onClick={() =>
+                router.push(
+                  `/dashboard?trip=${trip.id}${lockedReporterId ? "&mode=participant" : ""}`
+                )
+              }
             >
               대시보드로 이동
             </Button>
@@ -363,42 +375,77 @@ export default function ReportExpensePage() {
     );
   }
 
+  if (!trip) {
+    return (
+      <main className="app-screen safe-area">
+        <div className="page-container flex min-h-screen max-w-md flex-col justify-center">
+          <Card>
+            <div className="mb-5">
+              <div className="page-kicker mb-2 flex items-center gap-2 text-[#3182f6]">
+                <ReceiptText className="h-4 w-4" />
+                지출 제보
+              </div>
+              <h1 className="text-2xl font-extrabold leading-tight text-[#171719]">
+                초대 링크를 확인해주세요
+              </h1>
+              <p className="mt-2 text-sm leading-6 text-[#6b7684]">
+                여행 정보를 불러온 뒤 지출을 제보할 수 있습니다.
+              </p>
+            </div>
+            <div className="rounded-lg border border-[#ffd0d5] bg-[#fff0f1] p-3 text-sm font-bold leading-6 text-[#d93d4a]">
+              {formError || "초대 정보를 불러오지 못했습니다."}
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              className="mt-4 w-full gap-1.5"
+              onClick={() => router.back()}
+            >
+              <ArrowLeft className="h-4 w-4" />
+              뒤로
+            </Button>
+          </Card>
+        </div>
+      </main>
+    );
+  }
+
   return (
-    <main className="min-h-screen bg-gray-50 safe-area">
-      <div className="mx-auto max-w-md px-4 py-5">
+    <main className="app-screen safe-area">
+      <div className="page-container max-w-md">
         <Button
           type="button"
           variant="ghost"
           size="sm"
           onClick={() => router.back()}
-          className="mb-3"
+          className="mb-4 gap-1.5"
         >
-          <ArrowLeft className="mr-1 h-4 w-4" />
+          <ArrowLeft className="h-4 w-4" />
           뒤로
         </Button>
 
         <Card>
           <div className="mb-5">
-            <div className="mb-2 flex items-center gap-2 text-sm text-blue-600">
+            <div className="page-kicker mb-2 flex items-center gap-2 text-[#3182f6]">
               <ReceiptText className="h-4 w-4" />
               지출 제보
             </div>
-            <h1 className="text-2xl font-bold text-gray-900">
+            <h1 className="text-2xl font-extrabold leading-tight text-[#171719]">
               {trip?.name || "여행"} 지출 올리기
             </h1>
-            <p className="mt-2 text-sm leading-6 text-gray-600">
+            <p className="mt-2 text-sm leading-6 text-[#6b7684]">
               영수증을 올리고 금액과 참여자를 확인하면 총무에게 제보됩니다.
             </p>
           </div>
 
           {formError && (
-            <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm leading-6 text-red-700">
+            <div className="mb-4 rounded-lg border border-[#ffd0d5] bg-[#fff0f1] p-3 text-sm font-bold leading-6 text-[#d93d4a]">
               {formError}
             </div>
           )}
 
           <form className="space-y-5" onSubmit={handleSubmit}>
-            <label className="flex min-h-[180px] cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 p-4 text-center hover:bg-gray-100">
+            <label className="flex min-h-[180px] cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed border-[#b0b8c1] bg-[#f6f8fb] p-4 text-center hover:bg-[#eef2f6]">
               {receiptPreviewUrl ? (
                 <img
                   src={receiptPreviewUrl}
@@ -407,11 +454,11 @@ export default function ReportExpensePage() {
                 />
               ) : (
                 <>
-                  <Camera className="mb-3 h-8 w-8 text-gray-400" />
-                  <span className="text-sm font-medium text-gray-700">
+                  <Camera className="mb-3 h-8 w-8 text-[#8b95a1]" />
+                  <span className="text-sm font-bold text-[#4e5968]">
                     영수증 촬영 또는 이미지 선택
                   </span>
-                  <span className="mt-1 text-xs text-gray-500">
+                  <span className="mt-1 text-xs text-[#8b95a1]">
                     JPG, PNG, WEBP, GIF · 최대 8MB
                   </span>
                 </>
@@ -426,27 +473,37 @@ export default function ReportExpensePage() {
             </label>
 
             {ocrLoading && (
-              <div className="flex items-center gap-2 rounded-lg bg-blue-50 p-3 text-sm text-blue-700">
+              <div className="flex items-center gap-2 rounded-lg border border-[#c9e2ff] bg-[#e8f3ff] p-3 text-sm font-bold text-[#1b64da]">
                 <Sparkles className="h-4 w-4" />
                 영수증 텍스트를 확인하는 중...
               </div>
             )}
 
             {!ocrLoading && receiptFile && !ocrText && (
-              <div className="rounded-lg bg-gray-50 p-3 text-sm leading-6 text-gray-600">
+              <div className="rounded-lg border border-[#e5e8eb] bg-[#f6f8fb] p-3 text-sm leading-6 text-[#6b7684]">
                 이 브라우저에서는 자동 텍스트 인식이 제한될 수 있습니다. 아래 내용을 직접 확인해 입력해주세요.
               </div>
             )}
 
-            {participants.length > 0 && (
+            {participants.length > 0 && lockedReporterId ? (
               <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700">
+                <label className="mb-1.5 block text-sm font-bold text-[#4e5968]">
+                  제보자
+                </label>
+                <div className="min-h-[48px] rounded-lg border border-[#e5e8eb] bg-[#f6f8fb] px-3.5 py-3 text-base font-bold text-[#171719]">
+                  {participants.find((participant) => participant.id === lockedReporterId)?.name ||
+                    "내 프로필"}
+                </div>
+              </div>
+            ) : participants.length > 0 ? (
+              <div>
+                <label className="mb-1.5 block text-sm font-bold text-[#4e5968]">
                   제보자
                 </label>
                 <select
                   value={reporterId}
                   onChange={(event) => setReporterId(event.target.value)}
-                  className="h-11 w-full rounded-lg border border-gray-300 px-3 text-base"
+                  className="min-h-[48px] w-full rounded-lg border border-[#d1d6db] bg-white px-3.5 text-base text-[#171719] focus:border-[#3182f6] focus:outline-none focus:ring-3 focus:ring-[#3182f6]/15"
                   required
                 >
                   <option value="">선택하세요</option>
@@ -457,7 +514,7 @@ export default function ReportExpensePage() {
                   ))}
                 </select>
               </div>
-            )}
+            ) : null}
 
             <Input
               label="품목"
@@ -482,7 +539,7 @@ export default function ReportExpensePage() {
               <select
                 value={categoryId}
                 onChange={(event) => setCategoryId(event.target.value)}
-                className="h-11 min-w-0 rounded-lg border border-gray-300 px-3 text-sm"
+                className="min-h-[48px] min-w-0 rounded-lg border border-[#d1d6db] bg-white px-3.5 text-base text-[#171719] focus:border-[#3182f6] focus:outline-none focus:ring-3 focus:ring-[#3182f6]/15"
               >
                 {categories.map((category) => (
                   <option key={category.id} value={category.id}>
@@ -495,7 +552,7 @@ export default function ReportExpensePage() {
                 onChange={(event) =>
                   setPaymentType(event.target.value as "cash" | "card")
                 }
-                className="h-11 min-w-0 rounded-lg border border-gray-300 px-3 text-sm"
+                className="min-h-[48px] min-w-0 rounded-lg border border-[#d1d6db] bg-white px-3.5 text-base text-[#171719] focus:border-[#3182f6] focus:outline-none focus:ring-3 focus:ring-[#3182f6]/15"
               >
                 <option value="card">카드</option>
                 <option value="cash">현금</option>
@@ -524,17 +581,17 @@ export default function ReportExpensePage() {
             />
 
             {totalAmount > 0 && selectedParticipantIds.length > 0 && (
-              <div className="rounded-lg border border-blue-100 bg-blue-50 p-3">
-                <div className="text-sm text-blue-700">예상 1인 부담액</div>
-                <div className="mt-1 text-xl font-bold text-blue-800">
+              <div className="rounded-lg border border-[#c9e2ff] bg-[#e8f3ff] p-3">
+                <div className="text-sm font-bold text-[#1b64da]">예상 1인 부담액</div>
+                <div className="mt-1 text-xl font-extrabold text-[#1b64da]">
                   {formatCurrency(perPersonAmount)} / {selectedParticipantIds.length}명
                 </div>
               </div>
             )}
 
             {ocrText && (
-              <details className="rounded-lg bg-gray-50 p-3 text-sm text-gray-600">
-                <summary className="cursor-pointer font-medium text-gray-800">
+              <details className="rounded-lg border border-[#e5e8eb] bg-[#f6f8fb] p-3 text-sm text-[#6b7684]">
+                <summary className="cursor-pointer font-bold text-[#4e5968]">
                   인식된 텍스트 보기
                 </summary>
                 <pre className="mt-2 whitespace-pre-wrap break-words text-xs leading-5">

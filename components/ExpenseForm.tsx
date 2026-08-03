@@ -444,22 +444,22 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
     <form onSubmit={handleSubmit} className="space-y-6 pb-1">
       {/* 금액 입력 */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="mb-1.5 block text-sm font-bold text-[#4e5968]">
           금액
         </label>
         <div className="relative">
-          <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+          <DollarSign className="absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-[#8b95a1]" />
           <input
             type="text"
             value={amount ? formatNumber(parseInt(amount.replace(/,/g, ""))) : ""}
             onChange={(e) => handleAmountChange(e.target.value)}
             placeholder="0"
-            className="w-full h-14 rounded-lg border-2 border-gray-300 text-center text-2xl font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="min-h-[60px] w-full rounded-lg border border-[#d1d6db] bg-white px-12 text-center text-2xl font-extrabold text-[#171719] focus:border-[#3182f6] focus:outline-none focus:ring-3 focus:ring-[#3182f6]/15"
             required
           />
         </div>
         {amount && totalAmount <= 0 && (
-          <p className="mt-2 text-sm text-red-600">
+          <p className="mt-2 text-sm font-medium text-[#f04452]">
             금액은 1원 이상 입력해주세요.
           </p>
         )}
@@ -467,7 +467,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
           <select
             value={currency}
             onChange={(e) => setCurrency(e.target.value)}
-            className="h-11 min-w-0 rounded-lg border border-gray-300 px-3 text-sm"
+            className="min-h-[48px] min-w-0 rounded-lg border border-[#d1d6db] bg-white px-3.5 text-base text-[#171719] focus:border-[#3182f6] focus:outline-none focus:ring-3 focus:ring-[#3182f6]/15"
           >
             <option value="KRW">KRW</option>
             <option value="USD">USD</option>
@@ -477,7 +477,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
           <select
             value={paymentType}
             onChange={(e) => setPaymentType(e.target.value as "cash" | "card")}
-            className="h-11 min-w-0 rounded-lg border border-gray-300 px-3 text-sm"
+            className="min-h-[48px] min-w-0 rounded-lg border border-[#d1d6db] bg-white px-3.5 text-base text-[#171719] focus:border-[#3182f6] focus:outline-none focus:ring-3 focus:ring-[#3182f6]/15"
           >
             <option value="cash">현금</option>
             <option value="card">카드</option>
@@ -487,7 +487,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
 
       {/* 카테고리 선택 */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="mb-1.5 block text-sm font-bold text-[#4e5968]">
           카테고리
         </label>
         <div className="no-scrollbar -mx-1 flex snap-x gap-2 overflow-x-auto px-1 pb-2">
@@ -500,14 +500,14 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                 setFormError("");
               }}
               className={cn(
-                "flex min-h-[76px] min-w-[76px] snap-start flex-col items-center justify-center gap-1 rounded-lg border-2 px-3 py-3 transition-all",
+                "flex min-h-[76px] min-w-[76px] snap-start flex-col items-center justify-center gap-1 rounded-lg border px-3 py-3 transition-all",
                 categoryId === category.id
-                  ? "border-blue-500 bg-blue-50"
-                  : "border-gray-200 bg-white hover:border-gray-300"
+                  ? "border-[#3182f6] bg-[#e8f3ff] text-[#1b64da]"
+                  : "border-[#e5e8eb] bg-white text-[#4e5968] hover:border-[#d1d6db]"
               )}
             >
               <span className="text-2xl">{category.icon}</span>
-              <span className="text-xs font-medium">{category.name}</span>
+              <span className="text-xs font-bold">{category.name}</span>
             </button>
           ))}
         </div>
@@ -529,7 +529,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
       <div className="space-y-2">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="mb-1.5 block text-sm font-bold text-[#4e5968]">
               {isMultiDayCategory ? "시작일" : "날짜"}
             </label>
             <input
@@ -540,17 +540,17 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                 setFormError("");
               }}
               className={cn(
-                "w-full h-11 rounded-lg border px-3 focus:outline-none focus:ring-2 focus:ring-blue-500",
+                "min-h-[48px] w-full rounded-lg border px-3.5 text-base focus:border-[#3182f6] focus:outline-none focus:ring-3 focus:ring-[#3182f6]/15",
                 trip && !isDateWithinTripRange(date) && !isMultiDayCategory
-                  ? "border-orange-500 bg-orange-50"
-                  : "border-gray-300"
+                  ? "border-[#f59f00] bg-[#fff8e8]"
+                  : "border-[#d1d6db] bg-white"
               )}
               required
             />
           </div>
           {isMultiDayCategory && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="mb-1.5 block text-sm font-bold text-[#4e5968]">
                 종료일
               </label>
               <input
@@ -562,18 +562,18 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                 }}
                 min={date}
                 className={cn(
-                  "w-full h-11 rounded-lg border px-3 focus:outline-none focus:ring-2 focus:ring-blue-500",
+                  "min-h-[48px] w-full rounded-lg border px-3.5 text-base focus:border-[#3182f6] focus:outline-none focus:ring-3 focus:ring-[#3182f6]/15",
                   trip && endDate && !isDateWithinTripRange(endDate)
-                    ? "border-orange-500 bg-orange-50"
-                    : "border-gray-300"
+                    ? "border-[#f59f00] bg-[#fff8e8]"
+                    : "border-[#d1d6db] bg-white"
                 )}
               />
             </div>
           )}
         </div>
         {trip && !getDateRangeValidation().isValid && (
-          <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
-            <p className="text-sm leading-6 text-orange-800">
+          <div className="rounded-lg border border-[#ffe1ad] bg-[#fff8e8] p-3">
+            <p className="text-sm leading-6 text-[#9a6700]">
               이 날짜는 여행 기간({new Date(trip.start_date).toLocaleDateString("ko-KR")} ~ {new Date(trip.end_date).toLocaleDateString("ko-KR")}) 외부입니다. 추가 시 여행 기간이 자동으로 확장됩니다.
             </p>
           </div>
@@ -582,7 +582,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
 
       {/* 결제자 선택 */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="mb-1.5 block text-sm font-bold text-[#4e5968]">
           결제자
         </label>
         <select
@@ -591,7 +591,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
             setPayerId(e.target.value);
             setFormError("");
           }}
-          className="w-full h-11 rounded-lg border border-gray-300 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="min-h-[48px] w-full rounded-lg border border-[#d1d6db] bg-white px-3.5 text-base text-[#171719] focus:border-[#3182f6] focus:outline-none focus:ring-3 focus:ring-[#3182f6]/15"
           required
         >
           <option value="">선택하세요</option>
@@ -605,7 +605,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
 
       {/* 정산 방법 */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="mb-1.5 block text-sm font-bold text-[#4e5968]">
           정산 방법
         </label>
         <div className="grid grid-cols-2 gap-2">
@@ -616,10 +616,10 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
               setFormError("");
             }}
             className={cn(
-              "min-h-[44px] rounded-lg border-2 px-2 font-medium transition-all",
+              "min-h-[48px] rounded-lg border px-2 font-bold transition-all",
               settlementType === "equal"
-                ? "border-blue-500 bg-blue-50 text-blue-700"
-                : "border-gray-200 bg-white text-gray-700"
+                ? "border-[#3182f6] bg-[#e8f3ff] text-[#1b64da]"
+                : "border-[#e5e8eb] bg-white text-[#4e5968]"
             )}
           >
             동일 분할
@@ -631,10 +631,10 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
               setFormError("");
             }}
             className={cn(
-              "min-h-[44px] rounded-lg border-2 px-2 font-medium transition-all",
+              "min-h-[48px] rounded-lg border px-2 font-bold transition-all",
               settlementType === "custom"
-                ? "border-blue-500 bg-blue-50 text-blue-700"
-                : "border-gray-200 bg-white text-gray-700"
+                ? "border-[#3182f6] bg-[#e8f3ff] text-[#1b64da]"
+                : "border-[#e5e8eb] bg-white text-[#4e5968]"
             )}
           >
             직접 정산
@@ -667,7 +667,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
         <>
           {/* 전체 참여자 선택 (날짜별 기본값) */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="mb-1.5 block text-sm font-bold text-[#4e5968]">
               전체 참여자 (날짜별 기본값)
             </label>
             <ParticipantSelector
@@ -705,13 +705,13 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
           </div>
 
           {/* 날짜별 참여자 선택 */}
-          <div className="space-y-4 rounded-lg bg-gray-50 p-3 sm:p-4">
-            <h3 className="text-sm font-medium text-gray-700">
+          <div className="space-y-4 rounded-lg border border-[#e5e8eb] bg-[#f6f8fb] p-3 sm:p-4">
+            <h3 className="text-sm font-bold text-[#4e5968]">
               날짜별 참여자 선택
             </h3>
             {getDateRange(date, endDate).map((dateStr) => (
               <div key={dateStr} className="space-y-2">
-                <label className="block text-xs font-medium text-gray-600">
+                <label className="block text-xs font-bold text-[#6b7684]">
                   {new Date(dateStr).toLocaleDateString("ko-KR", {
                     month: "short",
                     day: "numeric",
@@ -745,10 +745,10 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                           });
                         }}
                         className={cn(
-                          "min-h-[40px] rounded-lg border-2 px-3 py-1 text-sm transition-all",
+                          "min-h-[40px] rounded-lg border px-3 py-1 text-sm font-bold transition-all",
                           isSelected
-                            ? "border-blue-500 bg-blue-50 text-blue-700"
-                            : "border-gray-200 bg-white text-gray-600"
+                            ? "border-[#3182f6] bg-[#e8f3ff] text-[#1b64da]"
+                            : "border-[#e5e8eb] bg-white text-[#6b7684]"
                         )}
                       >
                         {participant.name}
@@ -759,7 +759,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
               </div>
             ))}
             {missingDailyParticipantDates.length > 0 && (
-              <p className="text-sm text-red-600">
+              <p className="text-sm font-medium text-[#f04452]">
                 참여자가 없는 날짜:{" "}
                 {missingDailyParticipantDates
                   .map((dateStr) =>
@@ -778,14 +778,14 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
       {/* 직접 정산 금액 입력 */}
       {settlementType === "custom" && selectedParticipantIds.length > 0 && (
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">
+          <label className="block text-sm font-bold text-[#4e5968]">
             개별 금액 입력
           </label>
           {selectedParticipantIds.map((pid) => {
             const participant = participants.find((p) => p.id === pid);
             return (
               <div key={pid} className="grid grid-cols-1 gap-2 sm:grid-cols-[5rem_1fr] sm:items-center">
-                <span className="text-sm font-medium sm:w-20">
+                <span className="text-sm font-bold text-[#4e5968] sm:w-20">
                   {participant?.name}
                 </span>
                 <input
@@ -801,7 +801,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
                     handleCustomAmountChange(pid, e.target.value)
                   }
                   placeholder="0"
-                  className="h-11 min-w-0 rounded-lg border border-gray-300 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="min-h-[48px] min-w-0 rounded-lg border border-[#d1d6db] px-3.5 text-base focus:border-[#3182f6] focus:outline-none focus:ring-3 focus:ring-[#3182f6]/15"
                 />
               </div>
             );
@@ -810,8 +810,8 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
             className={cn(
               "rounded-lg border p-3 text-sm",
               hasMissingCustomAmount || hasCustomAmountMismatch
-                ? "border-red-200 bg-red-50 text-red-700"
-                : "border-green-200 bg-green-50 text-green-700"
+                ? "border-[#ffd0d5] bg-[#fff0f1] text-[#d93d4a]"
+                : "border-[#b7ebd0] bg-[#ebfff6] text-[#087443]"
             )}
           >
             <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
@@ -836,9 +836,9 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
       {settlementType === "equal" &&
         totalAmount > 0 &&
         selectedParticipantIds.length > 0 && (
-          <div className="bg-blue-50 rounded-lg p-4">
-            <p className="text-sm text-gray-600 mb-1">정산 미리보기</p>
-            <p className="break-words text-base font-semibold text-blue-700 sm:text-lg">
+          <div className="rounded-lg border border-[#c9e2ff] bg-[#e8f3ff] p-4">
+            <p className="mb-1 text-sm font-bold text-[#4e5968]">정산 미리보기</p>
+            <p className="break-words text-base font-extrabold text-[#1b64da] sm:text-lg">
               인당 {formatCurrency(perPersonAmount, currency)}
               {remainder > 0 && ` (+${formatCurrency(remainder, currency)} 첫 번째 참여자)`}
             </p>
@@ -857,7 +857,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
       />
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="mb-1.5 block text-sm font-bold text-[#4e5968]">
           메모 (선택)
         </label>
         <textarea
@@ -867,18 +867,18 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
             setFormError("");
           }}
           placeholder="추가 메모를 입력하세요"
-          className="w-full h-24 rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="min-h-24 w-full rounded-lg border border-[#d1d6db] px-3.5 py-2.5 text-base focus:border-[#3182f6] focus:outline-none focus:ring-3 focus:ring-[#3182f6]/15"
         />
       </div>
 
       {visibleValidationMessage && (
-        <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm font-medium text-red-700">
+        <div className="rounded-lg border border-[#ffd0d5] bg-[#fff0f1] p-3 text-sm font-bold text-[#d93d4a]">
           {visibleValidationMessage}
         </div>
       )}
 
       {/* 버튼 */}
-      <div className="sticky bottom-0 z-10 -mx-4 flex flex-col-reverse gap-2 border-t border-gray-100 bg-white/95 px-4 py-3 backdrop-blur sm:static sm:mx-0 sm:flex-row sm:border-t-0 sm:bg-transparent sm:px-0 sm:py-0 sm:backdrop-blur-none">
+      <div className="sticky bottom-0 z-10 -mx-4 flex flex-col-reverse gap-2 border-t border-[#e5e8eb] bg-white/95 px-4 py-3 backdrop-blur sm:static sm:mx-0 sm:flex-row sm:border-t-0 sm:bg-transparent sm:px-0 sm:py-0 sm:backdrop-blur-none">
         {onCancel && (
           <Button
             type="button"
@@ -910,11 +910,11 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
         title="여행 기간 외 날짜"
       >
         <div className="space-y-4">
-          <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
-            <p className="text-sm text-orange-800 font-medium mb-2">
+          <div className="rounded-lg border border-[#ffe1ad] bg-[#fff8e8] p-4">
+            <p className="mb-2 text-sm font-bold text-[#9a6700]">
               선택한 날짜가 여행 기간에 포함되지 않습니다.
             </p>
-            <p className="text-sm text-orange-700">
+            <p className="text-sm text-[#9a6700]">
               {trip && (
                 <>
                   설정된 여행 기간: {new Date(trip.start_date).toLocaleDateString("ko-KR")} ~ {new Date(trip.end_date).toLocaleDateString("ko-KR")}
@@ -928,10 +928,10 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
               )}
             </p>
           </div>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm leading-6 text-[#6b7684]">
             지출을 추가하면 여행 기간이 자동으로 확장되어 이 날짜를 포함하도록 업데이트됩니다.
           </p>
-          <div className="flex gap-2">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             <Button
               type="button"
               variant="outline"

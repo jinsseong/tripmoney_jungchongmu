@@ -12,6 +12,7 @@ interface ExpenseReportInboxProps {
   participants: Participant[];
   loading?: boolean;
   error?: string | null;
+  canManage?: boolean;
   onApprove: (report: ExpenseReport) => Promise<Expense | void>;
   onReject: (report: ExpenseReport) => Promise<void>;
 }
@@ -21,6 +22,7 @@ export function ExpenseReportInbox({
   participants,
   loading = false,
   error,
+  canManage = true,
   onApprove,
   onReject,
 }: ExpenseReportInboxProps) {
@@ -66,15 +68,15 @@ export function ExpenseReportInbox({
     return (
       <div
         key={report.id}
-        className="rounded-lg border border-gray-200 bg-white p-4"
+        className="rounded-lg border border-[#e5e8eb] bg-white p-4"
       >
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <h3 className="break-words text-base font-bold text-gray-900">
+              <h3 className="break-words text-base font-bold text-[#171719]">
                 {report.item_name}
               </h3>
-              <span className="rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600">
+              <span className="rounded-full bg-[#eef2f6] px-2 py-1 text-xs font-bold text-[#6b7684]">
                 {report.status === "pending"
                   ? "검토 대기"
                   : report.status === "approved"
@@ -82,34 +84,34 @@ export function ExpenseReportInbox({
                   : "반려됨"}
               </span>
             </div>
-            <div className="mt-1 text-sm text-gray-500">
+            <div className="mt-1 text-sm text-[#6b7684]">
               {report.date} · 제보자 {getParticipantName(report.reporter_id)}
             </div>
             <div className="mt-3 grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
-              <div className="rounded-lg bg-gray-50 p-3">
-                <div className="text-xs text-gray-500">전체 비용</div>
-                <div className="font-bold text-gray-900">
+              <div className="rounded-lg border border-[#e5e8eb] bg-[#f6f8fb] p-3">
+                <div className="text-xs font-bold text-[#6b7684]">전체 비용</div>
+                <div className="font-extrabold text-[#171719]">
                   {formatCurrency(report.amount, report.currency)}
                 </div>
               </div>
-              <div className="rounded-lg bg-blue-50 p-3">
-                <div className="text-xs text-blue-700">n분의 1 예상</div>
-                <div className="font-bold text-blue-700">
+              <div className="rounded-lg border border-[#c9e2ff] bg-[#e8f3ff] p-3">
+                <div className="text-xs font-bold text-[#1b64da]">n분의 1 예상</div>
+                <div className="font-extrabold text-[#1b64da]">
                   {formatCurrency(perPersonAmount, report.currency)}
-                  <span className="ml-1 text-xs font-medium">
+                  <span className="ml-1 text-xs font-bold">
                     / {report.participant_ids.length}명
                   </span>
                 </div>
               </div>
             </div>
             {participantNames && (
-              <div className="mt-3 text-sm leading-6 text-gray-600">
+              <div className="mt-3 text-sm leading-6 text-[#6b7684]">
                 참여자: {participantNames}
               </div>
             )}
             {report.ocr_text && (
-              <details className="mt-3 rounded-lg bg-gray-50 p-3 text-sm text-gray-600">
-                <summary className="cursor-pointer font-medium text-gray-800">
+              <details className="mt-3 rounded-lg border border-[#e5e8eb] bg-[#f6f8fb] p-3 text-sm text-[#6b7684]">
+                <summary className="cursor-pointer font-bold text-[#4e5968]">
                   인식된 텍스트
                 </summary>
                 <pre className="mt-2 whitespace-pre-wrap break-words text-xs leading-5">
@@ -124,7 +126,7 @@ export function ExpenseReportInbox({
               href={report.receipt_image_url}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-lg border-2 border-gray-300 px-3 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-lg border border-[#d1d6db] bg-white px-3 text-sm font-bold text-[#4e5968] hover:bg-[#f6f8fb]"
             >
               영수증
               <ExternalLink className="h-4 w-4" />
@@ -132,14 +134,14 @@ export function ExpenseReportInbox({
           )}
         </div>
 
-        {report.status === "pending" && (
+        {canManage && report.status === "pending" && (
           <div className="mt-4 grid grid-cols-2 gap-2">
             <Button
               type="button"
               variant="outline"
               onClick={() => handleReject(report)}
               isLoading={processingId === report.id}
-              className="gap-2 text-red-600 hover:text-red-700"
+              className="gap-2 text-[#f04452] hover:bg-[#fff0f1] hover:text-[#d93d4a]"
             >
               <X className="h-4 w-4" />
               반려
@@ -167,15 +169,15 @@ export function ExpenseReportInbox({
       </CardHeader>
       <CardContent>
         {loading ? (
-          <div className="py-10 text-center text-gray-500">
+          <div className="py-10 text-center text-[#6b7684]">
             제보를 불러오는 중...
           </div>
         ) : error ? (
-          <div className="rounded-lg border border-orange-200 bg-orange-50 p-3 text-sm leading-6 text-orange-800">
+          <div className="rounded-lg border border-[#ffe1ad] bg-[#fff8e8] p-3 text-sm leading-6 text-[#9a6700]">
             {error}
           </div>
         ) : reports.length === 0 ? (
-          <div className="py-10 text-center text-gray-500">
+          <div className="py-10 text-center text-[#6b7684]">
             아직 등록된 지출 제보가 없습니다.
           </div>
         ) : (
@@ -184,7 +186,7 @@ export function ExpenseReportInbox({
               {pendingReports.length > 0 ? (
                 pendingReports.map(renderReport)
               ) : (
-                <div className="rounded-lg bg-gray-50 p-4 text-center text-sm text-gray-500">
+                <div className="rounded-lg border border-[#e5e8eb] bg-[#f6f8fb] p-4 text-center text-sm text-[#6b7684]">
                   검토 대기 중인 제보가 없습니다.
                 </div>
               )}
@@ -192,7 +194,7 @@ export function ExpenseReportInbox({
 
             {reviewedReports.length > 0 && (
               <div className="space-y-3">
-                <h3 className="text-sm font-semibold text-gray-700">
+                <h3 className="text-sm font-bold text-[#4e5968]">
                   처리된 제보
                 </h3>
                 {reviewedReports.map(renderReport)}

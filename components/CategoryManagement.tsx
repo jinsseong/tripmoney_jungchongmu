@@ -125,8 +125,11 @@ export const CategoryManagement: React.FC<CategoryManagementProps> = ({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">카테고리 관리</h2>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <div className="page-kicker mb-1">관리</div>
+          <h2 className="page-title">카테고리 관리</h2>
+        </div>
         <Button
           variant="primary"
           size="sm"
@@ -134,8 +137,9 @@ export const CategoryManagement: React.FC<CategoryManagementProps> = ({
             setShowAddModal(true);
             setFormData({ name: "", icon: "💊", color: "#98D8C8" });
           }}
+          className="gap-1.5 sm:w-auto"
         >
-          <Plus className="h-4 w-4 mr-1" />
+          <Plus className="h-4 w-4" />
           카테고리 추가
         </Button>
       </div>
@@ -147,19 +151,19 @@ export const CategoryManagement: React.FC<CategoryManagementProps> = ({
             <CardTitle>기본 카테고리</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {defaultCategories.map((category) => (
                 <div
                   key={category.id}
-                  className="flex flex-col items-center p-4 bg-gray-50 rounded-lg"
+                  className="flex items-center gap-3 rounded-lg border border-[#e5e8eb] bg-[#f6f8fb] p-4"
                 >
                   <div
-                    className="w-16 h-16 rounded-full flex items-center justify-center text-2xl mb-2"
+                    className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg text-2xl"
                     style={{ backgroundColor: `${category.color}20` }}
                   >
                     {category.icon}
                   </div>
-                  <div className="font-semibold text-sm text-center">
+                  <div className="min-w-0 truncate text-sm font-bold text-[#171719]">
                     {category.name}
                   </div>
                 </div>
@@ -176,36 +180,38 @@ export const CategoryManagement: React.FC<CategoryManagementProps> = ({
         </CardHeader>
         <CardContent>
           {userCategories.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
+            <div className="py-8 text-center text-[#6b7684]">
               사용자 정의 카테고리가 없습니다.
             </div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {userCategories.map((category) => (
                 <div
                   key={category.id}
-                  className="relative flex flex-col items-center p-4 bg-gray-50 rounded-lg group"
+                  className="group relative flex items-center gap-3 rounded-lg border border-[#e5e8eb] bg-[#f6f8fb] p-4"
                 >
                   <div
-                    className="w-16 h-16 rounded-full flex items-center justify-center text-2xl mb-2"
+                    className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg text-2xl"
                     style={{ backgroundColor: `${category.color}20` }}
                   >
                     {category.icon}
                   </div>
-                  <div className="font-semibold text-sm text-center mb-2">
-                    {category.name}
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-sm font-bold text-[#171719]">
+                      {category.name}
+                    </div>
                   </div>
-                  <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="flex shrink-0 gap-1 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100">
                     <button
                       onClick={() => handleEdit(category)}
-                      className="p-1 text-blue-600 hover:bg-blue-50 rounded"
+                      className="flex min-h-[40px] min-w-[40px] items-center justify-center rounded-lg text-[#3182f6] hover:bg-[#e8f3ff]"
                       aria-label="수정"
                     >
                       <Edit2 className="h-4 w-4" />
                     </button>
                     <button
                       onClick={() => handleDelete(category.id)}
-                      className="p-1 text-red-600 hover:bg-red-50 rounded"
+                      className="flex min-h-[40px] min-w-[40px] items-center justify-center rounded-lg text-[#f04452] hover:bg-[#fff0f1]"
                       aria-label="삭제"
                     >
                       <Trash2 className="h-4 w-4" />
@@ -239,7 +245,7 @@ export const CategoryManagement: React.FC<CategoryManagementProps> = ({
           />
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="mb-2 block text-sm font-bold text-[#4e5968]">
               아이콘 선택
             </label>
             <div className="flex flex-wrap gap-2">
@@ -248,10 +254,10 @@ export const CategoryManagement: React.FC<CategoryManagementProps> = ({
                   key={emoji}
                   type="button"
                   onClick={() => setFormData({ ...formData, icon: emoji })}
-                  className={`w-12 h-12 text-2xl rounded-lg border-2 transition-all ${
+                  className={`min-h-[44px] min-w-[44px] rounded-lg border text-2xl transition-all ${
                     formData.icon === emoji
-                      ? "border-blue-500 bg-blue-50"
-                      : "border-gray-200 hover:border-gray-300"
+                      ? "border-[#3182f6] bg-[#e8f3ff]"
+                      : "border-[#e5e8eb] bg-white hover:bg-[#f6f8fb]"
                   }`}
                 >
                   {emoji}
@@ -261,7 +267,7 @@ export const CategoryManagement: React.FC<CategoryManagementProps> = ({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="mb-2 block text-sm font-bold text-[#4e5968]">
               색상 선택
             </label>
             <div className="flex flex-wrap gap-2">
@@ -270,10 +276,10 @@ export const CategoryManagement: React.FC<CategoryManagementProps> = ({
                   key={color}
                   type="button"
                   onClick={() => setFormData({ ...formData, color })}
-                  className={`w-10 h-10 rounded-lg border-2 transition-all ${
+                  className={`h-10 w-10 rounded-lg border border-black/5 transition-all ${
                     formData.color === color
-                      ? "border-gray-800 scale-110"
-                      : "border-gray-200 hover:border-gray-300"
+                      ? "scale-105 ring-2 ring-[#3182f6] ring-offset-2"
+                      : ""
                   }`}
                   style={{ backgroundColor: color }}
                   aria-label={`색상 ${color}`}
@@ -284,11 +290,11 @@ export const CategoryManagement: React.FC<CategoryManagementProps> = ({
               type="color"
               value={formData.color}
               onChange={(e) => setFormData({ ...formData, color: e.target.value })}
-              className="mt-2 w-full h-12 rounded-lg cursor-pointer"
+              className="mt-2 h-12 w-full cursor-pointer rounded-lg"
             />
           </div>
 
-          <div className="flex gap-2">
+          <div className="grid grid-cols-2 gap-2">
             <Button
               variant="outline"
               onClick={() => {
@@ -332,7 +338,7 @@ export const CategoryManagement: React.FC<CategoryManagementProps> = ({
           />
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="mb-2 block text-sm font-bold text-[#4e5968]">
               아이콘 선택
             </label>
             <div className="flex flex-wrap gap-2">
@@ -341,10 +347,10 @@ export const CategoryManagement: React.FC<CategoryManagementProps> = ({
                   key={emoji}
                   type="button"
                   onClick={() => setFormData({ ...formData, icon: emoji })}
-                  className={`w-12 h-12 text-2xl rounded-lg border-2 transition-all ${
+                  className={`min-h-[44px] min-w-[44px] rounded-lg border text-2xl transition-all ${
                     formData.icon === emoji
-                      ? "border-blue-500 bg-blue-50"
-                      : "border-gray-200 hover:border-gray-300"
+                      ? "border-[#3182f6] bg-[#e8f3ff]"
+                      : "border-[#e5e8eb] bg-white hover:bg-[#f6f8fb]"
                   }`}
                 >
                   {emoji}
@@ -354,7 +360,7 @@ export const CategoryManagement: React.FC<CategoryManagementProps> = ({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="mb-2 block text-sm font-bold text-[#4e5968]">
               색상 선택
             </label>
             <div className="flex flex-wrap gap-2">
@@ -363,10 +369,10 @@ export const CategoryManagement: React.FC<CategoryManagementProps> = ({
                   key={color}
                   type="button"
                   onClick={() => setFormData({ ...formData, color })}
-                  className={`w-10 h-10 rounded-lg border-2 transition-all ${
+                  className={`h-10 w-10 rounded-lg border border-black/5 transition-all ${
                     formData.color === color
-                      ? "border-gray-800 scale-110"
-                      : "border-gray-200 hover:border-gray-300"
+                      ? "scale-105 ring-2 ring-[#3182f6] ring-offset-2"
+                      : ""
                   }`}
                   style={{ backgroundColor: color }}
                   aria-label={`색상 ${color}`}
@@ -377,11 +383,11 @@ export const CategoryManagement: React.FC<CategoryManagementProps> = ({
               type="color"
               value={formData.color}
               onChange={(e) => setFormData({ ...formData, color: e.target.value })}
-              className="mt-2 w-full h-12 rounded-lg cursor-pointer"
+              className="mt-2 h-12 w-full cursor-pointer rounded-lg"
             />
           </div>
 
-          <div className="flex gap-2">
+          <div className="grid grid-cols-2 gap-2">
             <Button
               variant="outline"
               onClick={() => {
@@ -406,4 +412,3 @@ export const CategoryManagement: React.FC<CategoryManagementProps> = ({
     </div>
   );
 };
-

@@ -161,8 +161,8 @@ export default function SettlementDashboardPage() {
   // 모든 Hook 호출 이후에 early return
   if (loading && !dashboard) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-gray-500">로딩 중...</div>
+      <div className="app-screen flex items-center justify-center">
+        <div className="text-[#6b7684]">로딩 중...</div>
       </div>
     );
   }
@@ -179,45 +179,48 @@ export default function SettlementDashboardPage() {
     Boolean(dashboard?.trip_id) && (expensesLoading || categoriesLoading);
 
   return (
-    <div className="min-h-screen bg-gray-50 safe-area">
-      <div className="max-w-4xl mx-auto px-4 py-8">
+    <div className="app-screen safe-area">
+      <div className="page-container">
         {/* 대시보드 헤더 */}
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle className="text-2xl">{dashboard.title}</CardTitle>
+            <div className="page-kicker mb-1">공유 정산</div>
+            <CardTitle className="break-words text-2xl font-extrabold">
+              {dashboard.title}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             {dashboard.description && (
-              <p className="text-gray-600 mb-4">{dashboard.description}</p>
+              <p className="mb-4 text-sm leading-6 text-[#6b7684]">
+                {dashboard.description}
+              </p>
             )}
-            <div className="flex items-center gap-4 text-sm text-gray-500">
-              <span>
+            <div className="flex flex-col gap-2 text-sm text-[#6b7684] sm:flex-row sm:items-center sm:gap-4">
+              <span className="status-pill w-fit">
                 기간: {new Date(dashboard.start_date).toLocaleDateString(
                   "ko-KR"
                 )}{" "}
                 ~ {new Date(dashboard.end_date).toLocaleDateString("ko-KR")}
               </span>
-              <span>조회수: {dashboard.view_count || 0}</span>
+              <span className="status-pill w-fit">조회수: {dashboard.view_count || 0}</span>
             </div>
           </CardContent>
         </Card>
 
         {isRefreshingDetails && (
-          <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm font-medium text-blue-700">
+          <div className="mb-4 rounded-lg border border-[#c9e2ff] bg-[#e8f3ff] px-4 py-3 text-sm font-bold text-[#1b64da]">
             최신 지출 내역을 불러오는 중...
           </div>
         )}
 
         {/* 총 사용금액 */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>총 사용금액</CardTitle>
-          </CardHeader>
+        <Card className="mb-6 bg-[#171719] text-white">
           <CardContent>
-            <div className="text-3xl font-bold text-blue-600">
+            <div className="mb-1 text-sm font-bold text-white/65">총 사용금액</div>
+            <div className="break-all text-3xl font-extrabold text-white sm:text-4xl">
               {formatCurrency(totalAmount, "KRW")}
             </div>
-            <div className="text-sm text-gray-500 mt-2">
+            <div className="mt-2 text-sm font-bold text-white/65">
               {snapshots.length}명 참여
             </div>
           </CardContent>
@@ -250,7 +253,7 @@ export default function SettlementDashboardPage() {
 
         {/* 지출 패턴 분석 */}
         {expenses.length > 0 && categories.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6">
               <ExpenseChart
                 expenses={expenses}
                 categories={categories}
@@ -286,7 +289,7 @@ export default function SettlementDashboardPage() {
               error={passwordError}
               required
             />
-            <div className="flex gap-2">
+            <div className="grid grid-cols-2 gap-2">
               <Button
                 type="button"
                 variant="outline"

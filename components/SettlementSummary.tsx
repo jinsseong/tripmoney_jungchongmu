@@ -61,16 +61,16 @@ export const SettlementSummary: React.FC<SettlementSummaryProps> = ({
     <div className="space-y-4 sm:space-y-6">
       {/* 정산 검증 상태 */}
       {validation.settlement.isValid ? (
-        <div className="flex items-start gap-2 rounded-lg border border-green-200 bg-green-50 p-3">
-          <CheckCircle className="mt-0.5 h-5 w-5 shrink-0 text-green-600" />
-          <span className="text-sm text-green-700 font-medium">
+        <div className="flex items-start gap-2 rounded-lg border border-[#b7ebd0] bg-[#ebfff6] p-3">
+          <CheckCircle className="mt-0.5 h-5 w-5 shrink-0 text-[#00a86b]" />
+          <span className="text-sm font-bold text-[#087443]">
             {validation.settlement.message}
           </span>
         </div>
       ) : (
-        <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 p-3">
-          <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-red-600" />
-          <span className="text-sm text-red-700 font-medium">
+        <div className="flex items-start gap-2 rounded-lg border border-[#ffd0d5] bg-[#fff0f1] p-3">
+          <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-[#f04452]" />
+          <span className="text-sm font-bold text-[#d93d4a]">
             {validation.settlement.message}
           </span>
         </div>
@@ -92,7 +92,7 @@ export const SettlementSummary: React.FC<SettlementSummaryProps> = ({
                 <button
                   key={user.id}
                   onClick={() => handleUserClick(user)}
-                  className="flex w-full flex-col gap-3 rounded-lg bg-gray-50 p-4 text-left transition-colors hover:bg-gray-100 sm:flex-row sm:items-center sm:justify-between"
+                  className="flex w-full flex-col gap-3 rounded-lg border border-[#e5e8eb] bg-[#f6f8fb] p-4 text-left transition-colors hover:bg-[#eef2f6] sm:flex-row sm:items-center sm:justify-between"
                 >
                   <div className="flex min-w-0 items-center gap-3">
                     <div
@@ -108,12 +108,12 @@ export const SettlementSummary: React.FC<SettlementSummaryProps> = ({
                       {getInitials(user.name)}
                     </div>
                     <div className="min-w-0 text-left">
-                      <div className="truncate font-semibold">{user.name}</div>
-                      <div className="text-sm text-gray-500">
+                      <div className="truncate font-bold text-[#171719]">{user.name}</div>
+                      <div className="text-sm text-[#6b7684]">
                         사용한 금액: {formatCurrency(user.totalAmount, currency)}
                       </div>
                       {user.totalPaid !== undefined && (
-                        <div className="text-xs text-gray-400 mt-0.5">
+                        <div className="mt-0.5 text-xs text-[#8b95a1]">
                           지불한 금액: {formatCurrency(user.totalPaid, currency)}
                         </div>
                       )}
@@ -123,15 +123,15 @@ export const SettlementSummary: React.FC<SettlementSummaryProps> = ({
                     <div
                       className={cn(
                         "break-all text-xl font-bold sm:text-lg",
-                        isPositive && "text-green-600",
-                        isNegative && "text-red-600",
-                        isZero && "text-gray-600"
+                        isPositive && "text-[#00a86b]",
+                        isNegative && "text-[#f04452]",
+                        isZero && "text-[#6b7684]"
                       )}
                     >
                       {isPositive && "+"}
                       {formatCurrency(user.netBalance || 0, currency)}
                     </div>
-                    <div className="text-xs text-gray-500">
+                    <div className="text-xs font-bold text-[#8b95a1]">
                       {isPositive
                         ? "받을 금액"
                         : isNegative
@@ -143,7 +143,7 @@ export const SettlementSummary: React.FC<SettlementSummaryProps> = ({
               );
             })}
           </div>
-          <p className="mt-3 text-center text-xs text-gray-500">
+          <p className="mt-3 text-center text-xs text-[#8b95a1]">
             이름을 선택하면 상세 정산 내역을 확인할 수 있습니다
           </p>
         </CardContent>

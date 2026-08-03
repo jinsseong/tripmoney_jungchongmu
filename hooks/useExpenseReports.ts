@@ -18,6 +18,64 @@ const normalizeReport = (report: ExpenseReport): ExpenseReport => ({
     : [],
 });
 
+const EXPENSE_REPORTS_SETUP_MESSAGE =
+  "지출 제보 기능을 사용하려면 Supabase에서 supabase-schema-safe.sql을 먼저 실행해주세요.";
+
+const getErrorText = (err: unknown) => {
+  if (err instanceof Error) {
+    return err.message;
+  }
+
+  if (err && typeof err === "object") {
+    const maybeError = err as {
+      code?: string;
+      details?: string;
+      hint?: string;
+      message?: string;
+    };
+    return [
+      maybeError.code,
+      maybeError.message,
+      maybeError.details,
+      maybeError.hint,
+    ]
+      .filter(Boolean)
+      .join(" · ");
+  }
+
+  return "";
+};
+
+const isMissingExpenseReportsTable = (err: unknown) => {
+  if (!err || typeof err !== "object") {
+    return false;
+  }
+
+  const maybeError = err as {
+    code?: string;
+    details?: string;
+    message?: string;
+  };
+  const text = [
+    maybeError.code,
+    maybeError.message,
+    maybeError.details,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+
+  return (
+    text.includes("42p01") ||
+    text.includes("pgrst205") ||
+    text.includes("expense_reports") && (
+      text.includes("does not exist") ||
+      text.includes("schema cache") ||
+      text.includes("could not find")
+    )
+  );
+};
+
 export function useExpenseReports(tripId?: string, enabled = true) {
   const shouldFetch = enabled && Boolean(tripId);
   const [reports, setReports] = useState<ExpenseReport[]>([]);
@@ -41,9 +99,9 @@ export function useExpenseReports(tripId?: string, enabled = true) {
         .order("created_at", { ascending: false });
 
       if (error) {
-        if (error.code === "42P01" || error.message.includes("does not exist")) {
+        if (isMissingExpenseReportsTable(error)) {
           setReports([]);
-          setError("expense_reports 테이블이 없습니다. Supabase 스키마를 적용해주세요.");
+          setError(EXPENSE_REPORTS_SETUP_MESSAGE);
           return [];
         }
 
@@ -55,10 +113,15 @@ export function useExpenseReports(tripId?: string, enabled = true) {
       setError(null);
       return normalizedReports;
     } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "지출 제보 조회 실패";
+      if (isMissingExpenseReportsTable(err)) {
+        setReports([]);
+        setError(EXPENSE_REPORTS_SETUP_MESSAGE);
+        return [];
+      }
+
+      const message = getErrorText(err) || "지출 제보 조회 실패";
       setError(message);
-      console.error("Error fetching expense reports:", err);
+      console.warn("Expense report fetch failed:", message);
       return [];
     } finally {
       setLoading(false);

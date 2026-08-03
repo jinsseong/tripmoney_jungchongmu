@@ -3,7 +3,6 @@
 export const dynamic = "force-dynamic";
 
 import React, { useEffect, useState, Suspense } from "react";
-import { useParticipants } from "@/hooks/useParticipants";
 import { useTripParticipants } from "@/hooks/useTripParticipants";
 import { useExpenses } from "@/hooks/useExpenses";
 import { ExpenseList } from "@/components/ExpenseList";
@@ -27,12 +26,17 @@ import {
   optimizeTransfers,
 } from "@/lib/settlement-calculator";
 import { Expense, ExpenseReport } from "@/lib/types";
-import { formatCurrency, getDateRange, cn } from "@/lib/utils";
+import {
+  getParticipantIdForTrip,
+  getTripAccessSession,
+  TripAccessSession,
+} from "@/lib/trip-access";
+import { formatCurrency } from "@/lib/utils";
 import { format } from "date-fns";
 import { ko } from "date-fns/locale";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
-import { ArrowLeft, ClipboardList, Plus, ReceiptText, Settings, Share2, UserRound, Users } from "lucide-react";
+import { ArrowLeft, ClipboardList, Plus, ReceiptText, Settings, Share2, ShieldCheck, UserRound, Users } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 
 type DashboardTab = "overview" | "personal" | "reports";
@@ -43,7 +47,12 @@ function DashboardContent() {
   const [selectedTripId, setSelectedTripId] = useState<string | null>(
     searchParams.get("trip") || null
   );
-  const { participants: allParticipants } = useParticipants();
+  const requestedMode = searchParams.get("mode");
+  const [accessSession, setAccessSession] = useState<TripAccessSession | null>(null);
+  const [currentParticipantId, setCurrentParticipantId] = useState("");
+  const isParticipantMode =
+    requestedMode === "participant" || accessSession?.mode === "participant";
+  const isAdminMode = !isParticipantMode;
   const {
     participants,
     loading: participantsLoading,
@@ -76,6 +85,17 @@ function DashboardContent() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const { createDashboard, createSnapshot } = useSharedDashboard();
+
+  useEffect(() => {
+    setAccessSession(getTripAccessSession(selectedTripId));
+    setCurrentParticipantId(getParticipantIdForTrip(selectedTripId));
+  }, [selectedTripId, requestedMode]);
+
+  useEffect(() => {
+    if (isParticipantMode && activeTab === "reports") {
+      setActiveTab("personal");
+    }
+  }, [activeTab, isParticipantMode]);
 
   // 선택된 여행 또는 첫 번째 여행
   const currentTrip = selectedTripId
@@ -142,6 +162,8 @@ function DashboardContent() {
   const pendingReportCount = reports.filter(
     (report) => report.status === "pending"
   ).length;
+  const reportExpenseUrl =
+    currentTrip?.invite_key ? `/report-expense/${currentTrip.invite_key}` : "";
 
   // 여행이 없으면 기본 날짜 범위 설정
   const defaultStartDate = currentTrip?.start_date || new Date().toISOString().split("T")[0];
@@ -178,6 +200,10 @@ function DashboardContent() {
   }, [searchParams, trips, selectedTripId, router]);
 
   const handleApproveReport = async (report: ExpenseReport) => {
+    if (!isAdminMode) {
+      throw new Error("관리자 모드에서만 제보를 승인할 수 있습니다.");
+    }
+
     if (!selectedTripId) {
       throw new Error("여행이 선택되지 않았습니다.");
     }
@@ -212,67 +238,83 @@ function DashboardContent() {
   };
 
   const handleRejectReport = async (report: ExpenseReport) => {
+    if (!isAdminMode) {
+      throw new Error("관리자 모드에서만 제보를 반려할 수 있습니다.");
+    }
+
     await updateReportStatus(report.id, "rejected");
     await refetchReports();
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 safe-area">
-      <div className="mx-auto max-w-4xl px-4 pb-28 pt-4 sm:py-8">
-        <div className="mb-4 space-y-3 sm:mb-6">
+    <div className="app-screen safe-area">
+      <div className="page-container pb-28">
+        <div className="mb-5 space-y-3 sm:mb-6">
           <div className="flex items-center justify-between gap-3">
-          <Link href="/">
-            <Button variant="ghost" size="sm">
-              <ArrowLeft className="h-4 w-4 mr-1" />
-              뒤로
-            </Button>
-          </Link>
-          <div className="hidden gap-2 sm:flex">
-            <Link
-              href={
-                selectedTripId
-                  ? `/participants?trip=${selectedTripId}`
-                  : "/participants"
-              }
-            >
-              <Button variant="outline" size="sm">
-                <Users className="h-4 w-4 mr-1" />
-                참가자
+            <Link href="/">
+              <Button variant="ghost" size="sm" className="gap-1.5">
+                <ArrowLeft className="h-4 w-4" />
+                뒤로
               </Button>
             </Link>
-            <Link href={selectedTripId ? `/settings?trip=${selectedTripId}` : "/settings"}>
-              <Button variant="outline" size="sm">
-                <Settings className="h-4 w-4 mr-1" />
-                총무 관리
-              </Button>
-            </Link>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowShareModal(true)}
-            >
-              <Share2 className="h-4 w-4 mr-1" />
-              정산 대시보드
-            </Button>
-            <Link
-              href={
-                selectedTripId
-                  ? `/add-expense?trip=${selectedTripId}`
-                  : "/add-expense"
-              }
-            >
-              <Button variant="primary" size="sm">
-                <Plus className="h-4 w-4 mr-1" />
-                지출 추가
-              </Button>
-            </Link>
+            <div className="hidden gap-2 sm:flex">
+              <Link
+                href={
+                  selectedTripId
+                    ? `/participants?trip=${selectedTripId}${isParticipantMode ? "&mode=participant" : ""}`
+                    : "/participants"
+                }
+              >
+                <Button variant="outline" size="sm" className="gap-1.5">
+                  <Users className="h-4 w-4" />
+                  참가자
+                </Button>
+              </Link>
+              {isAdminMode ? (
+                <>
+                  <Link href={selectedTripId ? `/settings?trip=${selectedTripId}` : "/settings"}>
+                    <Button variant="outline" size="sm" className="gap-1.5">
+                      <Settings className="h-4 w-4" />
+                      총무 관리
+                    </Button>
+                  </Link>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowShareModal(true)}
+                    className="gap-1.5"
+                  >
+                    <Share2 className="h-4 w-4" />
+                    정산 대시보드
+                  </Button>
+                  <Link
+                    href={
+                      selectedTripId
+                        ? `/add-expense?trip=${selectedTripId}`
+                        : "/add-expense"
+                    }
+                  >
+                    <Button variant="primary" size="sm" className="gap-1.5">
+                      <Plus className="h-4 w-4" />
+                      지출 추가
+                    </Button>
+                  </Link>
+                </>
+              ) : reportExpenseUrl ? (
+                <Link href={reportExpenseUrl}>
+                  <Button variant="primary" size="sm" className="gap-1.5">
+                    <ReceiptText className="h-4 w-4" />
+                    지출 제보
+                  </Button>
+                </Link>
+              ) : null}
+            </div>
           </div>
-          </div>
-          <div className="grid grid-cols-3 gap-2 sm:hidden">
+          <div className={`grid gap-2 sm:hidden ${isAdminMode ? "grid-cols-3" : "grid-cols-2"}`}>
             <Link
               href={
                 selectedTripId
-                  ? `/participants?trip=${selectedTripId}`
+                  ? `/participants?trip=${selectedTripId}${isParticipantMode ? "&mode=participant" : ""}`
                   : "/participants"
               }
             >
@@ -281,48 +323,71 @@ function DashboardContent() {
                 참가자
               </Button>
             </Link>
-            <Link href={selectedTripId ? `/settings?trip=${selectedTripId}` : "/settings"}>
-              <Button variant="outline" size="sm" className="w-full flex-col gap-1 px-2 text-xs">
-                <Settings className="h-4 w-4" />
-                총무
-              </Button>
-            </Link>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowShareModal(true)}
-              className="w-full flex-col gap-1 px-2 text-xs"
-            >
-              <Share2 className="h-4 w-4" />
-              공유
-            </Button>
+            {isAdminMode ? (
+              <>
+                <Link href={selectedTripId ? `/settings?trip=${selectedTripId}` : "/settings"}>
+                  <Button variant="outline" size="sm" className="w-full flex-col gap-1 px-2 text-xs">
+                    <Settings className="h-4 w-4" />
+                    총무
+                  </Button>
+                </Link>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowShareModal(true)}
+                  className="w-full flex-col gap-1 px-2 text-xs"
+                >
+                  <Share2 className="h-4 w-4" />
+                  공유
+                </Button>
+              </>
+            ) : reportExpenseUrl ? (
+              <Link href={reportExpenseUrl}>
+                <Button variant="primary" size="sm" className="w-full flex-col gap-1 px-2 text-xs">
+                  <ReceiptText className="h-4 w-4" />
+                  제보
+                </Button>
+              </Link>
+            ) : null}
           </div>
         </div>
 
         {/* 여행이 없으면 홈으로 리다이렉트 */}
         {!currentTrip && !tripsLoading && trips.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-gray-600 mb-4">등록된 여행이 없습니다.</p>
+          <div className="py-12 text-center">
+            <p className="mb-4 text-[#6b7684]">등록된 여행이 없습니다.</p>
             <Link href="/">
               <Button variant="primary">여행 선택하기</Button>
             </Link>
           </div>
         ) : currentTrip ? (
           <>
-            <h1 className="mb-4 break-words text-2xl font-bold text-gray-900 sm:mb-6 sm:text-3xl">
-              {currentTrip.name}
-            </h1>
+            <div className="mb-4 sm:mb-6">
+              <div className="mb-2 flex flex-wrap items-center gap-2">
+                <div className="page-kicker">정산 대시보드</div>
+                <span className="status-pill">
+                  {isAdminMode ? (
+                    <>
+                      <ShieldCheck className="h-3.5 w-3.5" />
+                      관리자 모드
+                    </>
+                  ) : (
+                    <>
+                      <UserRound className="h-3.5 w-3.5" />
+                      참가자 모드
+                    </>
+                  )}
+                </span>
+              </div>
+              <h1 className="page-title break-words">{currentTrip.name}</h1>
+            </div>
 
-            <div className="mb-4 grid grid-cols-3 gap-2">
+            <div className="segment-control mb-4" data-count={isAdminMode ? 3 : 2}>
               <button
                 type="button"
                 onClick={() => setActiveTab("overview")}
-                className={cn(
-                  "flex min-h-[44px] items-center justify-center gap-2 rounded-lg border-2 px-2 text-sm font-medium transition-colors",
-                  activeTab === "overview"
-                    ? "border-blue-500 bg-blue-50 text-blue-700"
-                    : "border-gray-200 bg-white text-gray-700"
-                )}
+                className="segment-item"
+                data-active={activeTab === "overview"}
               >
                 <ClipboardList className="h-4 w-4" />
                 <span className="hidden sm:inline">전체 대시보드</span>
@@ -331,67 +396,63 @@ function DashboardContent() {
               <button
                 type="button"
                 onClick={() => setActiveTab("personal")}
-                className={cn(
-                  "flex min-h-[44px] items-center justify-center gap-2 rounded-lg border-2 px-2 text-sm font-medium transition-colors",
-                  activeTab === "personal"
-                    ? "border-blue-500 bg-blue-50 text-blue-700"
-                    : "border-gray-200 bg-white text-gray-700"
-                )}
+                className="segment-item"
+                data-active={activeTab === "personal"}
               >
                 <UserRound className="h-4 w-4" />
                 <span className="hidden sm:inline">개인별 정산</span>
                 <span className="sm:hidden">개인</span>
               </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab("reports")}
-                className={cn(
-                  "relative flex min-h-[44px] items-center justify-center gap-2 rounded-lg border-2 px-2 text-sm font-medium transition-colors",
-                  activeTab === "reports"
-                    ? "border-blue-500 bg-blue-50 text-blue-700"
-                    : "border-gray-200 bg-white text-gray-700"
-                )}
-              >
-                <ReceiptText className="h-4 w-4" />
-                <span className="hidden sm:inline">지출 제보함</span>
-                <span className="sm:hidden">제보</span>
-                {pendingReportCount > 0 && (
-                  <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-xs font-bold text-white">
-                    {pendingReportCount}
-                  </span>
-                )}
-              </button>
+              {isAdminMode && (
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("reports")}
+                  className="segment-item"
+                  data-active={activeTab === "reports"}
+                >
+                  <ReceiptText className="h-4 w-4" />
+                  <span className="hidden sm:inline">지출 제보함</span>
+                  <span className="sm:hidden">제보</span>
+                  {pendingReportCount > 0 && (
+                    <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#f04452] px-1 text-xs font-bold text-white">
+                      {pendingReportCount}
+                    </span>
+                  )}
+                </button>
+              )}
             </div>
+
+            {isParticipantMode && !currentParticipantId && currentTrip.invite_key && (
+              <Card className="mb-4 border-[#ffe1ad] bg-[#fff8e8]">
+                <div className="text-sm font-bold leading-6 text-[#9a6700]">
+                  참가자 초대 링크로 닉네임을 등록하면 본인 이름으로 지출을 제보할 수 있습니다.
+                </div>
+                <Link href={`/join/${currentTrip.invite_key}`}>
+                  <Button variant="outline" size="sm" className="mt-3 w-full gap-1.5">
+                    <UserRound className="h-4 w-4" />
+                    참가자 등록하기
+                  </Button>
+                </Link>
+              </Card>
+            )}
 
 
         {loading ? (
-          <div className="text-center py-12 text-gray-500">로딩 중...</div>
+          <div className="py-12 text-center text-[#6b7684]">로딩 중...</div>
         ) : activeTab === "overview" ? (
           <>
             {/* 총 사용금액 카드 */}
-            <Card className="mb-4">
+            <Card className="mb-4 bg-[#171719] text-white">
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <div className="text-sm text-gray-600 mb-1">총쓴돈</div>
-                  <div className="break-all text-2xl font-bold text-gray-900 sm:text-3xl">
+                  <div className="mb-1 text-sm font-bold text-white/65">총 지출</div>
+                  <div className="break-all text-3xl font-extrabold text-white sm:text-4xl">
                     {formatCurrency(totalAmount, "KRW")}
                   </div>
                 </div>
-                <button className="p-2 rounded-lg hover:bg-gray-100">
-                  <svg
-                    className="w-5 h-5 text-gray-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 9l-7 7-7-7"
-                    />
-                  </svg>
-                </button>
+                <div className="status-pill bg-white/12 text-white">
+                  {expenses.length}건
+                </div>
               </div>
             </Card>
 
@@ -423,8 +484,8 @@ function DashboardContent() {
             <div className="mb-6">
               {selectedDate ? (
                 <>
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-lg font-semibold sm:text-xl">
+                  <div className="mb-4 flex items-center justify-between">
+                    <h2 className="text-lg font-bold text-[#171719] sm:text-xl">
                       {format(selectedDate, "yyyy년 M월 d일 (EEE)", {
                         locale: ko,
                       })}
@@ -434,25 +495,33 @@ function DashboardContent() {
                     <ExpenseList
                       expenses={filteredExpenses}
                       participants={participants}
-                      onEdit={(expense) => {
-                        setEditingExpense(expense);
-                        setShowEditModal(true);
-                      }}
-                      onDelete={async (expenseId) => {
-                        if (confirm("정말 삭제하시겠습니까?")) {
-                          try {
-                            await deleteExpense(expenseId);
-                            await refetchExpenses();
-                          } catch (error) {
-                            console.error("Error deleting expense:", error);
-                            alert("지출 삭제에 실패했습니다.");
-                          }
-                        }
-                      }}
+                      onEdit={
+                        isAdminMode
+                          ? (expense) => {
+                              setEditingExpense(expense);
+                              setShowEditModal(true);
+                            }
+                          : undefined
+                      }
+                      onDelete={
+                        isAdminMode
+                          ? async (expenseId) => {
+                              if (confirm("정말 삭제하시겠습니까?")) {
+                                try {
+                                  await deleteExpense(expenseId);
+                                  await refetchExpenses();
+                                } catch (error) {
+                                  console.error("Error deleting expense:", error);
+                                  alert("지출 삭제에 실패했습니다.");
+                                }
+                              }
+                            }
+                          : undefined
+                      }
                     />
                   ) : (
                     <Card>
-                      <div className="text-center py-12 text-gray-500">
+                      <div className="py-12 text-center text-[#6b7684]">
                         이 날짜에 지출 내역이 없습니다.
                       </div>
                     </Card>
@@ -460,30 +529,38 @@ function DashboardContent() {
                 </>
               ) : (
                 <div>
-                  <h2 className="text-xl font-semibold mb-4">지출 내역</h2>
+                  <h2 className="mb-4 text-xl font-bold text-[#171719]">지출 내역</h2>
                   {expenses.length > 0 ? (
                     <ExpenseList
                       expenses={expenses}
                       participants={participants}
-                      onEdit={(expense) => {
-                        setEditingExpense(expense);
-                        setShowEditModal(true);
-                      }}
-                      onDelete={async (expenseId) => {
-                        if (confirm("정말 삭제하시겠습니까?")) {
-                          try {
-                            await deleteExpense(expenseId);
-                            await refetchExpenses();
-                          } catch (error) {
-                            console.error("Error deleting expense:", error);
-                            alert("지출 삭제에 실패했습니다.");
-                          }
-                        }
-                      }}
+                      onEdit={
+                        isAdminMode
+                          ? (expense) => {
+                              setEditingExpense(expense);
+                              setShowEditModal(true);
+                            }
+                          : undefined
+                      }
+                      onDelete={
+                        isAdminMode
+                          ? async (expenseId) => {
+                              if (confirm("정말 삭제하시겠습니까?")) {
+                                try {
+                                  await deleteExpense(expenseId);
+                                  await refetchExpenses();
+                                } catch (error) {
+                                  console.error("Error deleting expense:", error);
+                                  alert("지출 삭제에 실패했습니다.");
+                                }
+                              }
+                            }
+                          : undefined
+                      }
                     />
                   ) : (
                     <Card>
-                      <div className="text-center py-12 text-gray-500">
+                      <div className="py-12 text-center text-[#6b7684]">
                         지출 내역이 없습니다.
                       </div>
                     </Card>
@@ -533,6 +610,7 @@ function DashboardContent() {
             participants={participants}
             loading={reportsLoading}
             error={reportsError}
+            canManage={isAdminMode}
             onApprove={handleApproveReport}
             onReject={handleRejectReport}
           />
@@ -541,8 +619,8 @@ function DashboardContent() {
         ) : null}
       </div>
       <PWAInstallPrompt />
-      {currentTrip && (
-        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-gray-200 bg-white/95 px-4 pt-3 shadow-[0_-8px_24px_rgba(15,23,42,0.08)] backdrop-blur bottom-safe sm:hidden">
+      {currentTrip && isAdminMode && (
+        <div className="mobile-bottom-bar fixed inset-x-0 bottom-0 z-40 px-4 pt-3 bottom-safe sm:hidden">
           <Link
             href={
               selectedTripId
@@ -553,6 +631,16 @@ function DashboardContent() {
             <Button variant="primary" size="lg" className="w-full">
               <Plus className="h-5 w-5 mr-2" />
               지출 추가
+            </Button>
+          </Link>
+        </div>
+      )}
+      {currentTrip && isParticipantMode && reportExpenseUrl && (
+        <div className="mobile-bottom-bar fixed inset-x-0 bottom-0 z-40 px-4 pt-3 bottom-safe sm:hidden">
+          <Link href={reportExpenseUrl}>
+            <Button variant="primary" size="lg" className="w-full">
+              <ReceiptText className="h-5 w-5 mr-2" />
+              지출 제보하기
             </Button>
           </Link>
         </div>

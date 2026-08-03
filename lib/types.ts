@@ -15,9 +15,12 @@ export interface Trip {
   description?: string;
   cover_image_url?: string;
   invite_key?: string;
+  admin_key?: string;
   created_at: string;
   updated_at: string;
 }
+
+export type TripParticipantRole = "admin" | "participant";
 
 export interface Category {
   id: string;

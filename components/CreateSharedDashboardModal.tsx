@@ -55,18 +55,21 @@ export const CreateSharedDashboardModal: React.FC<
     return (
       <Modal isOpen={isOpen} onClose={handleClose} title="정산 대시보드 링크 생성 완료">
         <div className="space-y-4">
-          <div className="p-4 bg-blue-50 rounded-lg">
-            <p className="text-sm text-gray-600 mb-2">정산 대시보드 링크:</p>
-            <div className="flex items-center gap-2">
+          <div className="rounded-lg border border-[#c9e2ff] bg-[#e8f3ff] p-4">
+            <p className="mb-2 text-sm font-bold text-[#1b64da]">정산 대시보드 링크</p>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
               <input
                 type="text"
                 value={shareUrl}
                 readOnly
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg bg-white text-sm"
+                className="min-h-[48px] flex-1 rounded-lg border border-[#d1d6db] bg-white px-3.5 py-2 text-sm text-[#4e5968]"
               />
-              <button
+              <Button
+                type="button"
+                variant="primary"
+                size="sm"
                 onClick={handleCopy}
-                className="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                className="gap-2 sm:w-auto"
                 aria-label="복사"
               >
                 {copied ? (
@@ -74,10 +77,11 @@ export const CreateSharedDashboardModal: React.FC<
                 ) : (
                   <Copy className="h-5 w-5" />
                 )}
-              </button>
+                {copied ? "복사됨" : "복사"}
+              </Button>
             </div>
           </div>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm leading-6 text-[#6b7684]">
             이 링크를 공유하면 다른 사람들이 정산 결과를 확인할 수 있습니다.
           </p>
           <Button variant="primary" onClick={handleClose} className="w-full">
@@ -96,13 +100,13 @@ export const CreateSharedDashboardModal: React.FC<
       size="md"
     >
       <div className="space-y-4">
-        <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-          <p className="text-sm text-gray-700">
+        <div className="rounded-lg border border-[#c9e2ff] bg-[#e8f3ff] p-4">
+          <p className="text-sm leading-6 text-[#4e5968]">
             현재 여행의 모든 지출 내역과 정산 정보가 대시보드에 포함됩니다.
           </p>
           {tripName && (
-            <p className="text-sm font-semibold text-blue-800 mt-2">
-              📍 {tripName}
+            <p className="mt-2 text-sm font-bold text-[#1b64da]">
+              {tripName}
             </p>
           )}
         </div>
@@ -114,7 +118,7 @@ export const CreateSharedDashboardModal: React.FC<
           placeholder="공유받을 사람에게 알려줄 비밀번호"
           helperText="비밀번호를 설정하면 링크와 비밀번호가 모두 필요합니다"
         />
-        <div className="flex gap-2">
+        <div className="grid grid-cols-2 gap-2">
           <Button
             variant="outline"
             onClick={handleClose}
@@ -126,10 +130,10 @@ export const CreateSharedDashboardModal: React.FC<
           <Button
             variant="primary"
             onClick={handleCreate}
-            className="flex-1"
+            className="flex-1 gap-1.5"
             isLoading={isLoading}
           >
-            <Share2 className="h-4 w-4 mr-1" />
+            <Share2 className="h-4 w-4" />
             생성하기
           </Button>
         </div>

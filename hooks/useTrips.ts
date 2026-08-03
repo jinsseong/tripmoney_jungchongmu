@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { Trip } from "@/lib/types";
+import { rememberAdminTrip } from "@/lib/trip-access";
 
 export function useTrips() {
   const [trips, setTrips] = useState<Trip[]>([]);
@@ -47,6 +48,7 @@ export function useTrips() {
 
       if (error) throw error;
       setTrips((prev) => [data, ...prev]);
+      rememberAdminTrip(data as Trip);
       return data as Trip;
     } catch (err) {
       const errorMessage =
@@ -108,4 +110,3 @@ export function useTrips() {
     refetch: fetchTrips,
   };
 }
-

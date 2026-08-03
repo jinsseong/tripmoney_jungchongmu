@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/Input";
 import { ParticipantAvatar } from "@/components/ParticipantAvatar";
 import { Plus, Users, ArrowLeft, X, Link2, Copy, Share2, Check } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { getTripAccessSession } from "@/lib/trip-access";
 
 function ParticipantsContent() {
   const router = useRouter();
@@ -28,10 +29,12 @@ function ParticipantsContent() {
     removeParticipantFromTrip,
   } = useTripParticipants(tripId);
   const [showAddModal, setShowAddModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [editingParticipant, setEditingParticipant] = useState<any>(null);
   const [origin, setOrigin] = useState("");
   const [copiedInviteLink, setCopiedInviteLink] = useState(false);
+  const [copiedAdminLink, setCopiedAdminLink] = useState(false);
+  const [isParticipantMode, setIsParticipantMode] = useState(
+    searchParams.get("mode") === "participant"
+  );
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
@@ -41,9 +44,21 @@ function ParticipantsContent() {
     setOrigin(window.location.origin);
   }, []);
 
+  useEffect(() => {
+    const accessSession = getTripAccessSession(tripId);
+    setIsParticipantMode(
+      searchParams.get("mode") === "participant" ||
+        accessSession?.mode === "participant"
+    );
+  }, [tripId, searchParams]);
+
   const inviteUrl =
     currentTrip?.invite_key && origin
       ? `${origin}/join/${currentTrip.invite_key}`
+      : "";
+  const adminUrl =
+    currentTrip?.admin_key && origin
+      ? `${origin}/admin/${currentTrip.admin_key}`
       : "";
 
   const handleCopyInviteLink = async () => {
@@ -78,6 +93,19 @@ function ParticipantsContent() {
     }
 
     await handleCopyInviteLink();
+  };
+
+  const handleCopyAdminLink = async () => {
+    if (!adminUrl) return;
+
+    try {
+      await navigator.clipboard.writeText(adminUrl);
+      setCopiedAdminLink(true);
+      window.setTimeout(() => setCopiedAdminLink(false), 2000);
+    } catch (error) {
+      console.error("Failed to copy admin link:", error);
+      alert("관리자 링크 복사에 실패했습니다.");
+    }
   };
 
   const handleAddParticipant = async () => {
@@ -132,40 +160,55 @@ function ParticipantsContent() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 safe-area">
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <div className="flex items-center gap-4 mb-6">
+    <div className="app-screen safe-area">
+      <div className="page-container">
+        <div className="mb-6 space-y-4">
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
-            onClick={() => router.push(tripId ? `/dashboard?trip=${tripId}` : "/")}
+            onClick={() =>
+              router.push(
+                tripId
+                  ? `/dashboard?trip=${tripId}${isParticipantMode ? "&mode=participant" : "&mode=admin"}`
+                  : "/"
+              )
+            }
+            className="gap-1.5"
           >
-            <ArrowLeft className="h-4 w-4 mr-1" />
+            <ArrowLeft className="h-4 w-4" />
             뒤로
           </Button>
-          <h1 className="text-3xl font-bold text-gray-900">
-            {currentTrip ? `${currentTrip.name} - 참가자 관리` : "참가자 관리"}
-          </h1>
+          <div>
+            <div className="page-kicker mb-1">참가자</div>
+            <h1 className="page-title break-words">
+              {currentTrip ? currentTrip.name : "참가자 관리"}
+            </h1>
+            <p className="page-subtitle mt-2">
+              {isParticipantMode
+                ? "같은 여행에 참여한 사람을 확인할 수 있습니다."
+                : "정산에 참여할 사람을 관리하고 초대 링크를 공유하세요."}
+            </p>
+          </div>
         </div>
 
-        {tripId && currentTrip && (
+        {tripId && currentTrip && !isParticipantMode && (
           <Card className="mb-6">
             <CardHeader>
               <div className="flex items-center gap-2">
-                <Link2 className="h-5 w-5 text-blue-500" />
+                <Link2 className="h-5 w-5 text-[#3182f6]" />
                 <CardTitle>초대 링크</CardTitle>
               </div>
             </CardHeader>
             <CardContent>
               {inviteUrl ? (
                 <div className="space-y-3">
-                  <div className="rounded-lg border border-blue-100 bg-blue-50 p-3">
-                    <p className="text-sm font-medium text-blue-900">
+                  <div className="rounded-lg border border-[#c9e2ff] bg-[#e8f3ff] p-3">
+                    <p className="text-sm font-bold leading-6 text-[#1b64da]">
                       참가자는 이 링크에서 닉네임과 프로필 사진을 직접 설정할 수 있습니다.
                     </p>
                   </div>
                   <div className="flex flex-col gap-2 sm:flex-row">
-                    <div className="min-h-[44px] flex-1 break-all rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700">
+                    <div className="min-h-[48px] flex-1 break-all rounded-lg border border-[#e5e8eb] bg-[#f6f8fb] px-3.5 py-3 text-sm leading-5 text-[#4e5968]">
                       {inviteUrl}
                     </div>
                     <div className="grid grid-cols-2 gap-2 sm:flex">
@@ -195,9 +238,42 @@ function ParticipantsContent() {
                       </Button>
                     </div>
                   </div>
+                  {adminUrl ? (
+                    <div className="rounded-lg border border-[#e5e8eb] bg-white p-3">
+                      <div className="mb-2 text-sm font-extrabold text-[#171719]">
+                        관리자 링크
+                      </div>
+                      <p className="mb-3 text-sm leading-6 text-[#6b7684]">
+                        이 링크는 지출 추가, 제보 승인/반려, 설정 변경 권한이 있는 사람에게만 공유하세요.
+                      </p>
+                      <div className="flex flex-col gap-2 sm:flex-row">
+                        <div className="min-h-[48px] flex-1 break-all rounded-lg border border-[#e5e8eb] bg-[#f6f8fb] px-3.5 py-3 text-sm leading-5 text-[#4e5968]">
+                          {adminUrl}
+                        </div>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={handleCopyAdminLink}
+                          className="gap-2"
+                        >
+                          {copiedAdminLink ? (
+                            <Check className="h-4 w-4" />
+                          ) : (
+                            <Copy className="h-4 w-4" />
+                          )}
+                          {copiedAdminLink ? "복사됨" : "복사"}
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="rounded-lg border border-[#ffe1ad] bg-[#fff8e8] p-3 text-sm leading-6 text-[#9a6700]">
+                      관리자 링크를 사용하려면 Supabase 스키마에 trips.admin_key 컬럼을 먼저 적용해야 합니다.
+                    </div>
+                  )}
                 </div>
               ) : (
-                <div className="rounded-lg border border-orange-200 bg-orange-50 p-3 text-sm leading-6 text-orange-800">
+                <div className="rounded-lg border border-[#ffe1ad] bg-[#fff8e8] p-3 text-sm leading-6 text-[#9a6700]">
                   초대 링크를 사용하려면 Supabase 스키마에 trips.invite_key 컬럼을 먼저 적용해야 합니다.
                 </div>
               )}
@@ -207,55 +283,61 @@ function ParticipantsContent() {
 
         <Card className="mb-6">
           <CardHeader>
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-2">
-                <Users className="h-5 w-5 text-blue-500" />
+                <Users className="h-5 w-5 text-[#3182f6]" />
                 <CardTitle>참가자 목록</CardTitle>
               </div>
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={() => setShowAddModal(true)}
-              >
-                <Plus className="h-4 w-4 mr-1" />
-                추가
-              </Button>
+              {!isParticipantMode && (
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={() => setShowAddModal(true)}
+                  className="shrink-0 gap-1.5"
+                >
+                  <Plus className="h-4 w-4" />
+                  추가
+                </Button>
+              )}
             </div>
           </CardHeader>
           <CardContent>
             {loading ? (
-              <div className="text-center py-8 text-gray-500">로딩 중...</div>
+              <div className="py-8 text-center text-[#6b7684]">로딩 중...</div>
             ) : participants.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
+              <div className="py-8 text-center text-[#6b7684]">
                 참여자가 없습니다. 참여자를 추가해주세요.
               </div>
             ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {participants.map((participant) => (
                   <div
                     key={participant.id}
-                    className="flex flex-col items-center p-4 bg-gray-50 rounded-lg relative group"
+                    className="group relative flex items-center gap-3 rounded-lg border border-[#e5e8eb] bg-[#f6f8fb] p-4"
                   >
-                    <ParticipantAvatar participant={participant} size="lg" className="mb-2" />
-                    <div className="font-semibold text-center mb-1">
-                      {participant.name}
-                    </div>
-                    {participant.phone && (
-                      <div className="text-xs text-gray-500 mb-2">
-                        {participant.phone}
+                    <ParticipantAvatar participant={participant} size="lg" />
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate font-bold text-[#171719]">
+                        {participant.name}
                       </div>
-                    )}
-                    {tripId && (
-                      <div className="flex gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      {participant.phone && (
+                        <div className="truncate text-xs text-[#8b95a1]">
+                          {participant.phone}
+                        </div>
+                      )}
+                    </div>
+                    {tripId && !isParticipantMode && (
+                      <div className="shrink-0 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100">
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() =>
                             handleRemoveParticipant(participant.id, participant.name)
                           }
-                          className="h-8 px-2 text-red-600 hover:text-red-700"
+                          className="h-10 w-10 p-0 text-[#f04452] hover:bg-[#fff0f1] hover:text-[#d93d4a]"
+                          aria-label={`${participant.name} 제거`}
                         >
-                          <X className="h-3 w-3" />
+                          <X className="h-4 w-4" />
                         </Button>
                       </div>
                     )}
@@ -267,29 +349,31 @@ function ParticipantsContent() {
         </Card>
 
         {/* 기존 참가자 추가 (여행이 선택된 경우) */}
-        {tripId && availableParticipants.length > 0 && (
+        {tripId && !isParticipantMode && availableParticipants.length > 0 && (
           <Card className="mb-6">
             <CardHeader>
               <CardTitle>기존 참가자 추가</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {availableParticipants.map((participant) => (
                   <div
                     key={participant.id}
-                    className="flex flex-col items-center p-4 bg-gray-50 rounded-lg relative group"
+                    className="relative flex items-center gap-3 rounded-lg border border-[#e5e8eb] bg-[#f6f8fb] p-4"
                   >
-                    <ParticipantAvatar participant={participant} size="lg" className="mb-2" />
-                    <div className="font-semibold text-center mb-1">
-                      {participant.name}
+                    <ParticipantAvatar participant={participant} size="lg" />
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate font-bold text-[#171719]">
+                        {participant.name}
+                      </div>
                     </div>
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => handleAddExistingParticipant(participant.id)}
-                      className="mt-2"
+                      className="shrink-0 gap-1.5"
                     >
-                      <Plus className="h-3 w-3 mr-1" />
+                      <Plus className="h-3 w-3" />
                       추가
                     </Button>
                   </div>
@@ -357,8 +441,8 @@ function ParticipantsContent() {
 export default function ParticipantsPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-gray-500">로딩 중...</div>
+      <div className="app-screen flex items-center justify-center">
+        <div className="text-[#6b7684]">로딩 중...</div>
       </div>
     }>
       <ParticipantsContent />

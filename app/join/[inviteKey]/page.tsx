@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/Input";
 import { ParticipantAvatar } from "@/components/ParticipantAvatar";
 import { supabase } from "@/lib/supabase";
 import { Trip } from "@/lib/types";
+import { setTripAccessSession } from "@/lib/trip-access";
 import { generateAvatarColor } from "@/lib/utils";
 
 const AVATAR_BUCKET = "participant-avatars";
@@ -169,6 +170,7 @@ export default function JoinTripPage() {
         .insert({
           trip_id: trip.id,
           participant_id: (participant as { id: string }).id,
+          role: "participant",
         } as any);
 
       if (joinError) {
@@ -184,6 +186,13 @@ export default function JoinTripPage() {
           `jungchongmu-participant:${trip.id}`,
           (participant as { id: string }).id
         );
+        setTripAccessSession({
+          tripId: trip.id,
+          mode: "participant",
+          participantId: (participant as { id: string }).id,
+          participantName: nickname.trim(),
+          joinedAt: new Date().toISOString(),
+        });
       } catch {
         // localStorage가 막혀도 참가 자체는 완료됩니다.
       }
@@ -204,8 +213,8 @@ export default function JoinTripPage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-gray-50 safe-area">
-        <div className="mx-auto flex min-h-screen max-w-md items-center justify-center px-4 text-gray-500">
+      <main className="app-screen safe-area">
+        <div className="mx-auto flex min-h-screen max-w-md items-center justify-center px-4 text-[#6b7684]">
           초대 정보를 불러오는 중...
         </div>
       </main>
@@ -214,21 +223,21 @@ export default function JoinTripPage() {
 
   if (joinedParticipantId && trip) {
     return (
-      <main className="min-h-screen bg-gray-50 safe-area">
-        <div className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-4 py-8">
-          <div className="rounded-lg border border-green-100 bg-white p-6 text-center shadow-sm">
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-green-100 text-green-700">
+      <main className="app-screen safe-area">
+        <div className="page-container flex min-h-screen max-w-md flex-col justify-center">
+          <div className="rounded-lg border border-[#b7ebd0] bg-white p-6 text-center shadow-[var(--shadow-card)]">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-lg bg-[#ebfff6] text-[#00a86b]">
               <Check className="h-7 w-7" />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900">참여 완료</h1>
-            <p className="mt-2 text-sm leading-6 text-gray-600">
+            <h1 className="text-2xl font-extrabold text-[#171719]">참여 완료</h1>
+            <p className="mt-2 text-sm leading-6 text-[#6b7684]">
               {trip.name} 참가자로 등록되었습니다.
             </p>
             <Button
               type="button"
               variant="primary"
               className="mt-6 w-full gap-2"
-              onClick={() => router.push(`/dashboard?trip=${trip.id}`)}
+              onClick={() => router.push(`/dashboard?trip=${trip.id}&mode=participant`)}
             >
               정산 현황 보기
               <ArrowRight className="h-4 w-4" />
@@ -248,26 +257,26 @@ export default function JoinTripPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 safe-area">
-      <div className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-4 py-8">
-        <div className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
+    <main className="app-screen safe-area">
+      <div className="page-container flex min-h-screen max-w-md flex-col justify-center">
+        <div className="rounded-lg border border-[#e5e8eb] bg-white p-5 shadow-[var(--shadow-card)]">
           <div className="mb-6">
-            <div className="mb-3 flex items-center gap-2 text-sm text-gray-500">
+            <div className="page-kicker mb-3 flex items-center gap-2">
               <Calendar className="h-4 w-4" />
               여행 참가 초대
             </div>
-            <h1 className="text-2xl font-bold text-gray-900">
+            <h1 className="text-2xl font-extrabold leading-tight text-[#171719]">
               {trip ? trip.name : "초대 링크를 확인해주세요"}
             </h1>
             {trip && (
-              <p className="mt-2 text-sm leading-6 text-gray-600">
+              <p className="mt-2 text-sm leading-6 text-[#6b7684]">
                 닉네임과 프로필 사진을 설정하면 이 여행의 정산 참여자로 등록됩니다.
               </p>
             )}
           </div>
 
           {formError && (
-            <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm leading-6 text-red-700">
+            <div className="mb-4 rounded-lg border border-[#ffd0d5] bg-[#fff0f1] p-3 text-sm font-bold leading-6 text-[#d93d4a]">
               {formError}
             </div>
           )}
@@ -283,7 +292,7 @@ export default function JoinTripPage() {
                   }}
                   size="xl"
                 />
-                <label className="inline-flex min-h-[44px] cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                <label className="inline-flex min-h-[44px] cursor-pointer items-center justify-center gap-2 rounded-lg border border-[#d1d6db] bg-white px-4 text-sm font-bold text-[#4e5968] hover:bg-[#f6f8fb]">
                   <Camera className="h-4 w-4" />
                   프로필 사진 선택
                   <input
@@ -294,7 +303,7 @@ export default function JoinTripPage() {
                   />
                 </label>
                 {avatarFile && (
-                  <p className="max-w-full truncate text-xs text-gray-500">
+                  <p className="max-w-full truncate text-xs text-[#8b95a1]">
                     {avatarFile.name}
                   </p>
                 )}

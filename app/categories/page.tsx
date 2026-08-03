@@ -20,18 +20,18 @@ export default function CategoriesPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-gray-500">로딩 중...</div>
+      <div className="app-screen flex items-center justify-center">
+        <div className="text-[#6b7684]">로딩 중...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 safe-area">
-      <div className="max-w-4xl mx-auto px-4 py-8">
+    <div className="app-screen safe-area">
+      <div className="page-container">
         <Link href="/dashboard">
-          <Button variant="ghost" size="sm" className="mb-6">
-            <ArrowLeft className="h-4 w-4 mr-1" />
+          <Button variant="ghost" size="sm" className="mb-4 gap-1.5 sm:mb-6">
+            <ArrowLeft className="h-4 w-4" />
             뒤로
           </Button>
         </Link>
@@ -50,4 +50,3 @@ export default function CategoriesPage() {
     </div>
   );
 }
-

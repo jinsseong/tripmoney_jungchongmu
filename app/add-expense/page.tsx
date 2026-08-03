@@ -113,25 +113,25 @@ function AddExpenseContent() {
 
   if (participantsLoading || loadingCategories) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-gray-500">로딩 중...</div>
+      <div className="app-screen flex items-center justify-center">
+        <div className="text-[#6b7684]">로딩 중...</div>
       </div>
     );
   }
 
   if (participants.length === 0) {
     return (
-      <div className="min-h-screen bg-gray-50 safe-area">
-        <div className="mx-auto max-w-2xl px-4 pb-8 pt-4 sm:py-8">
+      <div className="app-screen safe-area">
+        <div className="page-container max-w-2xl">
           <Link href={tripId ? `/dashboard?trip=${tripId}` : "/"}>
-            <Button variant="ghost" size="sm" className="mb-4">
-              <ArrowLeft className="h-4 w-4 mr-1" />
+            <Button variant="ghost" size="sm" className="mb-4 gap-1.5">
+              <ArrowLeft className="h-4 w-4" />
               뒤로
             </Button>
           </Link>
           <Card>
             <div className="py-8 text-center">
-              <p className="text-gray-600 mb-4">
+              <p className="mb-4 text-[#6b7684]">
                 이 여행에 참여자가 없습니다. 먼저 참여자를 추가해주세요.
               </p>
               <Link href={tripId ? `/participants?trip=${tripId}` : "/participants"}>
@@ -145,16 +145,22 @@ function AddExpenseContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 safe-area">
-      <div className="mx-auto max-w-2xl px-4 pb-8 pt-4 sm:py-8">
+    <div className="app-screen safe-area">
+      <div className="page-container max-w-2xl">
         <Link href={tripId ? `/dashboard?trip=${tripId}` : "/dashboard"}>
-          <Button variant="ghost" size="sm" className="mb-4 sm:mb-6">
-            <ArrowLeft className="h-4 w-4 mr-1" />
+          <Button variant="ghost" size="sm" className="mb-4 gap-1.5 sm:mb-6">
+            <ArrowLeft className="h-4 w-4" />
             뒤로
           </Button>
         </Link>
 
-        <h1 className="mb-4 text-2xl font-bold text-gray-900 sm:mb-6 sm:text-3xl">지출 추가</h1>
+        <div className="mb-4 sm:mb-6">
+          <div className="page-kicker mb-1">지출 입력</div>
+          <h1 className="page-title">지출 추가</h1>
+          <p className="page-subtitle mt-2">
+            참석한 사람만 골라서 정산 금액을 정확히 나눕니다.
+          </p>
+        </div>
 
         <Card>
           <ExpenseForm
@@ -173,8 +179,8 @@ function AddExpenseContent() {
 export default function AddExpensePage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-gray-500">로딩 중...</div>
+      <div className="app-screen flex items-center justify-center">
+        <div className="text-[#6b7684]">로딩 중...</div>
       </div>
     }>
       <AddExpenseContent />

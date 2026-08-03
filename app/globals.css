@@ -1,12 +1,27 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f8fafc;
-  --foreground: #212529;
-  --color-primary: 59 130 246;
-  --color-success: 16 185 129;
-  --color-warning: 245 158 11;
-  --color-danger: 239 68 68;
+  --background: #f6f8fb;
+  --foreground: #171719;
+  --surface: #ffffff;
+  --surface-soft: #f2f4f6;
+  --surface-raised: #ffffff;
+  --muted: #6b7684;
+  --muted-strong: #4e5968;
+  --line: #e5e8eb;
+  --line-strong: #d1d6db;
+  --primary: #3182f6;
+  --primary-pressed: #1b64da;
+  --primary-soft: #e8f3ff;
+  --success: #00a86b;
+  --warning: #f59f00;
+  --danger: #f04452;
+  --shadow-soft: 0 8px 24px rgba(20, 33, 61, 0.06);
+  --shadow-card: 0 1px 2px rgba(20, 33, 61, 0.05), 0 8px 20px rgba(20, 33, 61, 0.04);
+  --color-primary: 49 130 246;
+  --color-success: 0 168 107;
+  --color-warning: 245 159 0;
+  --color-danger: 240 68 82;
 }
 
 @theme inline {
@@ -22,6 +37,25 @@ body {
   font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
   overflow-x: hidden;
   -webkit-tap-highlight-color: transparent;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+input,
+select,
+textarea {
+  font-size: 16px;
+}
+
+button {
+  touch-action: manipulation;
 }
 
 .safe-area {
@@ -41,4 +75,147 @@ body {
 
 .no-scrollbar::-webkit-scrollbar {
   display: none;
+}
+
+@layer components {
+  .app-screen {
+    min-height: 100dvh;
+    background:
+      linear-gradient(180deg, #ffffff 0%, var(--background) 172px),
+      var(--background);
+  }
+
+  .page-container {
+    width: 100%;
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 16px 16px calc(env(safe-area-inset-bottom) + 28px);
+  }
+
+  .page-shell {
+    display: flex;
+    min-height: 100dvh;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .page-kicker {
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .page-title {
+    color: var(--foreground);
+    font-size: clamp(26px, 7vw, 40px);
+    font-weight: 800;
+    line-height: 1.12;
+    letter-spacing: 0;
+  }
+
+  .page-subtitle {
+    color: var(--muted);
+    font-size: 15px;
+    line-height: 1.55;
+  }
+
+  .top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .soft-panel {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: var(--shadow-card);
+  }
+
+  .tap-card {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--surface);
+    box-shadow: var(--shadow-card);
+    transition: border-color 160ms ease, box-shadow 160ms ease, transform 120ms ease;
+  }
+
+  .tap-card:hover {
+    border-color: var(--line-strong);
+    box-shadow: 0 10px 28px rgba(20, 33, 61, 0.09);
+  }
+
+  .tap-card:active {
+    transform: scale(0.992);
+  }
+
+  .status-pill {
+    display: inline-flex;
+    min-height: 28px;
+    align-items: center;
+    gap: 6px;
+    border-radius: 999px;
+    background: var(--surface-soft);
+    padding: 0 10px;
+    color: var(--muted-strong);
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .segment-control {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 4px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #edf1f5;
+    padding: 4px;
+  }
+
+  .segment-control[data-count="2"] {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .segment-item {
+    position: relative;
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border-radius: 6px;
+    padding: 0 8px;
+    color: var(--muted-strong);
+    font-size: 14px;
+    font-weight: 700;
+    transition: background 160ms ease, color 160ms ease, box-shadow 160ms ease;
+  }
+
+  .segment-item:focus {
+    outline: none;
+  }
+
+  .segment-item:focus-visible {
+    box-shadow: 0 0 0 3px rgba(49, 130, 246, 0.18);
+  }
+
+  .segment-item[data-active="true"] {
+    background: var(--surface);
+    color: var(--primary);
+    box-shadow: 0 1px 2px rgba(20, 33, 61, 0.08);
+  }
+
+  .mobile-bottom-bar {
+    border-top: 1px solid var(--line);
+    background: rgba(255, 255, 255, 0.94);
+    box-shadow: 0 -10px 30px rgba(20, 33, 61, 0.08);
+    backdrop-filter: blur(16px);
+  }
+
+  @media (min-width: 640px) {
+    .page-container {
+      padding: 32px 24px 48px;
+    }
+  }
 }

@@ -13,28 +13,28 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className="w-full">
         {label && (
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="mb-1.5 block text-sm font-bold text-[#4e5968]">
             {label}
           </label>
         )}
         <input
           type={type}
           className={cn(
-            "flex h-11 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-base",
-            "placeholder:text-gray-400",
-            "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent",
+            "flex min-h-[48px] w-full rounded-lg border border-[#d1d6db] bg-white px-3.5 py-2.5 text-base text-[#171719]",
+            "placeholder:text-[#8b95a1]",
+            "focus:border-[#3182f6] focus:outline-none focus:ring-3 focus:ring-[#3182f6]/15",
             "disabled:cursor-not-allowed disabled:opacity-50",
-            error && "border-red-500 focus:ring-red-500",
+            error && "border-[#f04452] focus:border-[#f04452] focus:ring-[#f04452]/15",
             className
           )}
           ref={ref}
           {...props}
         />
         {error && (
-          <p className="mt-1 text-sm text-red-600">{error}</p>
+          <p className="mt-1.5 text-sm font-medium text-[#f04452]">{error}</p>
         )}
         {helperText && !error && (
-          <p className="mt-1 text-sm text-gray-500">{helperText}</p>
+          <p className="mt-1.5 text-sm text-[#6b7684]">{helperText}</p>
         )}
       </div>
     );
@@ -42,4 +42,3 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
 );
 
 Input.displayName = "Input";
-

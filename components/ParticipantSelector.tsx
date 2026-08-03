@@ -23,7 +23,7 @@ export const ParticipantSelector: React.FC<ParticipantSelectorProps> = ({
   return (
     <div className="space-y-2">
       {label && (
-        <label className="block text-sm font-medium text-gray-700">
+        <label className="block text-sm font-bold text-[#4e5968]">
           {label}
         </label>
       )}
@@ -36,14 +36,14 @@ export const ParticipantSelector: React.FC<ParticipantSelectorProps> = ({
               type="button"
               onClick={() => onToggle(participant.id)}
               className={cn(
-                "flex min-h-[44px] max-w-full items-center gap-2 rounded-lg border-2 px-3 py-2 transition-all sm:px-4",
+                "flex min-h-[44px] max-w-full items-center gap-2 rounded-lg border px-3 py-2 transition-all sm:px-4",
                 isSelected
-                  ? "border-blue-500 bg-blue-50 text-blue-700"
-                  : "border-gray-200 bg-white text-gray-700 hover:border-gray-300"
+                  ? "border-[#3182f6] bg-[#e8f3ff] text-[#1b64da]"
+                  : "border-[#e5e8eb] bg-white text-[#4e5968] hover:border-[#d1d6db] hover:bg-[#f6f8fb]"
               )}
             >
               <ParticipantAvatar participant={participant} size="sm" />
-              <span className="max-w-[11rem] truncate font-medium">{participant.name}</span>
+              <span className="max-w-[11rem] truncate font-bold">{participant.name}</span>
             </button>
           );
         })}
