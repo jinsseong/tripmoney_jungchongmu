@@ -158,18 +158,18 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
                   <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-start sm:justify-between sm:p-5">
                     <div className="min-w-0 flex-1">
                       <div className="mb-2 flex flex-wrap items-center gap-2">
-                        <h4 className="min-w-0 break-words text-base font-bold text-[#171719] sm:text-lg">
+                        <h4 className="min-w-0 break-words text-base font-bold text-[var(--foreground)] sm:text-lg">
                           {expense.item_name}
                         </h4>
                         {expense.category && (
-                          <span className="rounded-md bg-[#eef2f6] px-2 py-0.5 text-xs font-bold text-[#6b7684] sm:text-sm">
+                          <span className="rounded-md bg-[var(--line)] px-2 py-0.5 text-xs font-bold text-[var(--muted)] sm:text-sm">
                             {expense.category}
                           </span>
                         )}
                       </div>
-                      <div className="space-y-1 text-sm text-[#6b7684]">
+                      <div className="space-y-1 text-sm text-[var(--muted)]">
                         <div className="flex flex-wrap items-center gap-2">
-                          <span className="break-all text-lg font-extrabold text-[#171719]">
+                          <span className="break-all text-lg font-extrabold text-[var(--foreground)]">
                             {formatCurrency(expense.amount, expense.currency)}
                           </span>
                           <span className="text-xs">
@@ -191,7 +191,7 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
                           </div>
                         )}
                         {expense.memo && (
-                          <div className="mt-1 text-xs text-[#8b95a1]">
+                          <div className="mt-1 text-xs text-[var(--muted-2)]">
                             {expense.memo}
                           </div>
                         )}
@@ -205,7 +205,7 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
                               e.stopPropagation();
                               onEdit(expense);
                             }}
-                            className="min-h-[40px] flex-1 rounded-lg px-3 py-1 text-sm font-bold text-[#3182f6] hover:bg-[#e8f3ff] sm:flex-none"
+                            className="min-h-[40px] flex-1 rounded-lg px-3 py-1 text-sm font-bold text-[var(--primary)] hover:bg-[var(--primary-soft)] sm:flex-none"
                           >
                             수정
                           </button>
@@ -216,7 +216,7 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
                               e.stopPropagation();
                               onDelete(expense.id);
                             }}
-                            className="min-h-[40px] flex-1 rounded-lg px-3 py-1 text-sm font-bold text-[#f04452] hover:bg-[#fff0f1] sm:flex-none"
+                            className="min-h-[40px] flex-1 rounded-lg px-3 py-1 text-sm font-bold text-[var(--danger)] hover:bg-[var(--surface-danger)] sm:flex-none"
                           >
                             삭제
                           </button>
@@ -231,7 +231,7 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
         </div>
       ))}
       {expenses.length === 0 && (
-        <div className="py-12 text-center text-[#6b7684]">
+        <div className="py-12 text-center text-[var(--muted)]">
           지출 내역이 없습니다.
         </div>
       )}
@@ -248,49 +248,49 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
         >
           <div className="space-y-4">
             {/* 기본 정보 */}
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-100">
-              <h3 className="mb-2 break-words text-xl font-bold text-gray-900">
+            <div className="rounded-lg border border-[var(--surface-selected)] bg-[var(--primary-soft)] p-4">
+              <h3 className="mb-2 break-words text-xl font-bold text-[var(--foreground)]">
                 {selectedExpense.item_name}
               </h3>
               <div className="mb-3 flex flex-wrap items-center gap-2">
-                <span className="break-all text-2xl font-bold text-blue-600">
+                <span className="break-all text-2xl font-bold text-[var(--primary-pressed)]">
                   {formatCurrency(selectedExpense.amount, selectedExpense.currency)}
                 </span>
                 {selectedExpense.category && (
-                  <span className="px-2 py-1 bg-white rounded text-sm">
+                  <span className="px-2 py-1 bg-[var(--surface)] rounded text-sm">
                     {selectedExpense.category}
                   </span>
                 )}
               </div>
               <div className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
                 <div>
-                  <span className="text-gray-600">결제일:</span>
+                  <span className="text-[var(--muted)]">결제일:</span>
                   <span className="ml-2 font-medium">
                     {format(new Date(selectedExpense.date), "yyyy년 M월 d일 (EEE)", { locale: ko })}
                   </span>
                 </div>
                 <div>
-                  <span className="text-gray-600">결제방법:</span>
+                  <span className="text-[var(--muted)]">결제방법:</span>
                   <span className="ml-2 font-medium">
                     {selectedExpense.payment_type === "cash" ? "현금" : "카드"}
                   </span>
                 </div>
                 <div className="sm:col-span-2">
-                  <span className="text-gray-600">결제자:</span>
+                  <span className="text-[var(--muted)]">결제자:</span>
                   <span className="ml-2 font-medium">
                     {getParticipant(selectedExpense.payer_id)?.name}
                   </span>
                 </div>
                 {selectedExpense.location && (
                   <div className="sm:col-span-2">
-                    <span className="text-gray-600">📍 위치:</span>
+                    <span className="text-[var(--muted)]">📍 위치:</span>
                     <span className="ml-2 font-medium">{selectedExpense.location}</span>
                   </div>
                 )}
                 {selectedExpense.memo && (
                   <div className="sm:col-span-2">
-                    <span className="text-gray-600">메모:</span>
-                    <div className="ml-2 text-gray-700 mt-1 text-xs">
+                    <span className="text-[var(--muted)]">메모:</span>
+                    <div className="ml-2 text-[var(--muted-strong)] mt-1 text-xs">
                       {selectedExpense.memo}
                     </div>
                   </div>
@@ -299,8 +299,8 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
             </div>
 
             {/* 계산 방식 설명 */}
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-              <h4 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+            <div className="bg-[var(--surface-warning)] border border-[var(--surface-warning)] rounded-lg p-4">
+              <h4 className="font-semibold text-[var(--foreground)] mb-3 flex items-center gap-2">
                 <span>📊</span>
                 <span>정산 계산식</span>
               </h4>
@@ -308,7 +308,7 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
                 <>
                   {/* 날짜별 지출 계산 */}
                   <div className="space-y-3 text-sm">
-                    <div className="font-medium text-gray-700">
+                    <div className="font-medium text-[var(--muted-strong)]">
                       💡 날짜별 분담 방식 ({selectedExpense.category})
                     </div>
                     {(() => {
@@ -323,17 +323,17 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
 
                       return (
                         <>
-                          <div className="p-3 bg-white rounded border border-yellow-300">
-                            <div className="text-xs text-gray-600 mb-2">1단계: 총 금액을 날짜 수로 분배</div>
+                          <div className="rounded border border-[var(--surface-warning)] bg-[var(--surface)] p-3">
+                            <div className="text-xs text-[var(--muted)] mb-2">1단계: 총 금액을 날짜 수로 분배</div>
                             <div className="break-words font-mono text-xs sm:text-sm">
                               {formatCurrency(selectedExpense.amount, selectedExpense.currency)} ÷ {dates.length}일 
                               = {formatCurrency(dailyAmount, selectedExpense.currency)}/일
-                              {dailyRemainder > 0 && <span className="text-xs text-gray-500"> (+나머지 {formatCurrency(dailyRemainder, selectedExpense.currency)})</span>}
+                              {dailyRemainder > 0 && <span className="text-xs text-[var(--muted-2)]"> (+나머지 {formatCurrency(dailyRemainder, selectedExpense.currency)})</span>}
                             </div>
                           </div>
 
                           <div className="space-y-2">
-                            <div className="text-xs text-gray-600">2단계: 각 날짜별로 참여자 수로 분배</div>
+                            <div className="text-xs text-[var(--muted)]">2단계: 각 날짜별로 참여자 수로 분배</div>
                             {dates.map((date, dateIndex) => {
                               const dayParticipants = byDate[date];
                               const dateAmount = dailyAmount + (dateIndex === 0 ? dailyRemainder : 0);
@@ -341,16 +341,16 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
                               const remainder = dateAmount % dayParticipants.length;
 
                               return (
-                                <div key={date} className="p-2 bg-white rounded border border-gray-200">
-                                  <div className="text-xs font-medium text-gray-700 mb-1">
+                                <div key={date} className="p-2 bg-[var(--surface)] rounded border border-[var(--line)]">
+                                  <div className="text-xs font-medium text-[var(--muted-strong)] mb-1">
                                     {format(new Date(date), "M월 d일", { locale: ko })} ({dayParticipants.length}명)
                                   </div>
-                                  <div className="break-words font-mono text-xs text-gray-600">
+                                  <div className="break-words font-mono text-xs text-[var(--muted)]">
                                     {formatCurrency(dateAmount, selectedExpense.currency)} ÷ {dayParticipants.length}명 
                                     = {formatCurrency(perPerson, selectedExpense.currency)}/인
-                                    {remainder > 0 && <span className="text-gray-400"> (+나머지 {formatCurrency(remainder, selectedExpense.currency)})</span>}
+                                    {remainder > 0 && <span className="text-[var(--muted-2)]"> (+나머지 {formatCurrency(remainder, selectedExpense.currency)})</span>}
                                   </div>
-                                  <div className="text-xs text-gray-500 mt-1">
+                                  <div className="text-xs text-[var(--muted-2)] mt-1">
                                     참여: {dayParticipants.map(pid => getParticipant(pid)?.name).join(", ")}
                                   </div>
                                 </div>
@@ -366,12 +366,12 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
                 <>
                   {/* 일반 지출 계산 */}
                   <div className="space-y-2 text-sm">
-                    <div className="font-medium text-gray-700">
+                    <div className="font-medium text-[var(--muted-strong)]">
                       💡 {selectedExpense.settlement_type === "equal" ? "동일 분할" : "직접 정산"} 방식
                     </div>
                     {selectedExpense.settlement_type === "equal" ? (
                       <>
-                        <div className="p-3 bg-white rounded border border-yellow-300">
+                        <div className="rounded border border-[var(--surface-warning)] bg-[var(--surface)] p-3">
                           <div className="break-words font-mono text-xs sm:text-sm">
                             {formatCurrency(selectedExpense.amount, selectedExpense.currency)} ÷ {selectedExpense.expense_participants?.length || 0}명
                             = {formatCurrency(
@@ -381,21 +381,21 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
                             {(() => {
                               const remainder = selectedExpense.amount % (selectedExpense.expense_participants?.length || 1);
                               return remainder > 0 ? (
-                                <span className="text-xs text-gray-500">
+                                <span className="text-xs text-[var(--muted-2)]">
                                   {" "}(+나머지 {formatCurrency(remainder, selectedExpense.currency)} → 첫 번째 참여자)
                                 </span>
                               ) : null;
                             })()}
                           </div>
                         </div>
-                        <div className="text-xs text-gray-500 p-2 bg-white rounded">
+                        <div className="text-xs text-[var(--muted-2)] p-2 bg-[var(--surface)] rounded">
                           참여자: {selectedExpense.expense_participants?.map(ep => 
                             getParticipant(ep.participant_id)?.name
                           ).join(", ")}
                         </div>
                       </>
                     ) : (
-                      <div className="p-3 bg-white rounded border border-yellow-300 text-xs text-gray-600">
+                      <div className="rounded border border-[var(--surface-warning)] bg-[var(--surface)] p-3 text-xs text-[var(--muted)]">
                         각 참여자별로 직접 입력된 금액으로 정산됩니다.
                       </div>
                     )}
@@ -406,24 +406,24 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
 
             {/* 인원별 분담 금액 */}
             <div>
-              <h4 className="font-semibold text-gray-800 mb-3">최종 인원별 분담 금액</h4>
+              <h4 className="font-semibold text-[var(--foreground)] mb-3">최종 인원별 분담 금액</h4>
               <div className="space-y-2">
                 {calculateSplitDetails(selectedExpense).map((detail) => (
                   <div
                     key={detail.participantId}
-                    className="flex flex-col gap-2 rounded-lg bg-gray-50 p-3 sm:flex-row sm:items-center sm:justify-between"
+                    className="flex flex-col gap-2 rounded-lg bg-[var(--surface-muted)] p-3 sm:flex-row sm:items-center sm:justify-between"
                   >
                     <div>
                       <div className="font-medium">{detail.participantName}</div>
                       {detail.dates && detail.dates.length > 0 && (
-                        <div className="text-xs text-gray-500 mt-1">
+                        <div className="text-xs text-[var(--muted-2)] mt-1">
                           참여일: {detail.dates.map((d) => 
                             format(new Date(d), "M/d", { locale: ko })
                           ).join(", ")}
                         </div>
                       )}
                     </div>
-                    <div className="break-all text-lg font-bold text-blue-600">
+                    <div className="break-all text-lg font-bold text-[var(--primary-pressed)]">
                       {formatCurrency(detail.amount, selectedExpense.currency)}
                     </div>
                   </div>
@@ -431,8 +431,8 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
               </div>
               
               {/* 총합 확인 */}
-              <div className="mt-3 pt-3 border-t border-gray-200">
-                <div className="flex flex-col gap-1 text-sm text-gray-600 sm:flex-row sm:justify-between">
+              <div className="mt-3 pt-3 border-t border-[var(--line)]">
+                <div className="flex flex-col gap-1 text-sm text-[var(--muted)] sm:flex-row sm:justify-between">
                   <span>합계:</span>
                   <span className="font-semibold">
                     {formatCurrency(
@@ -446,14 +446,14 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
 
             {/* 액션 버튼 */}
             {(onEdit || onDelete) && (
-              <div className="flex gap-2 pt-2 border-t border-gray-200">
+              <div className="flex gap-2 pt-2 border-t border-[var(--line)]">
                 {onEdit && (
                   <button
                     onClick={() => {
                       setIsModalOpen(false);
                       onEdit(selectedExpense);
                     }}
-                    className="min-h-[44px] flex-1 rounded-lg bg-blue-50 px-4 py-2 text-sm font-medium text-blue-600 hover:bg-blue-100"
+                    className="min-h-[44px] flex-1 rounded-lg bg-[var(--primary-soft)] px-4 py-2 text-sm font-medium text-[var(--primary-pressed)] hover:bg-[var(--surface-selected)]"
                   >
                     수정
                   </button>
@@ -464,7 +464,7 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
                       setIsModalOpen(false);
                       onDelete(selectedExpense.id);
                     }}
-                    className="min-h-[44px] flex-1 rounded-lg bg-red-50 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-100"
+                    className="min-h-[44px] flex-1 rounded-lg bg-[var(--surface-danger)] px-4 py-2 text-sm font-medium text-[var(--danger)] hover:bg-[var(--surface-danger)]"
                   >
                     삭제
                   </button>
