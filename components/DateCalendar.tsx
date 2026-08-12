@@ -60,12 +60,12 @@ export const DateCalendar: React.FC<DateCalendarProps> = ({
   const firstDayOfWeek = getDay(monthStart);
 
   return (
-    <div className="bg-white rounded-xl p-4 shadow-sm">
+    <div className="bg-[var(--surface)] rounded-xl p-4 shadow-sm">
       {/* Month Navigation */}
       <div className="flex items-center justify-between mb-4">
         <button
           onClick={previousMonth}
-          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          className="p-2 hover:bg-[var(--surface-muted)] rounded-lg transition-colors"
           aria-label="이전 달"
         >
           <ChevronLeft className="h-5 w-5" />
@@ -75,7 +75,7 @@ export const DateCalendar: React.FC<DateCalendarProps> = ({
         </h3>
         <button
           onClick={nextMonth}
-          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          className="p-2 hover:bg-[var(--surface-muted)] rounded-lg transition-colors"
           aria-label="다음 달"
         >
           <ChevronRight className="h-5 w-5" />
@@ -87,7 +87,7 @@ export const DateCalendar: React.FC<DateCalendarProps> = ({
         {weekDays.map((day) => (
           <div
             key={day}
-            className="text-center text-sm font-medium text-gray-500 py-2"
+            className="text-center text-sm font-medium text-[var(--muted-2)] py-2"
           >
             {day}
           </div>
@@ -114,9 +114,9 @@ export const DateCalendar: React.FC<DateCalendarProps> = ({
               onClick={() => onDateClick?.(date)}
               className={cn(
                 "aspect-square p-1 rounded-lg transition-all relative",
-                "hover:bg-gray-50",
-                isSelected && "bg-blue-100 border-2 border-blue-500",
-                isToday && !isSelected && "bg-blue-50 border border-blue-200",
+                "hover:bg-[var(--surface-muted)]",
+                isSelected && "border-2 border-[var(--primary)] bg-[var(--primary-soft)]",
+                isToday && !isSelected && "bg-[var(--primary-soft)] border border-[var(--line-info)]",
                 !isToday && !isSelected && "border border-transparent"
               )}
             >
@@ -124,12 +124,12 @@ export const DateCalendar: React.FC<DateCalendarProps> = ({
                 {format(date, "d")}
               </div>
               {hasExpense && (
-                <div className="text-xs text-blue-600 font-semibold">
+                <div className="text-xs text-[var(--primary-pressed)] font-semibold">
                   {formatCurrency(total, "KRW").replace(/[₩]/g, "")}
                 </div>
               )}
               {hasExpense && (
-                <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-blue-500 rounded-full" />
+                <div className="absolute bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-[var(--success)]" />
               )}
             </button>
           );
@@ -138,4 +138,3 @@ export const DateCalendar: React.FC<DateCalendarProps> = ({
     </div>
   );
 };
-

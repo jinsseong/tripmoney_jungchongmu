@@ -103,16 +103,16 @@ CREATE POLICY "Allow all operations on dashboard_snapshots" ON dashboard_snapsho
   USING (true)
   WITH CHECK (true);
 
--- 11. expense_reports 테이블
-ALTER TABLE expense_reports ENABLE ROW LEVEL SECURITY;
+-- 이전 버전에서 생성된 제보 테이블은 데이터 보존을 위해 삭제하지 않고 공개 정책만 정리합니다.
+DO $$
+BEGIN
+  IF to_regclass('public.expense_reports') IS NOT NULL THEN
+    EXECUTE 'DROP POLICY IF EXISTS "Allow all operations on expense_reports" ON expense_reports';
+  END IF;
+END
+$$;
 
-DROP POLICY IF EXISTS "Allow all operations on expense_reports" ON expense_reports;
-CREATE POLICY "Allow all operations on expense_reports" ON expense_reports
-  FOR ALL
-  USING (true)
-  WITH CHECK (true);
-
--- 12. participant-avatars Storage 버킷
+-- 11. participant-avatars Storage 버킷
 -- 개발/MVP 단계에서 초대받은 참가자가 직접 프로필 사진을 업로드할 수 있게 허용합니다.
 DROP POLICY IF EXISTS "Allow public read on participant avatars" ON storage.objects;
 CREATE POLICY "Allow public read on participant avatars" ON storage.objects
@@ -139,32 +139,11 @@ CREATE POLICY "Allow public delete on participant avatars" ON storage.objects
   TO anon, authenticated
   USING (bucket_id = 'participant-avatars');
 
--- 13. expense-receipts Storage 버킷
--- 개발/MVP 단계에서 참가자가 영수증 이미지를 제보할 수 있게 허용합니다.
+-- 이전 버전의 영수증 제보 Storage 공개 정책 정리
 DROP POLICY IF EXISTS "Allow public read on expense receipts" ON storage.objects;
-CREATE POLICY "Allow public read on expense receipts" ON storage.objects
-  FOR SELECT
-  TO anon, authenticated
-  USING (bucket_id = 'expense-receipts');
-
 DROP POLICY IF EXISTS "Allow public upload on expense receipts" ON storage.objects;
-CREATE POLICY "Allow public upload on expense receipts" ON storage.objects
-  FOR INSERT
-  TO anon, authenticated
-  WITH CHECK (bucket_id = 'expense-receipts');
-
 DROP POLICY IF EXISTS "Allow public update on expense receipts" ON storage.objects;
-CREATE POLICY "Allow public update on expense receipts" ON storage.objects
-  FOR UPDATE
-  TO anon, authenticated
-  USING (bucket_id = 'expense-receipts')
-  WITH CHECK (bucket_id = 'expense-receipts');
-
 DROP POLICY IF EXISTS "Allow public delete on expense receipts" ON storage.objects;
-CREATE POLICY "Allow public delete on expense receipts" ON storage.objects
-  FOR DELETE
-  TO anon, authenticated
-  USING (bucket_id = 'expense-receipts');
 
 -- ============================================
 -- 참고: RLS를 완전히 비활성화하려면 (개발용)
@@ -179,4 +158,3 @@ CREATE POLICY "Allow public delete on expense receipts" ON storage.objects
 -- ALTER TABLE daily_participations DISABLE ROW LEVEL SECURITY;
 -- ALTER TABLE shared_dashboards DISABLE ROW LEVEL SECURITY;
 -- ALTER TABLE dashboard_snapshots DISABLE ROW LEVEL SECURITY;
--- ALTER TABLE expense_reports DISABLE ROW LEVEL SECURITY;

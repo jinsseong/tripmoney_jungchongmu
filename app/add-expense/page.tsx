@@ -114,7 +114,7 @@ function AddExpenseContent() {
   if (participantsLoading || loadingCategories) {
     return (
       <div className="app-screen flex items-center justify-center">
-        <div className="text-[#6b7684]">로딩 중...</div>
+        <div className="text-[var(--muted)]">로딩 중...</div>
       </div>
     );
   }
@@ -131,7 +131,7 @@ function AddExpenseContent() {
           </Link>
           <Card>
             <div className="py-8 text-center">
-              <p className="mb-4 text-[#6b7684]">
+              <p className="mb-4 text-[var(--muted)]">
                 이 여행에 참여자가 없습니다. 먼저 참여자를 추가해주세요.
               </p>
               <Link href={tripId ? `/participants?trip=${tripId}` : "/participants"}>
@@ -180,7 +180,7 @@ export default function AddExpensePage() {
   return (
     <Suspense fallback={
       <div className="app-screen flex items-center justify-center">
-        <div className="text-[#6b7684]">로딩 중...</div>
+        <div className="text-[var(--muted)]">로딩 중...</div>
       </div>
     }>
       <AddExpenseContent />

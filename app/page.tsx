@@ -110,7 +110,7 @@ export default function HomePage() {
   if (loading) {
     return (
       <div className="app-screen flex items-center justify-center">
-        <div className="text-[#6b7684]">로딩 중...</div>
+        <div className="text-[var(--muted)]">로딩 중...</div>
       </div>
     );
   }
@@ -121,12 +121,12 @@ export default function HomePage() {
         <div className="mb-6 flex flex-col gap-5 sm:mb-8">
           <div className="top-bar">
             <div className="flex min-w-0 items-center gap-3">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-[#171719] text-white">
+              <div className="brand-mark flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-white">
                 <WalletCards className="h-5 w-5" />
               </div>
               <div className="min-w-0">
                 <div className="page-kicker">여행 정산</div>
-                <h1 className="truncate text-xl font-extrabold text-[#171719] sm:text-2xl">
+                <h1 className="truncate text-xl font-extrabold text-[var(--foreground)] sm:text-2xl">
                   정총무
                 </h1>
               </div>
@@ -143,7 +143,7 @@ export default function HomePage() {
               </Button>
             )}
           </div>
-          <div>
+          <div className="home-intro">
             <h2 className="page-title mb-2">
               여행별 정산을<br className="sm:hidden" /> 바로 시작하세요
             </h2>
@@ -180,7 +180,7 @@ export default function HomePage() {
             <Card className="mb-5">
               <CardHeader>
                 <div className="flex items-center gap-2">
-                  <Link2 className="h-5 w-5 text-[#3182f6]" />
+                  <Link2 className="h-5 w-5 text-[var(--primary)]" />
                   <CardTitle>초대 링크로 참여</CardTitle>
                 </div>
               </CardHeader>
@@ -212,8 +212,8 @@ export default function HomePage() {
             {participantTrips.length === 0 ? (
               <Card className="border-dashed">
                 <div className="py-12 text-center sm:py-16">
-                  <UserRound className="mx-auto mb-4 h-14 w-14 text-[#b0b8c1]" />
-                  <p className="text-[#6b7684]">
+                  <UserRound className="mx-auto mb-4 h-14 w-14 text-[var(--muted-2)]" />
+                  <p className="text-[var(--muted)]">
                     아직 이 기기에서 참여한 여행이 없습니다.
                   </p>
                 </div>
@@ -223,7 +223,7 @@ export default function HomePage() {
                 {participantTrips.map((trip) => (
                   <Card
                     key={trip.id}
-                    className="tap-card cursor-pointer p-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3182f6] focus-visible:ring-offset-2"
+                    className="tap-card cursor-pointer p-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)] focus-visible:ring-offset-2"
                     onClick={() => handleSelectParticipantTrip(trip.id)}
                     onKeyDown={(event) => {
                       if (event.key === "Enter" || event.key === " ") {
@@ -241,11 +241,11 @@ export default function HomePage() {
                           <div className="mb-2 flex items-center gap-2">
                             <span className="status-pill">참가 중</span>
                           </div>
-                          <h3 className="mb-2 break-words text-xl font-extrabold text-[#171719]">
+                          <h3 className="mb-2 break-words text-xl font-extrabold text-[var(--foreground)]">
                             {trip.name}
                           </h3>
-                          <div className="flex items-start gap-2 text-sm text-[#6b7684]">
-                            <Calendar className="mt-0.5 h-4 w-4 shrink-0 text-[#8b95a1]" />
+                          <div className="flex items-start gap-2 text-sm text-[var(--muted)]">
+                            <Calendar className="mt-0.5 h-4 w-4 shrink-0 text-[var(--muted-2)]" />
                             <span className="break-words">
                               {format(new Date(trip.start_date), "yyyy년 M월 d일", {
                                 locale: ko,
@@ -257,7 +257,7 @@ export default function HomePage() {
                             </span>
                           </div>
                         </div>
-                        <ArrowRight className="mt-2 h-5 w-5 shrink-0 text-[#8b95a1] sm:mt-1" />
+                        <ArrowRight className="mt-2 h-5 w-5 shrink-0 text-[var(--muted-2)] sm:mt-1" />
                       </div>
                     </CardContent>
                   </Card>
@@ -268,8 +268,8 @@ export default function HomePage() {
         ) : trips.length === 0 ? (
           <Card className="border-dashed">
             <div className="py-12 text-center sm:py-16">
-              <Calendar className="mx-auto mb-4 h-14 w-14 text-[#b0b8c1]" />
-              <p className="mb-5 text-[#6b7684]">등록된 여행이 없습니다.</p>
+              <Calendar className="mx-auto mb-4 h-14 w-14 text-[var(--muted-2)]" />
+              <p className="mb-5 text-[var(--muted)]">등록된 여행이 없습니다.</p>
               <Button variant="primary" onClick={() => setShowAddModal(true)} className="gap-2">
                 <Plus className="h-4 w-4" />
                 첫 여행 추가하기
@@ -281,7 +281,7 @@ export default function HomePage() {
             {trips.map((trip) => (
               <Card
                 key={trip.id}
-                className="tap-card group cursor-pointer p-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3182f6] focus-visible:ring-offset-2"
+                className="tap-card group cursor-pointer p-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)] focus-visible:ring-offset-2"
                 onClick={() => handleSelectTrip(trip.id)}
                 onKeyDown={(event) => {
                   if (event.key === "Enter" || event.key === " ") {
@@ -296,12 +296,12 @@ export default function HomePage() {
                 <CardContent className="p-4 sm:p-5">
                       <div className="flex items-start justify-between gap-4">
                         <div className="min-w-0 flex-1">
-                          <h3 className="mb-2 break-words text-xl font-extrabold text-[#171719]">
+                          <h3 className="mb-2 break-words text-xl font-extrabold text-[var(--foreground)]">
                             {trip.name}
                           </h3>
-                      <div className="space-y-1 text-sm text-[#6b7684]">
+                      <div className="space-y-1 text-sm text-[var(--muted)]">
                         <div className="flex items-start gap-2">
-                          <Calendar className="mt-0.5 h-4 w-4 shrink-0 text-[#8b95a1]" />
+                          <Calendar className="mt-0.5 h-4 w-4 shrink-0 text-[var(--muted-2)]" />
                           <span className="break-words">
                             {format(new Date(trip.start_date), "yyyy년 M월 d일", {
                               locale: ko,
@@ -313,7 +313,7 @@ export default function HomePage() {
                           </span>
                         </div>
                         {trip.description && (
-                          <p className="line-clamp-2 text-[#8b95a1]">{trip.description}</p>
+                          <p className="line-clamp-2 text-[var(--muted-2)]">{trip.description}</p>
                         )}
                       </div>
                     </div>
@@ -323,11 +323,11 @@ export default function HomePage() {
                         size="sm"
                         aria-label={`${trip.name} 삭제`}
                         onClick={(e) => handleDeleteTrip(e, trip.id, trip.name)}
-                        className="hidden h-9 w-9 p-0 text-[#f04452] opacity-0 transition-opacity hover:bg-[#fff0f1] sm:inline-flex sm:group-hover:opacity-100"
+                        className="hidden h-9 w-9 p-0 text-[var(--danger)] opacity-0 transition-opacity hover:bg-[var(--surface-danger)] sm:inline-flex sm:group-hover:opacity-100"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
-                      <ArrowRight className="mt-2 h-5 w-5 shrink-0 text-[#8b95a1] sm:mt-1" />
+                      <ArrowRight className="mt-2 h-5 w-5 shrink-0 text-[var(--muted-2)] sm:mt-1" />
                     </div>
                   </div>
                 </CardContent>
@@ -362,7 +362,7 @@ export default function HomePage() {
             />
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
-                <label className="mb-1.5 block text-sm font-bold text-[#4e5968]">
+                <label className="mb-1.5 block text-sm font-bold text-[var(--muted-strong)]">
                   시작일
                 </label>
                 <input
@@ -371,12 +371,12 @@ export default function HomePage() {
                   onChange={(e) =>
                     setFormData({ ...formData, startDate: e.target.value })
                   }
-                  className="min-h-[48px] w-full rounded-lg border border-[#d1d6db] px-3.5 text-base focus:border-[#3182f6] focus:outline-none focus:ring-3 focus:ring-[#3182f6]/15"
+                  className="min-h-[48px] w-full rounded-lg border border-[var(--line-strong)] px-3.5 text-base focus:border-[var(--primary)] focus:outline-none focus:ring-3 focus:ring-[var(--primary)]/15"
                   required
                 />
               </div>
               <div>
-                <label className="mb-1.5 block text-sm font-bold text-[#4e5968]">
+                <label className="mb-1.5 block text-sm font-bold text-[var(--muted-strong)]">
                   종료일
                 </label>
                 <input
@@ -386,13 +386,13 @@ export default function HomePage() {
                     setFormData({ ...formData, endDate: e.target.value })
                   }
                   min={formData.startDate}
-                  className="min-h-[48px] w-full rounded-lg border border-[#d1d6db] px-3.5 text-base focus:border-[#3182f6] focus:outline-none focus:ring-3 focus:ring-[#3182f6]/15"
+                  className="min-h-[48px] w-full rounded-lg border border-[var(--line-strong)] px-3.5 text-base focus:border-[var(--primary)] focus:outline-none focus:ring-3 focus:ring-[var(--primary)]/15"
                   required
                 />
               </div>
             </div>
             <div>
-              <label className="mb-1.5 block text-sm font-bold text-[#4e5968]">
+              <label className="mb-1.5 block text-sm font-bold text-[var(--muted-strong)]">
                 설명 (선택)
               </label>
               <textarea
@@ -401,7 +401,7 @@ export default function HomePage() {
                   setFormData({ ...formData, description: e.target.value })
                 }
                 placeholder="여행에 대한 간단한 설명을 입력하세요"
-                className="min-h-24 w-full rounded-lg border border-[#d1d6db] px-3.5 py-2.5 text-base focus:border-[#3182f6] focus:outline-none focus:ring-3 focus:ring-[#3182f6]/15"
+                className="min-h-24 w-full rounded-lg border border-[var(--line-strong)] px-3.5 py-2.5 text-base focus:border-[var(--primary)] focus:outline-none focus:ring-3 focus:ring-[var(--primary)]/15"
               />
             </div>
             <div className="grid grid-cols-2 gap-2">

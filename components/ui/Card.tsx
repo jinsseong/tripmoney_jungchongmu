@@ -8,9 +8,9 @@ interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
 export const Card = React.forwardRef<HTMLDivElement, CardProps>(
   ({ className, variant = "default", children, ...props }, ref) => {
     const variants = {
-      default: "border border-[#e5e8eb] bg-white shadow-[var(--shadow-card)]",
-      outline: "border border-[#e5e8eb] bg-white",
-      elevated: "border border-[#e5e8eb] bg-white shadow-[0_12px_32px_rgba(20,33,61,0.10)]",
+      default: "border border-[var(--line)] bg-[var(--surface)] shadow-[var(--shadow-card)]",
+      outline: "border border-[var(--line)] bg-[var(--surface)]",
+      elevated: "border border-[var(--line)] bg-[var(--surface)] shadow-[0_12px_32px_rgb(var(--shadow-tint)/10%)]",
     };
 
     return (
@@ -50,7 +50,7 @@ export const CardTitle = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <h3
     ref={ref}
-    className={cn("text-lg font-bold leading-tight tracking-normal text-[#171719]", className)}
+    className={cn("text-lg font-bold leading-tight tracking-normal text-[var(--foreground)]", className)}
     {...props}
   />
 ));

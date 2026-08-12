@@ -11,6 +11,7 @@ interface PersonalSettlementPanelProps {
   expenses: Expense[];
   userTotals: UserTotal[];
   transfers: SettlementTransfer[];
+  preferredParticipantId?: string;
 }
 
 function getParticipantShare(expense: Expense, participantId: string) {
@@ -62,10 +63,20 @@ export function PersonalSettlementPanel({
   expenses,
   userTotals,
   transfers,
+  preferredParticipantId,
 }: PersonalSettlementPanelProps) {
   const [selectedParticipantId, setSelectedParticipantId] = useState(
-    participants[0]?.id || ""
+    preferredParticipantId || participants[0]?.id || ""
   );
+
+  useEffect(() => {
+    if (
+      preferredParticipantId &&
+      participants.some((participant) => participant.id === preferredParticipantId)
+    ) {
+      setSelectedParticipantId(preferredParticipantId);
+    }
+  }, [participants, preferredParticipantId]);
 
   useEffect(() => {
     if (
@@ -105,7 +116,7 @@ export function PersonalSettlementPanel({
   if (participants.length === 0) {
     return (
       <Card>
-        <div className="py-10 text-center text-gray-500">
+        <div className="py-10 text-center text-[var(--muted-2)]">
           개인별 정산을 보려면 참가자를 먼저 추가해주세요.
         </div>
       </Card>
@@ -125,8 +136,8 @@ export function PersonalSettlementPanel({
               className={cn(
                 "flex min-h-[44px] shrink-0 items-center gap-2 rounded-lg border-2 px-3 py-2 text-sm font-medium",
                 isSelected
-                  ? "border-blue-500 bg-blue-50 text-blue-700"
-                  : "border-gray-200 bg-white text-gray-700"
+                  ? "border-[var(--primary)] bg-[var(--primary-soft)] text-[var(--primary-pressed)]"
+                  : "border-[var(--line)] bg-[var(--surface)] text-[var(--muted-strong)]"
               )}
             >
               <ParticipantAvatar participant={participant} size="sm" />
@@ -141,36 +152,36 @@ export function PersonalSettlementPanel({
           <div className="flex items-center gap-3">
             <ParticipantAvatar participant={selectedParticipant} size="lg" />
             <div className="min-w-0 flex-1">
-              <h2 className="truncate text-xl font-bold text-gray-900">
+              <h2 className="truncate text-xl font-bold text-[var(--foreground)]">
                 {selectedParticipant.name}
               </h2>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-[var(--muted-2)]">
                 개인별 지출과 최종 송금 안내
               </p>
             </div>
           </div>
           <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <div className="rounded-lg bg-gray-50 p-3">
-              <div className="text-xs text-gray-500">낸 돈</div>
-              <div className="mt-1 break-all font-bold text-gray-900">
+            <div className="rounded-lg bg-[var(--surface-muted)] p-3">
+              <div className="text-xs text-[var(--muted-2)]">낸 돈</div>
+              <div className="mt-1 break-all font-bold text-[var(--foreground)]">
                 {formatCurrency(selectedTotal?.totalPaid || 0)}
               </div>
             </div>
-            <div className="rounded-lg bg-gray-50 p-3">
-              <div className="text-xs text-gray-500">부담액</div>
-              <div className="mt-1 break-all font-bold text-gray-900">
+            <div className="rounded-lg bg-[var(--surface-muted)] p-3">
+              <div className="text-xs text-[var(--muted-2)]">부담액</div>
+              <div className="mt-1 break-all font-bold text-[var(--foreground)]">
                 {formatCurrency(selectedTotal?.totalOwed || 0)}
               </div>
             </div>
-            <div className="rounded-lg bg-green-50 p-3">
-              <div className="text-xs text-green-700">받을 돈</div>
-              <div className="mt-1 break-all font-bold text-green-700">
+            <div className="rounded-lg bg-[var(--surface-success)] p-3">
+              <div className="text-xs text-[var(--success-ink)]">받을 돈</div>
+              <div className="mt-1 break-all font-bold text-[var(--success-ink)]">
                 {formatCurrency(Math.max(selectedTotal?.netBalance || 0, 0))}
               </div>
             </div>
-            <div className="rounded-lg bg-red-50 p-3">
-              <div className="text-xs text-red-700">낼 돈</div>
-              <div className="mt-1 break-all font-bold text-red-700">
+            <div className="rounded-lg bg-[var(--surface-danger)] p-3">
+              <div className="text-xs text-[var(--danger-ink)]">낼 돈</div>
+              <div className="mt-1 break-all font-bold text-[var(--danger-ink)]">
                 {formatCurrency(Math.max(-(selectedTotal?.netBalance || 0), 0))}
               </div>
             </div>
@@ -188,19 +199,19 @@ export function PersonalSettlementPanel({
               {personalTransfers.map((transfer, index) => (
                 <div
                   key={`${transfer.from.id}-${transfer.to.id}-${index}`}
-                  className="flex flex-col gap-1 rounded-lg border border-gray-100 bg-gray-50 p-3 text-sm sm:flex-row sm:items-center sm:justify-between"
+                  className="flex flex-col gap-1 rounded-lg border border-[var(--surface-muted)] bg-[var(--surface-muted)] p-3 text-sm sm:flex-row sm:items-center sm:justify-between"
                 >
-                  <span className="font-medium text-gray-800">
+                  <span className="font-medium text-[var(--foreground)]">
                     {transfer.from.name} → {transfer.to.name}
                   </span>
-                  <span className="font-bold text-blue-600">
+                  <span className="font-bold text-[var(--primary-pressed)]">
                     {formatCurrency(transfer.amount)}
                   </span>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="py-6 text-center text-sm text-gray-500">
+            <div className="py-6 text-center text-sm text-[var(--muted-2)]">
               이 참가자와 관련된 송금 내역이 없습니다.
             </div>
           )}
@@ -217,21 +228,21 @@ export function PersonalSettlementPanel({
               {personalExpenses.map(({ expense, shareAmount, isPayer }) => (
                 <div
                   key={expense.id}
-                  className="rounded-lg border border-gray-100 bg-white p-3"
+                  className="rounded-lg border border-[var(--surface-muted)] bg-[var(--surface)] p-3"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <div className="truncate font-semibold text-gray-900">
+                      <div className="truncate font-semibold text-[var(--foreground)]">
                         {expense.item_name}
                       </div>
-                      <div className="mt-1 text-xs text-gray-500">
+                      <div className="mt-1 text-xs text-[var(--muted-2)]">
                         {expense.date}
                         {isPayer ? " · 결제자" : ""}
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-xs text-gray-500">내 부담</div>
-                      <div className="font-bold text-gray-900">
+                      <div className="text-xs text-[var(--muted-2)]">내 부담</div>
+                      <div className="font-bold text-[var(--foreground)]">
                         {formatCurrency(shareAmount)}
                       </div>
                     </div>
@@ -240,7 +251,7 @@ export function PersonalSettlementPanel({
               ))}
             </div>
           ) : (
-            <div className="py-6 text-center text-sm text-gray-500">
+            <div className="py-6 text-center text-sm text-[var(--muted-2)]">
               참여한 지출이 없습니다.
             </div>
           )}

@@ -150,7 +150,7 @@ export const ExpenseChart: React.FC<ExpenseChartProps> = ({
             {categoryData.map((item, index) => (
               <div
                 key={index}
-                className="flex items-center justify-between p-2 bg-gray-50 rounded-lg"
+                className="flex items-center justify-between p-2 bg-[var(--surface-muted)] rounded-lg"
               >
                 <div className="flex items-center gap-2">
                   <span className="text-xl">{item.icon}</span>
@@ -195,7 +195,7 @@ export const ExpenseChart: React.FC<ExpenseChartProps> = ({
                 formatter={(value: number) => formatCurrency(value, "KRW")}
               />
               <Legend />
-              <Bar dataKey="amount" fill="#3b82f6" name="지출액" />
+              <Bar dataKey="amount" fill="var(--primary)" name="지출액" />
             </BarChart>
           )}
         </div>

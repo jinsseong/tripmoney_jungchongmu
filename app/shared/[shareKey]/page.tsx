@@ -162,7 +162,7 @@ export default function SettlementDashboardPage() {
   if (loading && !dashboard) {
     return (
       <div className="app-screen flex items-center justify-center">
-        <div className="text-[#6b7684]">로딩 중...</div>
+        <div className="text-[var(--muted)]">로딩 중...</div>
       </div>
     );
   }
@@ -191,11 +191,11 @@ export default function SettlementDashboardPage() {
           </CardHeader>
           <CardContent>
             {dashboard.description && (
-              <p className="mb-4 text-sm leading-6 text-[#6b7684]">
+              <p className="mb-4 text-sm leading-6 text-[var(--muted)]">
                 {dashboard.description}
               </p>
             )}
-            <div className="flex flex-col gap-2 text-sm text-[#6b7684] sm:flex-row sm:items-center sm:gap-4">
+            <div className="flex flex-col gap-2 text-sm text-[var(--muted)] sm:flex-row sm:items-center sm:gap-4">
               <span className="status-pill w-fit">
                 기간: {new Date(dashboard.start_date).toLocaleDateString(
                   "ko-KR"
@@ -208,19 +208,19 @@ export default function SettlementDashboardPage() {
         </Card>
 
         {isRefreshingDetails && (
-          <div className="mb-4 rounded-lg border border-[#c9e2ff] bg-[#e8f3ff] px-4 py-3 text-sm font-bold text-[#1b64da]">
+          <div className="mb-4 rounded-lg border border-[var(--surface-selected)] bg-[var(--primary-soft)] px-4 py-3 text-sm font-bold text-[var(--primary-pressed)]">
             최신 지출 내역을 불러오는 중...
           </div>
         )}
 
         {/* 총 사용금액 */}
-        <Card className="mb-6 bg-[#171719] text-white">
+        <Card className="summary-hero mb-6 !border-0 !border-t-[3px] !border-t-[var(--accent)] !bg-[var(--accent-soft)]">
           <CardContent>
-            <div className="mb-1 text-sm font-bold text-white/65">총 사용금액</div>
-            <div className="break-all text-3xl font-extrabold text-white sm:text-4xl">
+            <div className="mb-1 text-sm font-bold opacity-70">총 사용금액</div>
+            <div className="break-all text-3xl font-extrabold sm:text-4xl">
               {formatCurrency(totalAmount, "KRW")}
             </div>
-            <div className="mt-2 text-sm font-bold text-white/65">
+            <div className="mt-2 text-sm font-bold opacity-70">
               {snapshots.length}명 참여
             </div>
           </CardContent>

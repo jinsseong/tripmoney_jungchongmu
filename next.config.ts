@@ -22,7 +22,7 @@ const nextConfig: NextConfig = {
           },
           {
             key: "Cache-Control",
-            value: "public, max-age=31536000, immutable",
+            value: "public, max-age=0, must-revalidate",
           },
         ],
       },
@@ -35,17 +35,6 @@ const pwaConfig = withPWA({
   register: true,
   skipWaiting: true,
   runtimeCaching: [
-    {
-      urlPattern: /^https:\/\/.*\.supabase\.co\/.*/i,
-      handler: "NetworkFirst",
-      options: {
-        cacheName: "supabase-cache",
-        expiration: {
-          maxEntries: 32,
-          maxAgeSeconds: 24 * 60 * 60,
-        },
-      },
-    },
     {
       urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp)$/i,
       handler: "CacheFirst",

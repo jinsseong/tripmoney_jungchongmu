@@ -61,16 +61,16 @@ export const SettlementSummary: React.FC<SettlementSummaryProps> = ({
     <div className="space-y-4 sm:space-y-6">
       {/* 정산 검증 상태 */}
       {validation.settlement.isValid ? (
-        <div className="flex items-start gap-2 rounded-lg border border-[#b7ebd0] bg-[#ebfff6] p-3">
-          <CheckCircle className="mt-0.5 h-5 w-5 shrink-0 text-[#00a86b]" />
-          <span className="text-sm font-bold text-[#087443]">
+        <div className="flex items-start gap-2 rounded-lg border border-[var(--line-success)] bg-[var(--surface-success)] p-3">
+          <CheckCircle className="mt-0.5 h-5 w-5 shrink-0 text-[var(--success)]" />
+          <span className="text-sm font-bold text-[var(--success-ink)]">
             {validation.settlement.message}
           </span>
         </div>
       ) : (
-        <div className="flex items-start gap-2 rounded-lg border border-[#ffd0d5] bg-[#fff0f1] p-3">
-          <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-[#f04452]" />
-          <span className="text-sm font-bold text-[#d93d4a]">
+        <div className="flex items-start gap-2 rounded-lg border border-[var(--surface-danger)] bg-[var(--surface-danger)] p-3">
+          <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-[var(--danger)]" />
+          <span className="text-sm font-bold text-[var(--danger-ink)]">
             {validation.settlement.message}
           </span>
         </div>
@@ -92,28 +92,28 @@ export const SettlementSummary: React.FC<SettlementSummaryProps> = ({
                 <button
                   key={user.id}
                   onClick={() => handleUserClick(user)}
-                  className="flex w-full flex-col gap-3 rounded-lg border border-[#e5e8eb] bg-[#f6f8fb] p-4 text-left transition-colors hover:bg-[#eef2f6] sm:flex-row sm:items-center sm:justify-between"
+                  className="flex w-full flex-col gap-3 rounded-lg border border-[var(--line)] bg-[var(--surface-muted)] p-4 text-left transition-colors hover:bg-[var(--line)] sm:flex-row sm:items-center sm:justify-between"
                 >
                   <div className="flex min-w-0 items-center gap-3">
                     <div
                       className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-semibold text-white"
                       style={{
                         backgroundColor: isPositive
-                          ? "#10B981"
+                          ? "var(--success)"
                           : isNegative
-                          ? "#EF4444"
-                          : "#6B7280",
+                          ? "var(--danger)"
+                          : "var(--muted)",
                       }}
                     >
                       {getInitials(user.name)}
                     </div>
                     <div className="min-w-0 text-left">
-                      <div className="truncate font-bold text-[#171719]">{user.name}</div>
-                      <div className="text-sm text-[#6b7684]">
+                      <div className="truncate font-bold text-[var(--foreground)]">{user.name}</div>
+                      <div className="text-sm text-[var(--muted)]">
                         사용한 금액: {formatCurrency(user.totalAmount, currency)}
                       </div>
                       {user.totalPaid !== undefined && (
-                        <div className="mt-0.5 text-xs text-[#8b95a1]">
+                        <div className="mt-0.5 text-xs text-[var(--muted-2)]">
                           지불한 금액: {formatCurrency(user.totalPaid, currency)}
                         </div>
                       )}
@@ -123,15 +123,15 @@ export const SettlementSummary: React.FC<SettlementSummaryProps> = ({
                     <div
                       className={cn(
                         "break-all text-xl font-bold sm:text-lg",
-                        isPositive && "text-[#00a86b]",
-                        isNegative && "text-[#f04452]",
-                        isZero && "text-[#6b7684]"
+                        isPositive && "text-[var(--success)]",
+                        isNegative && "text-[var(--danger)]",
+                        isZero && "text-[var(--muted)]"
                       )}
                     >
                       {isPositive && "+"}
                       {formatCurrency(user.netBalance || 0, currency)}
                     </div>
-                    <div className="text-xs font-bold text-[#8b95a1]">
+                    <div className="text-xs font-bold text-[var(--muted-2)]">
                       {isPositive
                         ? "받을 금액"
                         : isNegative
@@ -143,7 +143,7 @@ export const SettlementSummary: React.FC<SettlementSummaryProps> = ({
               );
             })}
           </div>
-          <p className="mt-3 text-center text-xs text-[#8b95a1]">
+          <p className="mt-3 text-center text-xs text-[var(--muted-2)]">
             이름을 선택하면 상세 정산 내역을 확인할 수 있습니다
           </p>
         </CardContent>
@@ -156,15 +156,15 @@ export const SettlementSummary: React.FC<SettlementSummaryProps> = ({
             <CardTitle className="text-base">정산 원리</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2 text-sm text-gray-600">
+            <div className="space-y-2 text-sm text-[var(--muted)]">
               <p>
-                <strong className="text-gray-900">1. 지출 분담:</strong> 각 지출마다 참여한 사람들만 n분의 1로 분담합니다.
+                <strong className="text-[var(--foreground)]">1. 지출 분담:</strong> 각 지출마다 참여한 사람들만 n분의 1로 분담합니다.
               </p>
               <p>
-                <strong className="text-gray-900">2. 차액 계산:</strong> (실제 결제 금액) - (부담해야 할 금액) = 받을/낼 돈
+                <strong className="text-[var(--foreground)]">2. 차액 계산:</strong> (실제 결제 금액) - (부담해야 할 금액) = 받을/낼 돈
               </p>
               <p>
-                <strong className="text-gray-900">3. 최적화:</strong> 가장 적은 송금 횟수로 정산을 완료합니다.
+                <strong className="text-[var(--foreground)]">3. 최적화:</strong> 가장 적은 송금 횟수로 정산을 완료합니다.
               </p>
               <p className="mt-3 text-xs">
                 예시: A가 30,000원 지출(참여: A,B,C), B가 20,000원 지출(참여: B,C만) 
@@ -189,7 +189,7 @@ export const SettlementSummary: React.FC<SettlementSummaryProps> = ({
         >
           <div className="space-y-6">
             {/* 요약 정보 */}
-            <div className="rounded-lg border border-blue-100 bg-gradient-to-r from-blue-50 to-indigo-50 p-4">
+            <div className="rounded-lg border border-[var(--surface-selected)] bg-[var(--primary-soft)] p-4">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
                   <div
@@ -197,52 +197,52 @@ export const SettlementSummary: React.FC<SettlementSummaryProps> = ({
                     style={{
                       backgroundColor:
                         (selectedUser.netBalance || 0) > 0
-                          ? "#10B981"
+                          ? "var(--success)"
                           : (selectedUser.netBalance || 0) < 0
-                          ? "#EF4444"
-                          : "#6B7280",
+                          ? "var(--danger)"
+                          : "var(--muted)",
                     }}
                   >
                     {getInitials(selectedUser.name)}
                   </div>
                   <div>
                     <h3 className="font-bold text-lg">{selectedUser.name}</h3>
-                    <p className="text-sm text-gray-600">정산 요약</p>
+                    <p className="text-sm text-[var(--muted)]">정산 요약</p>
                   </div>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2 sm:gap-4">
-                <div className="bg-white rounded-lg p-3">
-                  <p className="text-gray-600 mb-1">사용한 금액</p>
+                <div className="bg-[var(--surface)] rounded-lg p-3">
+                  <p className="text-[var(--muted)] mb-1">사용한 금액</p>
                   <p className="break-all text-lg font-bold">
                     {formatCurrency(selectedUser.totalAmount, currency)}
                   </p>
                 </div>
-                <div className="bg-white rounded-lg p-3">
-                  <p className="text-gray-600 mb-1">지불한 금액</p>
+                <div className="bg-[var(--surface)] rounded-lg p-3">
+                  <p className="text-[var(--muted)] mb-1">지불한 금액</p>
                   <p className="break-all text-lg font-bold">
                     {formatCurrency(selectedUser.totalPaid || 0, currency)}
                   </p>
                 </div>
               </div>
 
-              <div className="mt-4 pt-4 border-t border-blue-200">
+              <div className="mt-4 pt-4 border-t border-[var(--line-info)]">
                 <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-                  <span className="text-gray-700 font-medium">최종 정산 금액</span>
+                  <span className="text-[var(--muted-strong)] font-medium">최종 정산 금액</span>
                   <span
                     className={cn(
                       "break-all text-2xl font-bold",
-                      (selectedUser.netBalance || 0) > 0 && "text-green-600",
-                      (selectedUser.netBalance || 0) < 0 && "text-red-600",
-                      (selectedUser.netBalance || 0) === 0 && "text-gray-600"
+                      (selectedUser.netBalance || 0) > 0 && "text-[var(--success)]",
+                      (selectedUser.netBalance || 0) < 0 && "text-[var(--danger)]",
+                      (selectedUser.netBalance || 0) === 0 && "text-[var(--muted)]"
                     )}
                   >
                     {(selectedUser.netBalance || 0) > 0 && "+"}
                     {formatCurrency(selectedUser.netBalance || 0, currency)}
                   </span>
                 </div>
-                <p className="text-xs text-gray-600 mt-1">
+                <p className="text-xs text-[var(--muted)] mt-1">
                   {(selectedUser.netBalance || 0) > 0
                     ? "받으실 금액입니다"
                     : (selectedUser.netBalance || 0) < 0
@@ -260,37 +260,37 @@ export const SettlementSummary: React.FC<SettlementSummaryProps> = ({
                 <>
                   {toSend.length > 0 && (
                     <div>
-                      <h4 className="font-semibold text-red-700 mb-3 flex items-center gap-2">
-                        <span className="w-2 h-2 bg-red-500 rounded-full"></span>
+                      <h4 className="font-semibold text-[var(--danger-ink)] mb-3 flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-[var(--danger)]"></span>
                         보내야 할 금액
                       </h4>
                       <div className="space-y-2">
                         {toSend.map((transfer, index) => (
                           <div
                             key={index}
-                            className="flex flex-col gap-3 rounded-lg border border-red-200 bg-red-50 p-3 sm:flex-row sm:items-center sm:justify-between"
+                            className="flex flex-col gap-3 rounded-lg border border-[var(--line-danger)] bg-[var(--surface-danger)] p-3 sm:flex-row sm:items-center sm:justify-between"
                           >
                             <div className="flex items-center gap-2">
-                              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-green-500 text-xs font-semibold text-white">
+                              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--success)] text-xs font-semibold text-white">
                                 {getInitials(transfer.to.name)}
                               </div>
                               <div>
-                                <p className="font-semibold text-gray-900">
+                                <p className="font-semibold text-[var(--foreground)]">
                                   {transfer.to.name}
                                 </p>
-                                <p className="text-xs text-gray-600">에게 송금</p>
+                                <p className="text-xs text-[var(--muted)]">에게 송금</p>
                               </div>
                             </div>
                             <div className="text-left sm:text-right">
-                              <p className="break-all text-lg font-bold text-red-600">
+                              <p className="break-all text-lg font-bold text-[var(--danger)]">
                                 {formatCurrency(transfer.amount, currency)}
                               </p>
                             </div>
                           </div>
                         ))}
                       </div>
-                      <div className="mt-3 p-3 bg-red-50 rounded-lg border border-red-100">
-                        <p className="text-sm text-red-800">
+                      <div className="mt-3 p-3 bg-[var(--surface-danger)] rounded-lg border border-[var(--surface-danger)]">
+                        <p className="text-sm text-[var(--danger-ink)]">
                           <strong>총 {formatCurrency(
                             toSend.reduce((sum, t) => sum + t.amount, 0),
                             currency
@@ -302,37 +302,37 @@ export const SettlementSummary: React.FC<SettlementSummaryProps> = ({
 
                   {toReceive.length > 0 && (
                     <div>
-                      <h4 className="font-semibold text-green-700 mb-3 flex items-center gap-2">
-                        <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                      <h4 className="font-semibold text-[var(--success-ink)] mb-3 flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-[var(--success)]"></span>
                         받으실 금액
                       </h4>
                       <div className="space-y-2">
                         {toReceive.map((transfer, index) => (
                           <div
                             key={index}
-                            className="flex flex-col gap-3 rounded-lg border border-green-200 bg-green-50 p-3 sm:flex-row sm:items-center sm:justify-between"
+                            className="flex flex-col gap-3 rounded-lg border border-[var(--line-success)] bg-[var(--surface-success)] p-3 sm:flex-row sm:items-center sm:justify-between"
                           >
                             <div className="flex items-center gap-2">
-                              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-500 text-xs font-semibold text-white">
+                              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--primary)] text-xs font-semibold text-white">
                                 {getInitials(transfer.from.name)}
                               </div>
                               <div>
-                                <p className="font-semibold text-gray-900">
+                                <p className="font-semibold text-[var(--foreground)]">
                                   {transfer.from.name}
                                 </p>
-                                <p className="text-xs text-gray-600">로부터 수령</p>
+                                <p className="text-xs text-[var(--muted)]">로부터 수령</p>
                               </div>
                             </div>
                             <div className="text-left sm:text-right">
-                              <p className="break-all text-lg font-bold text-green-600">
+                              <p className="break-all text-lg font-bold text-[var(--success)]">
                                 +{formatCurrency(transfer.amount, currency)}
                               </p>
                             </div>
                           </div>
                         ))}
                       </div>
-                      <div className="mt-3 p-3 bg-green-50 rounded-lg border border-green-100">
-                        <p className="text-sm text-green-800">
+                      <div className="mt-3 p-3 bg-[var(--surface-success)] rounded-lg border border-[var(--line-success)]">
+                        <p className="text-sm text-[var(--success-ink)]">
                           <strong>총 {formatCurrency(
                             toReceive.reduce((sum, t) => sum + t.amount, 0),
                             currency
@@ -344,11 +344,11 @@ export const SettlementSummary: React.FC<SettlementSummaryProps> = ({
 
                   {toSend.length === 0 && toReceive.length === 0 && (
                     <div className="text-center py-8">
-                      <CheckCircle className="h-16 w-16 text-gray-400 mx-auto mb-3" />
-                      <p className="text-gray-600 font-medium">
+                      <CheckCircle className="h-16 w-16 text-[var(--muted-2)] mx-auto mb-3" />
+                      <p className="text-[var(--muted)] font-medium">
                         정산이 완료되었습니다!
                       </p>
-                      <p className="text-sm text-gray-500 mt-1">
+                      <p className="text-sm text-[var(--muted-2)] mt-1">
                         보내거나 받을 금액이 없습니다.
                       </p>
                     </div>

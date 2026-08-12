@@ -36,9 +36,7 @@
      - ✅ daily_participations
      - ✅ shared_dashboards
      - ✅ dashboard_snapshots
-     - ✅ expense_reports
      - ✅ Storage bucket: participant-avatars
-     - ✅ Storage bucket: expense-receipts
 
 ### 2. 기본 카테고리 확인
 
@@ -96,12 +94,6 @@ npm run dev
    - 대시보드에서 `개인별 정산` 탭 선택
    - 참가자별 낸 돈, 부담액, 받을 돈/낼 돈, 관련 송금 내역 확인
 
-8. **지출 제보**
-   - 참가자 초대 링크 참여 완료 후 `영수증 지출 제보하기` 클릭
-   - 영수증 촬영/업로드 후 품목, 금액, 정산 참여자 확인
-   - 대시보드의 `지출 제보함` 탭에서 승인
-   - 승인 후 실제 지출 목록과 정산에 반영되는지 확인
-
 ## 🔧 문제 해결
 
 ### 데이터베이스 연결 오류
@@ -128,20 +120,11 @@ npm run dev
 - Supabase Storage에 `participant-avatars` 버킷이 있는지 확인
 - `supabase-rls-policy.sql`의 Storage 정책까지 실행했는지 확인
 
-### 영수증 지출 제보가 실패함
-- `expense_reports` 테이블이 있는지 확인
-- Supabase Storage에 `expense-receipts` 버킷이 있는지 확인
-- `supabase-rls-policy.sql`의 Storage 정책까지 실행했는지 확인
-
-### 영수증 텍스트 인식이 되지 않음
-- 브라우저의 텍스트 감지 API 지원 여부에 따라 자동 인식이 제한될 수 있음
-- 인식되지 않는 경우에도 품목/금액을 직접 입력해 제보 가능
-
 ## 📝 참고사항
 
 - 공유 대시보드 비밀번호는 PBKDF2-SHA256 해시로 저장됩니다
 - `supabase-rls-policy.sql`은 개발용 전체 허용 정책입니다
-- 초대 링크, 프로필 사진 업로드, 영수증 지출 제보도 현재는 개발/MVP용 공개 정책을 사용합니다
+- 초대 링크와 프로필 사진 업로드도 현재는 개발/MVP용 공개 정책을 사용합니다
 - 프로덕션 배포 시에는 Supabase Auth 또는 별도 권한 모델에 맞춘 RLS 정책으로 교체해야 합니다
 - 모든 테이블에 인덱스가 생성되어 성능이 최적화되어 있습니다
 

@@ -214,7 +214,7 @@ export default function JoinTripPage() {
   if (loading) {
     return (
       <main className="app-screen safe-area">
-        <div className="mx-auto flex min-h-screen max-w-md items-center justify-center px-4 text-[#6b7684]">
+        <div className="mx-auto flex min-h-screen max-w-md items-center justify-center px-4 text-[var(--muted)]">
           초대 정보를 불러오는 중...
         </div>
       </main>
@@ -225,12 +225,12 @@ export default function JoinTripPage() {
     return (
       <main className="app-screen safe-area">
         <div className="page-container flex min-h-screen max-w-md flex-col justify-center">
-          <div className="rounded-lg border border-[#b7ebd0] bg-white p-6 text-center shadow-[var(--shadow-card)]">
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-lg bg-[#ebfff6] text-[#00a86b]">
+          <div className="rounded-lg border border-[var(--line-success)] bg-[var(--surface)] p-6 text-center shadow-[var(--shadow-card)]">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-lg bg-[var(--surface-success)] text-[var(--success)]">
               <Check className="h-7 w-7" />
             </div>
-            <h1 className="text-2xl font-extrabold text-[#171719]">참여 완료</h1>
-            <p className="mt-2 text-sm leading-6 text-[#6b7684]">
+            <h1 className="text-2xl font-extrabold text-[var(--foreground)]">참여 완료</h1>
+            <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
               {trip.name} 참가자로 등록되었습니다.
             </p>
             <Button
@@ -242,14 +242,6 @@ export default function JoinTripPage() {
               정산 현황 보기
               <ArrowRight className="h-4 w-4" />
             </Button>
-            <Button
-              type="button"
-              variant="outline"
-              className="mt-2 w-full"
-              onClick={() => router.push(`/report-expense/${inviteKey}`)}
-            >
-              영수증 지출 제보하기
-            </Button>
           </div>
         </div>
       </main>
@@ -259,24 +251,24 @@ export default function JoinTripPage() {
   return (
     <main className="app-screen safe-area">
       <div className="page-container flex min-h-screen max-w-md flex-col justify-center">
-        <div className="rounded-lg border border-[#e5e8eb] bg-white p-5 shadow-[var(--shadow-card)]">
+        <div className="rounded-lg border border-[var(--line)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
           <div className="mb-6">
             <div className="page-kicker mb-3 flex items-center gap-2">
               <Calendar className="h-4 w-4" />
               여행 참가 초대
             </div>
-            <h1 className="text-2xl font-extrabold leading-tight text-[#171719]">
+            <h1 className="text-2xl font-extrabold leading-tight text-[var(--foreground)]">
               {trip ? trip.name : "초대 링크를 확인해주세요"}
             </h1>
             {trip && (
-              <p className="mt-2 text-sm leading-6 text-[#6b7684]">
+              <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
                 닉네임과 프로필 사진을 설정하면 이 여행의 정산 참여자로 등록됩니다.
               </p>
             )}
           </div>
 
           {formError && (
-            <div className="mb-4 rounded-lg border border-[#ffd0d5] bg-[#fff0f1] p-3 text-sm font-bold leading-6 text-[#d93d4a]">
+            <div className="mb-4 rounded-lg border border-[var(--surface-danger)] bg-[var(--surface-danger)] p-3 text-sm font-bold leading-6 text-[var(--danger-ink)]">
               {formError}
             </div>
           )}
@@ -292,7 +284,7 @@ export default function JoinTripPage() {
                   }}
                   size="xl"
                 />
-                <label className="inline-flex min-h-[44px] cursor-pointer items-center justify-center gap-2 rounded-lg border border-[#d1d6db] bg-white px-4 text-sm font-bold text-[#4e5968] hover:bg-[#f6f8fb]">
+                <label className="inline-flex min-h-[44px] cursor-pointer items-center justify-center gap-2 rounded-lg border border-[var(--line-strong)] bg-[var(--surface)] px-4 text-sm font-bold text-[var(--muted-strong)] hover:bg-[var(--surface-muted)]">
                   <Camera className="h-4 w-4" />
                   프로필 사진 선택
                   <input
@@ -303,7 +295,7 @@ export default function JoinTripPage() {
                   />
                 </label>
                 {avatarFile && (
-                  <p className="max-w-full truncate text-xs text-[#8b95a1]">
+                  <p className="max-w-full truncate text-xs text-[var(--muted-2)]">
                     {avatarFile.name}
                   </p>
                 )}

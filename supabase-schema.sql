@@ -143,28 +143,6 @@ CREATE TABLE IF NOT EXISTS dashboard_snapshots (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- 11. expense_reports (참가자 지출 제보)
-CREATE TABLE IF NOT EXISTS expense_reports (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  trip_id UUID REFERENCES trips(id) ON DELETE CASCADE,
-  reporter_id UUID REFERENCES participants(id) ON DELETE SET NULL,
-  item_name VARCHAR(200) NOT NULL,
-  amount INTEGER NOT NULL,
-  category_id UUID REFERENCES categories(id),
-  payer_id UUID REFERENCES participants(id) ON DELETE SET NULL,
-  payment_type VARCHAR(20) DEFAULT 'card',
-  currency VARCHAR(10) DEFAULT 'KRW',
-  date DATE NOT NULL,
-  receipt_image_url TEXT,
-  ocr_text TEXT,
-  participant_ids JSONB DEFAULT '[]'::jsonb,
-  status VARCHAR(20) DEFAULT 'pending',
-  approved_expense_id UUID REFERENCES expenses(id) ON DELETE SET NULL,
-  reviewed_at TIMESTAMP WITH TIME ZONE,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
 -- ============================================
 -- 기존 DB 호환 컬럼 보정
 -- ============================================
@@ -213,12 +191,6 @@ CHECK (role IN ('admin', 'participant'));
 ALTER TABLE shared_expenses
 ADD COLUMN IF NOT EXISTS payer_id UUID REFERENCES participants(id);
 
-ALTER TABLE expense_reports
-ADD COLUMN IF NOT EXISTS payer_id UUID REFERENCES participants(id) ON DELETE SET NULL;
-
-ALTER TABLE expense_reports
-ADD COLUMN IF NOT EXISTS approved_expense_id UUID REFERENCES expenses(id) ON DELETE SET NULL;
-
 -- ============================================
 -- 인덱스 생성
 -- ============================================
@@ -239,9 +211,6 @@ CREATE INDEX IF NOT EXISTS idx_shared_expenses_trip_id ON shared_expenses(trip_i
 CREATE INDEX IF NOT EXISTS idx_daily_participations_shared_expense_id ON daily_participations(shared_expense_id);
 CREATE INDEX IF NOT EXISTS idx_shared_dashboards_share_key ON shared_dashboards(share_key);
 CREATE INDEX IF NOT EXISTS idx_dashboard_snapshots_dashboard_id ON dashboard_snapshots(dashboard_id);
-CREATE INDEX IF NOT EXISTS idx_expense_reports_trip_id ON expense_reports(trip_id);
-CREATE INDEX IF NOT EXISTS idx_expense_reports_reporter_id ON expense_reports(reporter_id);
-CREATE INDEX IF NOT EXISTS idx_expense_reports_status ON expense_reports(status);
 
 -- ============================================
 -- updated_at 자동 업데이트 함수 및 트리거
@@ -295,11 +264,6 @@ CREATE TRIGGER update_shared_dashboards_updated_at
   BEFORE UPDATE ON shared_dashboards
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-DROP TRIGGER IF EXISTS update_expense_reports_updated_at ON expense_reports;
-CREATE TRIGGER update_expense_reports_updated_at
-  BEFORE UPDATE ON expense_reports
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
 -- ============================================
 -- 기본 카테고리 데이터 삽입
 -- ============================================
@@ -328,19 +292,6 @@ VALUES (
 ON CONFLICT (id) DO UPDATE SET
   public = true,
   file_size_limit = 5242880,
-  allowed_mime_types = ARRAY['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-
-INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-VALUES (
-  'expense-receipts',
-  'expense-receipts',
-  true,
-  8388608,
-  ARRAY['image/jpeg', 'image/png', 'image/webp', 'image/gif']
-)
-ON CONFLICT (id) DO UPDATE SET
-  public = true,
-  file_size_limit = 8388608,
   allowed_mime_types = ARRAY['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 
 -- ============================================

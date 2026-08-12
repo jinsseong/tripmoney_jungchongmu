@@ -55,14 +55,14 @@ export const CreateSharedDashboardModal: React.FC<
     return (
       <Modal isOpen={isOpen} onClose={handleClose} title="정산 대시보드 링크 생성 완료">
         <div className="space-y-4">
-          <div className="rounded-lg border border-[#c9e2ff] bg-[#e8f3ff] p-4">
-            <p className="mb-2 text-sm font-bold text-[#1b64da]">정산 대시보드 링크</p>
+          <div className="rounded-lg border border-[var(--surface-selected)] bg-[var(--primary-soft)] p-4">
+            <p className="mb-2 text-sm font-bold text-[var(--primary-pressed)]">정산 대시보드 링크</p>
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
               <input
                 type="text"
                 value={shareUrl}
                 readOnly
-                className="min-h-[48px] flex-1 rounded-lg border border-[#d1d6db] bg-white px-3.5 py-2 text-sm text-[#4e5968]"
+                className="min-h-[48px] flex-1 rounded-lg border border-[var(--line-strong)] bg-[var(--surface)] px-3.5 py-2 text-sm text-[var(--muted-strong)]"
               />
               <Button
                 type="button"
@@ -81,7 +81,7 @@ export const CreateSharedDashboardModal: React.FC<
               </Button>
             </div>
           </div>
-          <p className="text-sm leading-6 text-[#6b7684]">
+          <p className="text-sm leading-6 text-[var(--muted)]">
             이 링크를 공유하면 다른 사람들이 정산 결과를 확인할 수 있습니다.
           </p>
           <Button variant="primary" onClick={handleClose} className="w-full">
@@ -100,12 +100,12 @@ export const CreateSharedDashboardModal: React.FC<
       size="md"
     >
       <div className="space-y-4">
-        <div className="rounded-lg border border-[#c9e2ff] bg-[#e8f3ff] p-4">
-          <p className="text-sm leading-6 text-[#4e5968]">
+        <div className="rounded-lg border border-[var(--surface-selected)] bg-[var(--primary-soft)] p-4">
+          <p className="text-sm leading-6 text-[var(--muted-strong)]">
             현재 여행의 모든 지출 내역과 정산 정보가 대시보드에 포함됩니다.
           </p>
           {tripName && (
-            <p className="mt-2 text-sm font-bold text-[#1b64da]">
+            <p className="mt-2 text-sm font-bold text-[var(--primary-pressed)]">
               {tripName}
             </p>
           )}
@@ -128,7 +128,7 @@ export const CreateSharedDashboardModal: React.FC<
             취소
           </Button>
           <Button
-            variant="primary"
+            variant="accent"
             onClick={handleCreate}
             className="flex-1 gap-1.5"
             isLoading={isLoading}

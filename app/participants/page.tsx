@@ -195,20 +195,20 @@ function ParticipantsContent() {
           <Card className="mb-6">
             <CardHeader>
               <div className="flex items-center gap-2">
-                <Link2 className="h-5 w-5 text-[#3182f6]" />
+                <Link2 className="h-5 w-5 text-[var(--primary)]" />
                 <CardTitle>초대 링크</CardTitle>
               </div>
             </CardHeader>
             <CardContent>
               {inviteUrl ? (
                 <div className="space-y-3">
-                  <div className="rounded-lg border border-[#c9e2ff] bg-[#e8f3ff] p-3">
-                    <p className="text-sm font-bold leading-6 text-[#1b64da]">
+                  <div className="rounded-lg border border-[var(--surface-selected)] bg-[var(--primary-soft)] p-3">
+                    <p className="text-sm font-bold leading-6 text-[var(--primary-pressed)]">
                       참가자는 이 링크에서 닉네임과 프로필 사진을 직접 설정할 수 있습니다.
                     </p>
                   </div>
                   <div className="flex flex-col gap-2 sm:flex-row">
-                    <div className="min-h-[48px] flex-1 break-all rounded-lg border border-[#e5e8eb] bg-[#f6f8fb] px-3.5 py-3 text-sm leading-5 text-[#4e5968]">
+                    <div className="min-h-[48px] flex-1 break-all rounded-lg border border-[var(--line)] bg-[var(--surface-muted)] px-3.5 py-3 text-sm leading-5 text-[var(--muted-strong)]">
                       {inviteUrl}
                     </div>
                     <div className="grid grid-cols-2 gap-2 sm:flex">
@@ -239,15 +239,15 @@ function ParticipantsContent() {
                     </div>
                   </div>
                   {adminUrl ? (
-                    <div className="rounded-lg border border-[#e5e8eb] bg-white p-3">
-                      <div className="mb-2 text-sm font-extrabold text-[#171719]">
+                    <div className="rounded-lg border border-[var(--line)] bg-[var(--surface)] p-3">
+                      <div className="mb-2 text-sm font-extrabold text-[var(--foreground)]">
                         관리자 링크
                       </div>
-                      <p className="mb-3 text-sm leading-6 text-[#6b7684]">
-                        이 링크는 지출 추가, 제보 승인/반려, 설정 변경 권한이 있는 사람에게만 공유하세요.
+                      <p className="mb-3 text-sm leading-6 text-[var(--muted)]">
+                        이 링크는 지출 추가, 참가자 관리, 설정 변경 권한이 있는 사람에게만 공유하세요.
                       </p>
                       <div className="flex flex-col gap-2 sm:flex-row">
-                        <div className="min-h-[48px] flex-1 break-all rounded-lg border border-[#e5e8eb] bg-[#f6f8fb] px-3.5 py-3 text-sm leading-5 text-[#4e5968]">
+                        <div className="min-h-[48px] flex-1 break-all rounded-lg border border-[var(--line)] bg-[var(--surface-muted)] px-3.5 py-3 text-sm leading-5 text-[var(--muted-strong)]">
                           {adminUrl}
                         </div>
                         <Button
@@ -267,13 +267,13 @@ function ParticipantsContent() {
                       </div>
                     </div>
                   ) : (
-                    <div className="rounded-lg border border-[#ffe1ad] bg-[#fff8e8] p-3 text-sm leading-6 text-[#9a6700]">
+                    <div className="rounded-lg border border-[var(--surface-warning)] bg-[var(--surface-warning)] p-3 text-sm leading-6 text-[var(--warning-ink)]">
                       관리자 링크를 사용하려면 Supabase 스키마에 trips.admin_key 컬럼을 먼저 적용해야 합니다.
                     </div>
                   )}
                 </div>
               ) : (
-                <div className="rounded-lg border border-[#ffe1ad] bg-[#fff8e8] p-3 text-sm leading-6 text-[#9a6700]">
+                <div className="rounded-lg border border-[var(--surface-warning)] bg-[var(--surface-warning)] p-3 text-sm leading-6 text-[var(--warning-ink)]">
                   초대 링크를 사용하려면 Supabase 스키마에 trips.invite_key 컬럼을 먼저 적용해야 합니다.
                 </div>
               )}
@@ -285,7 +285,7 @@ function ParticipantsContent() {
           <CardHeader>
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-2">
-                <Users className="h-5 w-5 text-[#3182f6]" />
+                <Users className="h-5 w-5 text-[var(--primary)]" />
                 <CardTitle>참가자 목록</CardTitle>
               </div>
               {!isParticipantMode && (
@@ -303,9 +303,9 @@ function ParticipantsContent() {
           </CardHeader>
           <CardContent>
             {loading ? (
-              <div className="py-8 text-center text-[#6b7684]">로딩 중...</div>
+              <div className="py-8 text-center text-[var(--muted)]">로딩 중...</div>
             ) : participants.length === 0 ? (
-              <div className="py-8 text-center text-[#6b7684]">
+              <div className="py-8 text-center text-[var(--muted)]">
                 참여자가 없습니다. 참여자를 추가해주세요.
               </div>
             ) : (
@@ -313,15 +313,15 @@ function ParticipantsContent() {
                 {participants.map((participant) => (
                   <div
                     key={participant.id}
-                    className="group relative flex items-center gap-3 rounded-lg border border-[#e5e8eb] bg-[#f6f8fb] p-4"
+                    className="group relative flex items-center gap-3 rounded-lg border border-[var(--line)] bg-[var(--surface-muted)] p-4"
                   >
                     <ParticipantAvatar participant={participant} size="lg" />
                     <div className="min-w-0 flex-1">
-                      <div className="truncate font-bold text-[#171719]">
+                      <div className="truncate font-bold text-[var(--foreground)]">
                         {participant.name}
                       </div>
                       {participant.phone && (
-                        <div className="truncate text-xs text-[#8b95a1]">
+                        <div className="truncate text-xs text-[var(--muted-2)]">
                           {participant.phone}
                         </div>
                       )}
@@ -334,7 +334,7 @@ function ParticipantsContent() {
                           onClick={() =>
                             handleRemoveParticipant(participant.id, participant.name)
                           }
-                          className="h-10 w-10 p-0 text-[#f04452] hover:bg-[#fff0f1] hover:text-[#d93d4a]"
+                          className="h-10 w-10 p-0 text-[var(--danger)] hover:bg-[var(--surface-danger)] hover:text-[var(--danger-ink)]"
                           aria-label={`${participant.name} 제거`}
                         >
                           <X className="h-4 w-4" />
@@ -359,11 +359,11 @@ function ParticipantsContent() {
                 {availableParticipants.map((participant) => (
                   <div
                     key={participant.id}
-                    className="relative flex items-center gap-3 rounded-lg border border-[#e5e8eb] bg-[#f6f8fb] p-4"
+                    className="relative flex items-center gap-3 rounded-lg border border-[var(--line)] bg-[var(--surface-muted)] p-4"
                   >
                     <ParticipantAvatar participant={participant} size="lg" />
                     <div className="min-w-0 flex-1">
-                      <div className="truncate font-bold text-[#171719]">
+                      <div className="truncate font-bold text-[var(--foreground)]">
                         {participant.name}
                       </div>
                     </div>
@@ -442,7 +442,7 @@ export default function ParticipantsPage() {
   return (
     <Suspense fallback={
       <div className="app-screen flex items-center justify-center">
-        <div className="text-[#6b7684]">로딩 중...</div>
+        <div className="text-[var(--muted)]">로딩 중...</div>
       </div>
     }>
       <ParticipantsContent />
