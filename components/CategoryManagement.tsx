@@ -155,7 +155,7 @@ export const CategoryManagement: React.FC<CategoryManagementProps> = ({
               {defaultCategories.map((category) => (
                 <div
                   key={category.id}
-                  className="flex items-center gap-3 rounded-lg border border-[#e5e8eb] bg-[#f6f8fb] p-4"
+                  className="flex items-center gap-3 rounded-lg border border-[var(--line)] bg-[var(--surface-muted)] p-4"
                 >
                   <div
                     className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg text-2xl"
@@ -163,7 +163,7 @@ export const CategoryManagement: React.FC<CategoryManagementProps> = ({
                   >
                     {category.icon}
                   </div>
-                  <div className="min-w-0 truncate text-sm font-bold text-[#171719]">
+                  <div className="min-w-0 truncate text-sm font-bold text-[var(--foreground)]">
                     {category.name}
                   </div>
                 </div>
@@ -180,7 +180,7 @@ export const CategoryManagement: React.FC<CategoryManagementProps> = ({
         </CardHeader>
         <CardContent>
           {userCategories.length === 0 ? (
-            <div className="py-8 text-center text-[#6b7684]">
+            <div className="py-8 text-center text-[var(--muted)]">
               사용자 정의 카테고리가 없습니다.
             </div>
           ) : (
@@ -188,7 +188,7 @@ export const CategoryManagement: React.FC<CategoryManagementProps> = ({
               {userCategories.map((category) => (
                 <div
                   key={category.id}
-                  className="group relative flex items-center gap-3 rounded-lg border border-[#e5e8eb] bg-[#f6f8fb] p-4"
+                  className="group relative flex items-center gap-3 rounded-lg border border-[var(--line)] bg-[var(--surface-muted)] p-4"
                 >
                   <div
                     className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg text-2xl"
@@ -197,21 +197,21 @@ export const CategoryManagement: React.FC<CategoryManagementProps> = ({
                     {category.icon}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="truncate text-sm font-bold text-[#171719]">
+                    <div className="truncate text-sm font-bold text-[var(--foreground)]">
                       {category.name}
                     </div>
                   </div>
                   <div className="flex shrink-0 gap-1 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100">
                     <button
                       onClick={() => handleEdit(category)}
-                      className="flex min-h-[40px] min-w-[40px] items-center justify-center rounded-lg text-[#3182f6] hover:bg-[#e8f3ff]"
+                      className="flex min-h-[40px] min-w-[40px] items-center justify-center rounded-lg text-[var(--primary)] hover:bg-[var(--primary-soft)]"
                       aria-label="수정"
                     >
                       <Edit2 className="h-4 w-4" />
                     </button>
                     <button
                       onClick={() => handleDelete(category.id)}
-                      className="flex min-h-[40px] min-w-[40px] items-center justify-center rounded-lg text-[#f04452] hover:bg-[#fff0f1]"
+                      className="flex min-h-[40px] min-w-[40px] items-center justify-center rounded-lg text-[var(--danger)] hover:bg-[var(--surface-danger)]"
                       aria-label="삭제"
                     >
                       <Trash2 className="h-4 w-4" />
@@ -245,7 +245,7 @@ export const CategoryManagement: React.FC<CategoryManagementProps> = ({
           />
 
           <div>
-            <label className="mb-2 block text-sm font-bold text-[#4e5968]">
+            <label className="mb-2 block text-sm font-bold text-[var(--muted-strong)]">
               아이콘 선택
             </label>
             <div className="flex flex-wrap gap-2">
@@ -256,8 +256,8 @@ export const CategoryManagement: React.FC<CategoryManagementProps> = ({
                   onClick={() => setFormData({ ...formData, icon: emoji })}
                   className={`min-h-[44px] min-w-[44px] rounded-lg border text-2xl transition-all ${
                     formData.icon === emoji
-                      ? "border-[#3182f6] bg-[#e8f3ff]"
-                      : "border-[#e5e8eb] bg-white hover:bg-[#f6f8fb]"
+                      ? "border-[var(--primary)] bg-[var(--primary-soft)]"
+                      : "border-[var(--line)] bg-[var(--surface)] hover:bg-[var(--surface-muted)]"
                   }`}
                 >
                   {emoji}
@@ -267,7 +267,7 @@ export const CategoryManagement: React.FC<CategoryManagementProps> = ({
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-bold text-[#4e5968]">
+            <label className="mb-2 block text-sm font-bold text-[var(--muted-strong)]">
               색상 선택
             </label>
             <div className="flex flex-wrap gap-2">
@@ -278,7 +278,7 @@ export const CategoryManagement: React.FC<CategoryManagementProps> = ({
                   onClick={() => setFormData({ ...formData, color })}
                   className={`h-10 w-10 rounded-lg border border-black/5 transition-all ${
                     formData.color === color
-                      ? "scale-105 ring-2 ring-[#3182f6] ring-offset-2"
+                      ? "scale-105 ring-2 ring-[var(--primary)] ring-offset-2"
                       : ""
                   }`}
                   style={{ backgroundColor: color }}
@@ -338,7 +338,7 @@ export const CategoryManagement: React.FC<CategoryManagementProps> = ({
           />
 
           <div>
-            <label className="mb-2 block text-sm font-bold text-[#4e5968]">
+            <label className="mb-2 block text-sm font-bold text-[var(--muted-strong)]">
               아이콘 선택
             </label>
             <div className="flex flex-wrap gap-2">
@@ -349,8 +349,8 @@ export const CategoryManagement: React.FC<CategoryManagementProps> = ({
                   onClick={() => setFormData({ ...formData, icon: emoji })}
                   className={`min-h-[44px] min-w-[44px] rounded-lg border text-2xl transition-all ${
                     formData.icon === emoji
-                      ? "border-[#3182f6] bg-[#e8f3ff]"
-                      : "border-[#e5e8eb] bg-white hover:bg-[#f6f8fb]"
+                      ? "border-[var(--primary)] bg-[var(--primary-soft)]"
+                      : "border-[var(--line)] bg-[var(--surface)] hover:bg-[var(--surface-muted)]"
                   }`}
                 >
                   {emoji}
@@ -360,7 +360,7 @@ export const CategoryManagement: React.FC<CategoryManagementProps> = ({
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-bold text-[#4e5968]">
+            <label className="mb-2 block text-sm font-bold text-[var(--muted-strong)]">
               색상 선택
             </label>
             <div className="flex flex-wrap gap-2">
@@ -371,7 +371,7 @@ export const CategoryManagement: React.FC<CategoryManagementProps> = ({
                   onClick={() => setFormData({ ...formData, color })}
                   className={`h-10 w-10 rounded-lg border border-black/5 transition-all ${
                     formData.color === color
-                      ? "scale-105 ring-2 ring-[#3182f6] ring-offset-2"
+                      ? "scale-105 ring-2 ring-[var(--primary)] ring-offset-2"
                       : ""
                   }`}
                   style={{ backgroundColor: color }}
