@@ -42,7 +42,7 @@ export const Modal: React.FC<ModalProps> = ({
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 bg-[#171719]/35 backdrop-blur-[2px]" />
+          <div className="fixed inset-0 bg-[var(--foreground)]/35 backdrop-blur-[2px]" />
         </Transition.Child>
 
         <div className="fixed inset-0 overflow-y-auto">
@@ -58,17 +58,17 @@ export const Modal: React.FC<ModalProps> = ({
             >
               <Dialog.Panel
                 className={cn(
-                  "w-full transform overflow-hidden rounded-t-2xl bg-white text-left align-middle shadow-xl transition-all sm:rounded-2xl",
-                  "border border-[#e5e8eb] max-h-[92dvh] sm:max-h-[88dvh] sm:rounded-lg",
+                  "w-full transform overflow-hidden rounded-t-2xl bg-[var(--surface)] text-left align-middle shadow-xl transition-all sm:rounded-2xl",
+                  "border border-[var(--line)] max-h-[92dvh] sm:max-h-[88dvh] sm:rounded-lg",
                   sizes[size]
                 )}
               >
                 {(title || showCloseButton) && (
-                  <div className="sticky top-0 z-10 flex items-center justify-between border-b border-[#e5e8eb] bg-white px-4 py-3 sm:px-6 sm:py-4">
+                  <div className="sticky top-0 z-10 flex items-center justify-between border-b border-[var(--line)] bg-[var(--surface)] px-4 py-3 sm:px-6 sm:py-4">
                     {title && (
                       <Dialog.Title
                         as="h3"
-                        className="min-w-0 pr-3 text-base font-bold leading-6 text-[#171719] sm:text-lg"
+                        className="min-w-0 pr-3 text-base font-bold leading-6 text-[var(--foreground)] sm:text-lg"
                       >
                         {title}
                       </Dialog.Title>
@@ -76,7 +76,7 @@ export const Modal: React.FC<ModalProps> = ({
                     {showCloseButton && (
                       <button
                         onClick={onClose}
-                        className="min-h-[44px] min-w-[44px] rounded-lg p-2 text-[#4e5968] transition-colors hover:bg-[#eef2f6]"
+                        className="min-h-[44px] min-w-[44px] rounded-lg p-2 text-[var(--muted-strong)] transition-colors hover:bg-[var(--line)]"
                         aria-label="닫기"
                       >
                         <X className="h-5 w-5" />
