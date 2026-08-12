@@ -42,8 +42,8 @@ export function NetworkStatusBanner() {
       <div
         className={
           isOffline
-            ? "flex items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-amber-900 shadow-lg"
-            : "flex items-center gap-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-emerald-900 shadow-lg"
+            ? "flex items-center gap-3 rounded-lg border border-[var(--surface-warning)] bg-[var(--surface-warning)] px-3 py-2 text-[var(--warning-ink)] shadow-lg"
+            : "flex items-center gap-3 rounded-lg border border-[var(--line-success)] bg-[var(--surface-success)] px-3 py-2 text-[var(--success-ink)] shadow-lg"
         }
         role="status"
         aria-live="polite"
@@ -62,7 +62,7 @@ export function NetworkStatusBanner() {
           <button
             type="button"
             onClick={() => window.location.reload()}
-            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-amber-900 hover:bg-amber-100 focus:outline-none focus:ring-2 focus:ring-amber-500"
+            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-[var(--warning-ink)] hover:bg-[var(--surface-warning)] focus:outline-none focus:ring-2 focus:ring-[var(--warning)]"
             aria-label="페이지 새로고침"
           >
             <RefreshCw className="h-4 w-4" />
