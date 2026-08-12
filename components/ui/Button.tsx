@@ -2,7 +2,7 @@ import React from "react";
 import { cn } from "@/lib/utils";
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "primary" | "secondary" | "outline" | "ghost" | "danger";
+  variant?: "primary" | "secondary" | "outline" | "ghost" | "danger" | "accent";
   size?: "sm" | "md" | "lg";
   isLoading?: boolean;
 }
@@ -25,14 +25,16 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     
     const variants = {
       primary:
-        "bg-[#3182f6] text-white shadow-[0_8px_18px_rgba(49,130,246,0.22)] hover:bg-[#1b64da] focus:ring-[#3182f6]",
+        "bg-[var(--primary)] text-white shadow-[0_8px_18px_rgb(var(--color-primary)/22%)] hover:bg-[var(--primary-pressed)] focus:ring-[var(--primary)]",
       secondary:
-        "bg-[#eef2f6] text-[#171719] hover:bg-[#e5e8eb] focus:ring-[#8b95a1]",
+        "bg-[var(--surface-muted)] text-[var(--foreground)] hover:bg-[var(--line)] focus:ring-[var(--muted)]",
       outline:
-        "border border-[#d1d6db] bg-white text-[#4e5968] hover:bg-[#f6f8fb] focus:ring-[#8b95a1]",
-      ghost: "text-[#4e5968] hover:bg-[#eef2f6] focus:ring-[#8b95a1]",
+        "border border-[var(--line-strong)] bg-[var(--surface)] text-[var(--muted-strong)] hover:bg-[var(--surface-soft)] focus:ring-[var(--muted)]",
+      ghost: "text-[var(--muted-strong)] hover:bg-[var(--surface-soft)] focus:ring-[var(--muted)]",
       danger:
-        "bg-[#f04452] text-white shadow-[0_8px_18px_rgba(240,68,82,0.18)] hover:bg-[#d93d4a] focus:ring-[#f04452]",
+        "bg-[var(--danger)] text-white shadow-[0_8px_18px_rgb(var(--color-danger)/18%)] hover:bg-[var(--danger-pressed)] focus:ring-[var(--danger)]",
+      accent:
+        "bg-[var(--accent)] text-white shadow-[0_8px_18px_rgb(var(--color-accent)/22%)] hover:bg-[var(--accent-pressed)] focus:ring-[var(--accent)]",
     };
 
     const sizes = {
