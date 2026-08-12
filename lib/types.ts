@@ -71,29 +71,6 @@ export interface ExpenseDailyParticipant {
   created_at: string;
 }
 
-export type ExpenseReportStatus = "pending" | "approved" | "rejected";
-
-export interface ExpenseReport {
-  id: string;
-  trip_id: string;
-  reporter_id?: string;
-  item_name: string;
-  amount: number;
-  category_id?: string;
-  payer_id?: string;
-  payment_type: "cash" | "card";
-  currency: string;
-  date: string;
-  receipt_image_url?: string;
-  ocr_text?: string;
-  participant_ids: string[];
-  status: ExpenseReportStatus;
-  approved_expense_id?: string;
-  reviewed_at?: string;
-  created_at: string;
-  updated_at: string;
-}
-
 export interface SharedExpense {
   id: string;
   trip_id: string;
