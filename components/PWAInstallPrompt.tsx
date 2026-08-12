@@ -66,18 +66,18 @@ export const PWAInstallPrompt: React.FC = () => {
       <Card className="shadow-lg">
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-2">
-            <Download className="h-5 w-5 text-blue-500" />
+            <Download className="h-5 w-5 text-[var(--primary)]" />
             <h3 className="font-semibold">앱 설치하기</h3>
           </div>
           <button
             onClick={handleDismiss}
-            className="text-gray-400 hover:text-gray-600"
+            className="text-[var(--muted-2)] hover:text-[var(--muted)]"
             aria-label="닫기"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
-        <p className="text-sm text-gray-600 mb-4">
+        <p className="text-sm text-[var(--muted)] mb-4">
           홈 화면에 추가하여 더 빠르게 접근하세요.
         </p>
         <div className="flex gap-2">
