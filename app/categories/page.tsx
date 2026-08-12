@@ -21,7 +21,7 @@ export default function CategoriesPage() {
   if (loading) {
     return (
       <div className="app-screen flex items-center justify-center">
-        <div className="text-[#6b7684]">로딩 중...</div>
+        <div className="text-[var(--muted)]">로딩 중...</div>
       </div>
     );
   }
