@@ -62,7 +62,7 @@ export default function AdminAccessPage() {
   if (loading) {
     return (
       <main className="app-screen safe-area">
-        <div className="mx-auto flex min-h-screen max-w-md items-center justify-center px-4 text-[#6b7684]">
+        <div className="mx-auto flex min-h-screen max-w-md items-center justify-center px-4 text-[var(--muted)]">
           관리자 링크를 확인하는 중...
         </div>
       </main>
@@ -73,19 +73,19 @@ export default function AdminAccessPage() {
     <main className="app-screen safe-area">
       <div className="page-container flex min-h-screen max-w-md flex-col justify-center">
         <Card className="text-center">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-lg bg-[#e8f3ff] text-[#3182f6]">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-lg bg-[var(--primary-soft)] text-[var(--primary)]">
             <ShieldCheck className="h-7 w-7" />
           </div>
           <div className="page-kicker mb-2">관리자 모드</div>
-          <h1 className="text-2xl font-extrabold text-[#171719]">
+          <h1 className="text-2xl font-extrabold text-[var(--foreground)]">
             {trip ? `${trip.name} 관리자로 연결됨` : "관리자 링크를 확인해주세요"}
           </h1>
-          <p className="mt-2 text-sm leading-6 text-[#6b7684]">
-            관리자 모드에서는 지출 추가, 참가자 관리, 제보 승인/반려, 공유 설정을 사용할 수 있습니다.
+          <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
+            관리자 모드에서는 지출 추가, 참가자 관리, 정산 확인, 공유 설정을 사용할 수 있습니다.
           </p>
 
           {errorMessage && (
-            <div className="mt-5 rounded-lg border border-[#ffd0d5] bg-[#fff0f1] p-3 text-sm font-bold leading-6 text-[#d93d4a]">
+            <div className="mt-5 rounded-lg border border-[var(--surface-danger)] bg-[var(--surface-danger)] p-3 text-sm font-bold leading-6 text-[var(--danger-ink)]">
               {errorMessage}
             </div>
           )}
