@@ -11,7 +11,6 @@ import { SettlementSummary } from "@/components/SettlementSummary";
 import { ExpenseChart } from "@/components/ExpenseChart";
 import { ExpenseList } from "@/components/ExpenseList";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
-import { Modal } from "@/components/ui/Modal";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { formatCurrency } from "@/lib/utils";
@@ -46,6 +45,7 @@ export default function SettlementDashboardPage() {
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [password, setPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
+  const [loadError, setLoadError] = useState("");
   
   // 정산 계산용 상태 (모든 useState는 최상단에!)
   const [userTotals, setUserTotals] = useState<UserTotal[]>([]);
@@ -63,6 +63,7 @@ export default function SettlementDashboardPage() {
   const loadDashboard = useCallback(async (providedPassword?: string) => {
     try {
       if (!shareKey) return;
+      setLoadError("");
       const result = (await getDashboard(
         shareKey,
         providedPassword
@@ -70,19 +71,21 @@ export default function SettlementDashboardPage() {
       setDashboard(result.dashboard);
       setSnapshots(result.snapshots);
       setShowPasswordModal(false);
+      setPasswordError("");
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "대시보드를 불러올 수 없습니다.";
 
       if (message.includes("비밀번호")) {
         setShowPasswordModal(true);
-        setPasswordError(message);
+        setPasswordError(providedPassword ? message : "");
       } else {
-        alert("대시보드를 불러올 수 없습니다.");
-        router.push("/");
+        setLoadError(
+          "공유 대시보드를 불러오지 못했습니다. 링크가 올바른지 확인해주세요."
+        );
       }
     }
-  }, [getDashboard, router, shareKey]);
+  }, [getDashboard, shareKey]);
 
   useEffect(() => {
     if (shareKey) {
@@ -159,7 +162,7 @@ export default function SettlementDashboardPage() {
   }, [dashboard, expenses, snapshotParticipants, snapshots]);
 
   // 모든 Hook 호출 이후에 early return
-  if (loading && !dashboard) {
+  if (loading && !dashboard && !showPasswordModal) {
     return (
       <div className="app-screen flex items-center justify-center">
         <div className="text-[var(--muted)]">로딩 중...</div>
@@ -167,8 +170,92 @@ export default function SettlementDashboardPage() {
     );
   }
 
+  if (!dashboard && showPasswordModal) {
+    return (
+      <main className="app-screen safe-area">
+        <div className="page-container flex min-h-screen max-w-md items-center">
+          <Card className="w-full">
+            <CardHeader>
+              <div className="page-kicker mb-1">공유 정산</div>
+              <CardTitle className="text-xl font-extrabold">
+                비밀번호를 입력해주세요
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="mb-5 text-sm leading-6 text-[var(--muted)]">
+                이 정산 대시보드는 비밀번호로 보호되어 있습니다.
+              </p>
+              <form onSubmit={handlePasswordSubmit} className="space-y-4">
+                <Input
+                  label="비밀번호"
+                  type="password"
+                  value={password}
+                  onChange={(event) => {
+                    setPassword(event.target.value);
+                    setPasswordError("");
+                  }}
+                  error={passwordError}
+                  autoFocus
+                  required
+                />
+                <div className="grid grid-cols-2 gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => router.push("/")}
+                  >
+                    취소
+                  </Button>
+                  <Button
+                    type="submit"
+                    variant="primary"
+                    isLoading={loading}
+                    disabled={!password}
+                  >
+                    확인
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+      </main>
+    );
+  }
+
+  if (!dashboard && loadError) {
+    return (
+      <main className="app-screen safe-area">
+        <div className="page-container flex min-h-screen max-w-md items-center">
+          <Card className="w-full text-center">
+            <CardHeader>
+              <CardTitle className="text-xl font-extrabold">
+                공유 링크를 확인해주세요
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm leading-6 text-[var(--muted)]">{loadError}</p>
+              <Button
+                type="button"
+                variant="primary"
+                className="mt-6 w-full"
+                onClick={() => router.push("/")}
+              >
+                홈으로 돌아가기
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </main>
+    );
+  }
+
   if (!dashboard) {
-    return null;
+    return (
+      <div className="app-screen flex items-center justify-center">
+        <div className="text-[var(--muted)]">공유 대시보드를 준비하는 중...</div>
+      </div>
+    );
   }
 
   const totalAmount =
@@ -266,44 +353,6 @@ export default function SettlementDashboardPage() {
               />
             </div>
           )}
-
-        {/* 비밀번호 모달 */}
-        <Modal
-          isOpen={showPasswordModal}
-          onClose={() => {
-            setShowPasswordModal(false);
-            router.push("/");
-          }}
-          title="비밀번호 입력"
-          showCloseButton={false}
-        >
-          <form onSubmit={handlePasswordSubmit} className="space-y-4">
-            <Input
-              label="비밀번호"
-              type="password"
-              value={password}
-              onChange={(e) => {
-                setPassword(e.target.value);
-                setPasswordError("");
-              }}
-              error={passwordError}
-              required
-            />
-            <div className="grid grid-cols-2 gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => router.push("/")}
-                className="flex-1"
-              >
-                취소
-              </Button>
-              <Button type="submit" variant="primary" className="flex-1">
-                확인
-              </Button>
-            </div>
-          </form>
-        </Modal>
       </div>
     </div>
   );
