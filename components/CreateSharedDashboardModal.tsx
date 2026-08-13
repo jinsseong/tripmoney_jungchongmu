@@ -2,23 +2,19 @@
 
 import React, { useState } from "react";
 import { Modal } from "./ui/Modal";
-import { Input } from "./ui/Input";
 import { Button } from "./ui/Button";
 import { Share2, Copy, Check } from "lucide-react";
 
 interface CreateSharedDashboardModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onCreate: (
-    password?: string
-  ) => Promise<{ shareUrl: string; shareKey: string }>;
+  onCreate: () => Promise<{ shareUrl: string; shareKey: string }>;
   tripName?: string;
 }
 
 export const CreateSharedDashboardModal: React.FC<
   CreateSharedDashboardModalProps
 > = ({ isOpen, onClose, onCreate, tripName }) => {
-  const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -26,7 +22,7 @@ export const CreateSharedDashboardModal: React.FC<
   const handleCreate = async () => {
     setIsLoading(true);
     try {
-      const result = await onCreate(password || undefined);
+      const result = await onCreate();
       setShareUrl(result.shareUrl);
     } catch (error) {
       console.error("Error creating dashboard:", error);
@@ -45,7 +41,6 @@ export const CreateSharedDashboardModal: React.FC<
   };
 
   const handleClose = () => {
-    setPassword("");
     setShareUrl(null);
     setCopied(false);
     onClose();
@@ -110,14 +105,6 @@ export const CreateSharedDashboardModal: React.FC<
             </p>
           )}
         </div>
-        <Input
-          label="비밀번호 (선택)"
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="공유받을 사람에게 알려줄 비밀번호"
-          helperText="비밀번호를 설정하면 링크와 비밀번호가 모두 필요합니다"
-        />
         <div className="grid grid-cols-2 gap-2">
           <Button
             variant="outline"

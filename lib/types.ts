@@ -101,7 +101,6 @@ export interface SharedDashboard {
   end_date: string;
   cover_image_url?: string;
   is_active: boolean;
-  password_hash?: string;
   view_count: number;
   created_at: string;
   updated_at: string;

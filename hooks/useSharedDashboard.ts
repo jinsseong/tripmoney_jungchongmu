@@ -2,11 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import {
-  createPasswordHash,
-  generateShareKey,
-  verifyPasswordHash,
-} from "@/lib/security";
+import { generateShareKey } from "@/lib/security";
 
 export function useSharedDashboard() {
   const [loading, setLoading] = useState(false);
@@ -17,8 +13,7 @@ export function useSharedDashboard() {
     title: string,
     description: string,
     startDate: string,
-    endDate: string,
-    password?: string
+    endDate: string
   ) => {
     try {
       setLoading(true);
@@ -35,7 +30,6 @@ export function useSharedDashboard() {
             description,
             start_date: startDate,
             end_date: endDate,
-            password_hash: password ? await createPasswordHash(password) : null,
           },
         ] as any)
         .select()
@@ -57,12 +51,14 @@ export function useSharedDashboard() {
     }
   }, []);
 
-  const getDashboard = useCallback(async (shareKey: string, password?: string) => {
+  const getDashboard = useCallback(async (shareKey: string) => {
     try {
       setLoading(true);
       const { data: dashboard, error: dashboardError } = await supabase
         .from("shared_dashboards")
-        .select("*")
+        .select(
+          "id, trip_id, share_key, title, description, start_date, end_date, cover_image_url, is_active, view_count, created_at, updated_at"
+        )
         .eq("share_key", shareKey)
         .eq("is_active", true)
         .single();
@@ -70,25 +66,6 @@ export function useSharedDashboard() {
       if (dashboardError) throw dashboardError;
 
       const dashboardData = dashboard as any;
-
-      // Check password if exists
-      if (dashboardData.password_hash) {
-        if (!password) {
-          throw new Error("비밀번호가 필요합니다.");
-        }
-        const verification = await verifyPasswordHash(
-          password,
-          dashboardData.password_hash
-        );
-        if (!verification.isValid) {
-          throw new Error("비밀번호가 올바르지 않습니다.");
-        }
-        if (verification.needsUpgrade) {
-          await (supabase.from("shared_dashboards") as any)
-            .update({ password_hash: await createPasswordHash(password) })
-            .eq("id", dashboardData.id);
-        }
-      }
 
       // Get snapshots
       const { data: snapshots, error: snapshotsError } = await supabase
@@ -105,11 +82,8 @@ export function useSharedDashboard() {
         .update({ view_count: (dashboardData.view_count || 0) + 1 })
         .eq("id", dashboardData.id);
 
-      const safeDashboard = { ...dashboardData };
-      delete safeDashboard.password_hash;
-
       return {
-        dashboard: safeDashboard,
+        dashboard: dashboardData,
         snapshots: snapshots || [],
       };
     } catch (err) {

@@ -545,7 +545,7 @@ function DashboardContent() {
         isOpen={showShareModal}
         onClose={() => setShowShareModal(false)}
         tripName={currentTrip?.name}
-        onCreate={async (password) => {
+        onCreate={async () => {
           if (!currentTrip) {
             throw new Error("여행이 선택되지 않았습니다.");
           }
@@ -555,8 +555,7 @@ function DashboardContent() {
             `${currentTrip.name} 정산`,
             currentTrip.description || "",
             currentTrip.start_date,
-            currentTrip.end_date,
-            password
+            currentTrip.end_date
           );
 
           // Create snapshots for each participant

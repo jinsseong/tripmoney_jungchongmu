@@ -124,7 +124,6 @@ CREATE TABLE IF NOT EXISTS shared_dashboards (
   end_date DATE NOT NULL,
   cover_image_url TEXT,
   is_active BOOLEAN DEFAULT true,
-  password_hash VARCHAR(255),
   view_count INTEGER DEFAULT 0,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
