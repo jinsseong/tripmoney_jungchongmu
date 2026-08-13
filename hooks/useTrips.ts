@@ -5,6 +5,14 @@ import { supabase } from "@/lib/supabase";
 import { Trip } from "@/lib/types";
 import { rememberAdminTrip } from "@/lib/trip-access";
 
+function getErrorMessage(error: unknown, fallback: string) {
+  if (error instanceof Error) return error.message;
+  if (error && typeof error === "object" && "message" in error) {
+    return String(error.message);
+  }
+  return fallback;
+}
+
 interface UseTripsOptions {
   enabled?: boolean;
   ids?: string[];
@@ -48,7 +56,7 @@ export function useTrips(options: UseTripsOptions = {}) {
       setError(null);
       return (data || []) as Trip[];
     } catch (err) {
-      setError(err instanceof Error ? err.message : "여행 조회 실패");
+      setError(getErrorMessage(err, "여행 조회 실패"));
       console.error("Error fetching trips:", err);
       return [];
     } finally {
@@ -78,8 +86,7 @@ export function useTrips(options: UseTripsOptions = {}) {
       rememberAdminTrip(data as Trip);
       return data as Trip;
     } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "여행 추가 실패";
+      const errorMessage = getErrorMessage(err, "여행 추가 실패");
       setError(errorMessage);
       throw new Error(errorMessage);
     }
@@ -95,8 +102,7 @@ export function useTrips(options: UseTripsOptions = {}) {
       if (error) throw error;
       setTrips((prev) => prev.filter((t) => t.id !== id));
     } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "여행 삭제 실패";
+      const errorMessage = getErrorMessage(err, "여행 삭제 실패");
       setError(errorMessage);
       throw new Error(errorMessage);
     }
@@ -120,8 +126,7 @@ export function useTrips(options: UseTripsOptions = {}) {
       );
       return data as Trip;
     } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "여행 수정 실패";
+      const errorMessage = getErrorMessage(err, "여행 수정 실패");
       setError(errorMessage);
       throw new Error(errorMessage);
     }
