@@ -14,37 +14,59 @@ import { format } from "date-fns";
 import { ko } from "date-fns/locale";
 import {
   extractInviteKeyFromInput,
-  hasParticipantAccess,
+  getPreferredHomeMode,
+  getStoredTripAccessSessions,
   rememberAdminTrip,
+  TripAccessSession,
 } from "@/lib/trip-access";
 
 type HomeMode = "admin" | "participant";
 
 export default function HomePage() {
   const router = useRouter();
-  const { trips, loading, addTrip, deleteTrip } = useTrips();
   const [activeMode, setActiveMode] = useState<HomeMode>("admin");
+  const [accessSessions, setAccessSessions] = useState<TripAccessSession[]>([]);
+  const [accessResolved, setAccessResolved] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [inviteInput, setInviteInput] = useState("");
-  const [participantTripIds, setParticipantTripIds] = useState<string[]>([]);
   const [formData, setFormData] = useState({
     name: "",
     startDate: new Date().toISOString().split("T")[0],
     endDate: new Date().toISOString().split("T")[0],
     description: "",
   });
+  const adminTripIds = accessSessions
+    .filter((session) => session.mode === "admin")
+    .map((session) => session.tripId);
+  const participantTripIds = accessSessions
+    .filter((session) => session.mode === "participant")
+    .map((session) => session.tripId);
+  const {
+    trips: adminTrips,
+    loading: adminTripsLoading,
+    addTrip,
+    deleteTrip,
+  } = useTrips({
+    enabled: accessResolved,
+    ids: adminTripIds,
+    includeAdminKey: true,
+  });
+  const { trips: participantTrips, loading: participantTripsLoading } = useTrips({
+    enabled: accessResolved,
+    ids: participantTripIds,
+  });
+  const loading = adminTripsLoading || participantTripsLoading;
 
   useEffect(() => {
-    setParticipantTripIds(
-      trips
-        .filter((trip) => hasParticipantAccess(trip.id))
-        .map((trip) => trip.id)
-    );
-  }, [trips]);
+    const storedSessions = getStoredTripAccessSessions();
+    setAccessSessions(storedSessions);
+    setActiveMode(getPreferredHomeMode(storedSessions));
+    setAccessResolved(true);
+  }, []);
 
-  const participantTrips = trips.filter((trip) =>
-    participantTripIds.includes(trip.id)
-  );
+  const hasAdminAccess = adminTripIds.length > 0;
+  const hasParticipantAccess = participantTripIds.length > 0;
+  const showModeSwitch = hasAdminAccess || !hasParticipantAccess;
 
   const handleAddTrip = async () => {
     if (!formData.name.trim() || !formData.startDate || !formData.endDate) {
@@ -68,7 +90,7 @@ export default function HomePage() {
       // 여행 추가 후 대시보드로 이동
       if (newTrip && newTrip.id) {
         rememberAdminTrip(newTrip);
-        router.push(`/dashboard?trip=${newTrip.id}&mode=admin`);
+        router.push(`/dashboard?trip=${newTrip.id}`);
       }
     } catch (error) {
       console.error("Failed to add trip:", error);
@@ -77,11 +99,11 @@ export default function HomePage() {
   };
 
   const handleSelectTrip = (tripId: string) => {
-    router.push(`/dashboard?trip=${tripId}&mode=admin`);
+    router.push(`/dashboard?trip=${tripId}`);
   };
 
   const handleSelectParticipantTrip = (tripId: string) => {
-    router.push(`/dashboard?trip=${tripId}&mode=participant`);
+    router.push(`/dashboard?trip=${tripId}`);
   };
 
   const handleOpenInvite = () => {
@@ -107,7 +129,7 @@ export default function HomePage() {
     }
   };
 
-  if (loading) {
+  if (!accessResolved || loading) {
     return (
       <div className="app-screen flex items-center justify-center">
         <div className="text-[var(--muted)]">로딩 중...</div>
@@ -131,7 +153,7 @@ export default function HomePage() {
                 </h1>
               </div>
             </div>
-            {activeMode === "admin" && trips.length > 0 && (
+            {activeMode === "admin" && adminTrips.length > 0 && (
               <Button
                 variant="primary"
                 size="sm"
@@ -153,26 +175,28 @@ export default function HomePage() {
           </div>
         </div>
 
-        <div className="segment-control mb-5" data-count={2}>
-          <button
-            type="button"
-            onClick={() => setActiveMode("admin")}
-            className="segment-item"
-            data-active={activeMode === "admin"}
-          >
-            <ShieldCheck className="h-4 w-4" />
-            관리자
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveMode("participant")}
-            className="segment-item"
-            data-active={activeMode === "participant"}
-          >
-            <UserRound className="h-4 w-4" />
-            참가자
-          </button>
-        </div>
+        {showModeSwitch && (
+          <div className="segment-control mb-5" data-count={2}>
+            <button
+              type="button"
+              onClick={() => setActiveMode("admin")}
+              className="segment-item"
+              data-active={activeMode === "admin"}
+            >
+              <ShieldCheck className="h-4 w-4" />
+              관리자
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveMode("participant")}
+              className="segment-item"
+              data-active={activeMode === "participant"}
+            >
+              <UserRound className="h-4 w-4" />
+              참가자
+            </button>
+          </div>
+        )}
 
         {/* 여행 목록 */}
         {activeMode === "participant" ? (
@@ -265,7 +289,7 @@ export default function HomePage() {
               </div>
             )}
           </>
-        ) : trips.length === 0 ? (
+        ) : adminTrips.length === 0 ? (
           <Card className="border-dashed">
             <div className="py-12 text-center sm:py-16">
               <Calendar className="mx-auto mb-4 h-14 w-14 text-[var(--muted-2)]" />
@@ -278,7 +302,7 @@ export default function HomePage() {
           </Card>
         ) : (
           <div className="mb-6 space-y-3">
-            {trips.map((trip) => (
+            {adminTrips.map((trip) => (
               <Card
                 key={trip.id}
                 className="tap-card group cursor-pointer p-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)] focus-visible:ring-offset-2"

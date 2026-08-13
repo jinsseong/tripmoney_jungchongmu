@@ -11,30 +11,42 @@ import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { Input } from "@/components/ui/Input";
 import { ParticipantAvatar } from "@/components/ParticipantAvatar";
+import { TripAccessDenied } from "@/components/TripAccessDenied";
 import { Plus, Users, ArrowLeft, X, Link2, Copy, Share2, Check } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { getTripAccessSession } from "@/lib/trip-access";
+import { getTripAccessSession, TripAccessSession } from "@/lib/trip-access";
 
 function ParticipantsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const tripId = searchParams.get("trip");
-  const { trips } = useTrips();
+  const [accessSession, setAccessSession] = useState<TripAccessSession | null>(null);
+  const [accessResolved, setAccessResolved] = useState(false);
+  const authorizedTripId =
+    accessResolved && accessSession?.tripId === tripId ? tripId : null;
+  const isAdminMode = accessSession?.mode === "admin";
+  const isParticipantMode = accessSession?.mode === "participant";
+  const { trips, loading: tripsLoading } = useTrips({
+    enabled: Boolean(authorizedTripId),
+    ids: authorizedTripId ? [authorizedTripId] : [],
+    includeAdminKey: isAdminMode,
+  });
   const currentTrip = tripId ? trips.find((t) => t.id === tripId) : null;
-  const { participants: allParticipants, addParticipant } = useParticipants();
+  const {
+    participants: allParticipants,
+    addParticipant,
+    loading: allParticipantsLoading,
+  } = useParticipants({ enabled: Boolean(authorizedTripId && isAdminMode) });
   const {
     participants,
     loading,
     addParticipantToTrip,
     removeParticipantFromTrip,
-  } = useTripParticipants(tripId);
+  } = useTripParticipants(authorizedTripId);
   const [showAddModal, setShowAddModal] = useState(false);
   const [origin, setOrigin] = useState("");
   const [copiedInviteLink, setCopiedInviteLink] = useState(false);
   const [copiedAdminLink, setCopiedAdminLink] = useState(false);
-  const [isParticipantMode, setIsParticipantMode] = useState(
-    searchParams.get("mode") === "participant"
-  );
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
@@ -45,12 +57,9 @@ function ParticipantsContent() {
   }, []);
 
   useEffect(() => {
-    const accessSession = getTripAccessSession(tripId);
-    setIsParticipantMode(
-      searchParams.get("mode") === "participant" ||
-        accessSession?.mode === "participant"
-    );
-  }, [tripId, searchParams]);
+    setAccessSession(getTripAccessSession(tripId));
+    setAccessResolved(true);
+  }, [tripId]);
 
   const inviteUrl =
     currentTrip?.invite_key && origin
@@ -159,6 +168,26 @@ function ParticipantsContent() {
     (p) => !participants.some((tp) => tp.id === p.id)
   );
 
+  if (!accessResolved) {
+    return (
+      <div className="app-screen flex items-center justify-center">
+        <div className="text-[var(--muted)]">접근 권한 확인 중...</div>
+      </div>
+    );
+  }
+
+  if (!authorizedTripId) {
+    return <TripAccessDenied />;
+  }
+
+  if (tripsLoading || loading || (isAdminMode && allParticipantsLoading)) {
+    return (
+      <div className="app-screen flex items-center justify-center">
+        <div className="text-[var(--muted)]">참가자 불러오는 중...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="app-screen safe-area">
       <div className="page-container">
@@ -169,7 +198,7 @@ function ParticipantsContent() {
             onClick={() =>
               router.push(
                 tripId
-                  ? `/dashboard?trip=${tripId}${isParticipantMode ? "&mode=participant" : "&mode=admin"}`
+                  ? `/dashboard?trip=${tripId}`
                   : "/"
               )
             }
@@ -191,7 +220,7 @@ function ParticipantsContent() {
           </div>
         </div>
 
-        {tripId && currentTrip && !isParticipantMode && (
+        {tripId && currentTrip && isAdminMode && (
           <Card className="mb-6">
             <CardHeader>
               <div className="flex items-center gap-2">
@@ -288,7 +317,7 @@ function ParticipantsContent() {
                 <Users className="h-5 w-5 text-[var(--primary)]" />
                 <CardTitle>참가자 목록</CardTitle>
               </div>
-              {!isParticipantMode && (
+              {isAdminMode && (
                 <Button
                   variant="primary"
                   size="sm"
@@ -326,7 +355,7 @@ function ParticipantsContent() {
                         </div>
                       )}
                     </div>
-                    {tripId && !isParticipantMode && (
+                    {tripId && isAdminMode && (
                       <div className="shrink-0 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100">
                         <Button
                           variant="outline"
@@ -349,7 +378,7 @@ function ParticipantsContent() {
         </Card>
 
         {/* 기존 참가자 추가 (여행이 선택된 경우) */}
-        {tripId && !isParticipantMode && availableParticipants.length > 0 && (
+        {tripId && isAdminMode && availableParticipants.length > 0 && (
           <Card className="mb-6">
             <CardHeader>
               <CardTitle>기존 참가자 추가</CardTitle>

@@ -6,6 +6,7 @@ import React, { useState, useEffect, Suspense } from "react";
 import { useTripParticipants } from "@/hooks/useTripParticipants";
 import { useExpenses } from "@/hooks/useExpenses";
 import { ExpenseForm } from "@/components/ExpenseForm";
+import { TripAccessDenied } from "@/components/TripAccessDenied";
 import { Card } from "@/components/ui/Card";
 import { Expense, Category } from "@/lib/types";
 import { supabase } from "@/lib/supabase";
@@ -14,32 +15,49 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { getTripAccessSession, TripAccessSession } from "@/lib/trip-access";
 
 function AddExpenseContent() {
   const searchParams = useSearchParams();
   const tripId = searchParams.get("trip");
-  const { participants, loading: participantsLoading } = useTripParticipants(tripId);
-  const { trips, updateTrip } = useTrips();
-  const { addExpense, refetch } = useExpenses(tripId || undefined, undefined, {
-    enabled: Boolean(tripId),
+  const [accessSession, setAccessSession] = useState<TripAccessSession | null>(null);
+  const [accessResolved, setAccessResolved] = useState(false);
+  const authorizedTripId =
+    accessResolved &&
+    accessSession?.tripId === tripId &&
+    accessSession.mode === "admin"
+      ? tripId
+      : null;
+  const { participants, loading: participantsLoading } = useTripParticipants(authorizedTripId);
+  const { trips, loading: tripsLoading, updateTrip } = useTrips({
+    enabled: Boolean(authorizedTripId),
+    ids: authorizedTripId ? [authorizedTripId] : [],
+  });
+  const { addExpense, refetch } = useExpenses(authorizedTripId || undefined, undefined, {
+    enabled: Boolean(authorizedTripId),
   });
   const [categories, setCategories] = useState<Category[]>([]);
-  const [loadingCategories, setLoadingCategories] = useState(true);
+  const [loadingCategories, setLoadingCategories] = useState(false);
   const router = useRouter();
 
   // 현재 여행 정보 가져오기
   const currentTrip = tripId ? trips.find((t) => t.id === tripId) : null;
 
-  // 여행이 선택되지 않았으면 대시보드로 리다이렉트
   useEffect(() => {
-    if (!tripId) {
-      router.push("/");
-    }
-  }, [tripId, router]);
+    setAccessSession(getTripAccessSession(tripId));
+    setAccessResolved(true);
+  }, [tripId]);
 
   useEffect(() => {
+    if (!authorizedTripId) {
+      setCategories([]);
+      setLoadingCategories(false);
+      return;
+    }
+
     const fetchCategories = async () => {
       try {
+        setLoadingCategories(true);
         const { data, error } = await supabase
           .from("categories")
           .select("*")
@@ -79,7 +97,7 @@ function AddExpenseContent() {
     };
 
     fetchCategories();
-  }, []);
+  }, [authorizedTripId]);
 
   const handleTripUpdate = async (tripIdToUpdate: string, startDate: string, endDate: string) => {
     try {
@@ -100,18 +118,30 @@ function AddExpenseContent() {
       // trip_id 추가
       const expenseWithTrip = {
         ...expenseData,
-        trip_id: tripId || undefined,
+        trip_id: authorizedTripId || undefined,
       };
       await addExpense(expenseWithTrip, participantIds, customAmounts, dailyParticipants);
       await refetch();
-      router.push(tripId ? `/dashboard?trip=${tripId}` : "/dashboard");
+      router.push(`/dashboard?trip=${authorizedTripId}`);
     } catch (error) {
       console.error("Error adding expense:", error);
       alert("지출 추가에 실패했습니다. 다시 시도해주세요.");
     }
   };
 
-  if (participantsLoading || loadingCategories) {
+  if (!accessResolved) {
+    return (
+      <div className="app-screen flex items-center justify-center">
+        <div className="text-[var(--muted)]">접근 권한 확인 중...</div>
+      </div>
+    );
+  }
+
+  if (!authorizedTripId) {
+    return <TripAccessDenied adminOnly />;
+  }
+
+  if (participantsLoading || tripsLoading || loadingCategories) {
     return (
       <div className="app-screen flex items-center justify-center">
         <div className="text-[var(--muted)]">로딩 중...</div>

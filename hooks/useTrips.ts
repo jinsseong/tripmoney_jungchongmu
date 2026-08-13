@@ -1,37 +1,64 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { Trip } from "@/lib/types";
 import { rememberAdminTrip } from "@/lib/trip-access";
 
-export function useTrips() {
+interface UseTripsOptions {
+  enabled?: boolean;
+  ids?: string[];
+  includeAdminKey?: boolean;
+}
+
+export function useTrips(options: UseTripsOptions = {}) {
+  const { enabled = true, ids, includeAdminKey = false } = options;
+  const idsKey = ids === undefined ? null : [...new Set(ids)].sort().join(",");
   const [trips, setTrips] = useState<Trip[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(enabled);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchTrips = async () => {
+  const fetchTrips = useCallback(async () => {
+    if (!enabled || idsKey === "") {
+      setTrips([]);
+      setError(null);
+      setLoading(false);
+      return [];
+    }
+
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      let query = supabase
         .from("trips")
-        .select("*")
+        .select(
+          includeAdminKey
+            ? "*"
+            : "id, name, start_date, end_date, description, cover_image_url, invite_key, created_at, updated_at"
+        )
         .order("start_date", { ascending: false });
+
+      if (idsKey !== null) {
+        query = query.in("id", idsKey.split(","));
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       setTrips((data || []) as Trip[]);
       setError(null);
+      return (data || []) as Trip[];
     } catch (err) {
       setError(err instanceof Error ? err.message : "여행 조회 실패");
       console.error("Error fetching trips:", err);
+      return [];
     } finally {
       setLoading(false);
     }
-  };
+  }, [enabled, idsKey, includeAdminKey]);
 
   useEffect(() => {
     fetchTrips();
-  }, []);
+  }, [fetchTrips]);
 
   const addTrip = async (
     name: string,

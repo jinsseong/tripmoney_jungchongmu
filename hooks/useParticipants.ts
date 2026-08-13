@@ -1,16 +1,28 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { Participant } from "@/lib/types";
 import { generateAvatarColor } from "@/lib/utils";
 
-export function useParticipants() {
+interface UseParticipantsOptions {
+  enabled?: boolean;
+}
+
+export function useParticipants(options: UseParticipantsOptions = {}) {
+  const { enabled = true } = options;
   const [participants, setParticipants] = useState<Participant[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(enabled);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchParticipants = async () => {
+  const fetchParticipants = useCallback(async () => {
+    if (!enabled) {
+      setParticipants([]);
+      setError(null);
+      setLoading(false);
+      return [];
+    }
+
     try {
       setLoading(true);
       setError(null);
@@ -37,6 +49,7 @@ export function useParticipants() {
       
       setParticipants(data || []);
       setError(null);
+      return data || [];
     } catch (err) {
       const errorMessage = err instanceof Error 
         ? err.message 
@@ -51,14 +64,15 @@ export function useParticipants() {
         errorMessage,
         stack: err instanceof Error ? err.stack : undefined,
       });
+      return [];
     } finally {
       setLoading(false);
     }
-  };
+  }, [enabled]);
 
   useEffect(() => {
     fetchParticipants();
-  }, []);
+  }, [fetchParticipants]);
 
   const addParticipant = async (
     name: string,

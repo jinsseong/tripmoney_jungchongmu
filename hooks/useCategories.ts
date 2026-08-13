@@ -1,15 +1,27 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { Category } from "@/lib/types";
 
-export function useCategories() {
+interface UseCategoriesOptions {
+  enabled?: boolean;
+}
+
+export function useCategories(options: UseCategoriesOptions = {}) {
+  const { enabled = true } = options;
   const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(enabled);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchCategories = async () => {
+  const fetchCategories = useCallback(async () => {
+    if (!enabled) {
+      setCategories([]);
+      setError(null);
+      setLoading(false);
+      return [];
+    }
+
     try {
       setLoading(true);
       const { data, error } = await supabase
@@ -21,17 +33,19 @@ export function useCategories() {
       if (error) throw error;
       setCategories(data || []);
       setError(null);
+      return data || [];
     } catch (err) {
       setError(err instanceof Error ? err.message : "카테고리 조회 실패");
       console.error("Error fetching categories:", err);
+      return [];
     } finally {
       setLoading(false);
     }
-  };
+  }, [enabled]);
 
   useEffect(() => {
     fetchCategories();
-  }, []);
+  }, [fetchCategories]);
 
   const addCategory = async (
     name: string,
@@ -109,4 +123,3 @@ export function useCategories() {
     refetch: fetchCategories,
   };
 }
-

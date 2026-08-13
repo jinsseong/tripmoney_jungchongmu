@@ -2,26 +2,70 @@
 
 export const dynamic = "force-dynamic";
 
-import React, { Suspense } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTrips } from "@/hooks/useTrips";
 import { useCategories } from "@/hooks/useCategories";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { CategoryManagement } from "@/components/CategoryManagement";
+import { TripAccessDenied } from "@/components/TripAccessDenied";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { getTripAccessSession, TripAccessSession } from "@/lib/trip-access";
 
 function SettingsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const tripId = searchParams.get("trip");
-  const { trips } = useTrips();
-  const { categories, loading: categoriesLoading, addCategory, updateCategory, deleteCategory } = useCategories();
+  const [accessSession, setAccessSession] = useState<TripAccessSession | null>(null);
+  const [accessResolved, setAccessResolved] = useState(false);
+  const authorizedTripId =
+    accessResolved &&
+    accessSession?.tripId === tripId &&
+    accessSession.mode === "admin"
+      ? tripId
+      : null;
+  const { trips, loading: tripsLoading } = useTrips({
+    enabled: Boolean(authorizedTripId),
+    ids: authorizedTripId ? [authorizedTripId] : [],
+  });
+  const {
+    categories,
+    loading: categoriesLoading,
+    addCategory,
+    updateCategory,
+    deleteCategory,
+  } = useCategories({ enabled: Boolean(authorizedTripId) });
+
+  useEffect(() => {
+    setAccessSession(getTripAccessSession(tripId));
+    setAccessResolved(true);
+  }, [tripId]);
 
   const selectedTrip = tripId
     ? trips.find((t) => t.id === tripId)
-    : trips[0] || null;
+    : null;
+
+  if (!accessResolved) {
+    return (
+      <div className="app-screen flex items-center justify-center">
+        <div className="text-[var(--muted)]">접근 권한 확인 중...</div>
+      </div>
+    );
+  }
+
+  if (!authorizedTripId) {
+    return <TripAccessDenied adminOnly />;
+  }
+
+  if (tripsLoading || categoriesLoading) {
+    return (
+      <div className="app-screen flex items-center justify-center">
+        <div className="text-[var(--muted)]">총무 설정 불러오는 중...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="app-screen safe-area">
@@ -83,7 +127,7 @@ function SettingsContent() {
               </Card>
             </Link>
           )}
-          <Link href="/participants">
+          <Link href={`/participants?trip=${selectedTrip?.id || authorizedTripId}`}>
             <Card className="tap-card cursor-pointer">
               <CardContent>
                 <h3 className="mb-1 text-lg font-bold text-[var(--foreground)]">참가자 관리</h3>

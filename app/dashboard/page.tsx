@@ -12,6 +12,7 @@ import { ExpenseChart } from "@/components/ExpenseChart";
 import { CreateSharedDashboardModal } from "@/components/CreateSharedDashboardModal";
 import { ExpenseForm } from "@/components/ExpenseForm";
 import { PersonalSettlementPanel } from "@/components/PersonalSettlementPanel";
+import { TripAccessDenied } from "@/components/TripAccessDenied";
 import { Card } from "@/components/ui/Card";
 import { Modal } from "@/components/ui/Modal";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
@@ -49,22 +50,32 @@ function DashboardContent() {
   const [accessResolved, setAccessResolved] = useState(false);
   const [currentParticipantId, setCurrentParticipantId] = useState("");
   const isAdminMode = accessSession?.mode === "admin";
-  const isParticipantMode = !isAdminMode;
+  const isParticipantMode = accessSession?.mode === "participant";
+  const authorizedTripId =
+    accessResolved && accessSession?.tripId === selectedTripId
+      ? selectedTripId
+      : null;
   const {
     participants,
     loading: participantsLoading,
-  } = useTripParticipants(selectedTripId);
-  const { trips, loading: tripsLoading, updateTrip } = useTrips();
+  } = useTripParticipants(authorizedTripId);
+  const { trips, loading: tripsLoading, updateTrip } = useTrips({
+    enabled: Boolean(authorizedTripId),
+    ids: authorizedTripId ? [authorizedTripId] : [],
+    includeAdminKey: isAdminMode,
+  });
   const { 
     expenses, 
     loading: expensesLoading, 
     updateExpense, 
     deleteExpense,
     refetch: refetchExpenses 
-  } = useExpenses(selectedTripId || undefined, undefined, {
-    enabled: Boolean(selectedTripId),
+  } = useExpenses(authorizedTripId || undefined, undefined, {
+    enabled: Boolean(authorizedTripId),
   });
-  const { categories, loading: categoriesLoading } = useCategories();
+  const { categories, loading: categoriesLoading } = useCategories({
+    enabled: Boolean(authorizedTripId),
+  });
   const [userTotals, setUserTotals] = useState<any[]>([]);
   const [transfers, setTransfers] = useState<any[]>([]);
   const [totalAmount, setTotalAmount] = useState(0);
@@ -140,10 +151,11 @@ function DashboardContent() {
 
   const loading =
     !accessResolved ||
-    participantsLoading ||
-    tripsLoading ||
-    expensesLoading ||
-    categoriesLoading;
+    (Boolean(authorizedTripId) &&
+      (participantsLoading ||
+        tripsLoading ||
+        expensesLoading ||
+        categoriesLoading));
   // 초기 선택 날짜 설정
   useEffect(() => {
     if (currentTrip && !selectedDate) {
@@ -164,15 +176,21 @@ function DashboardContent() {
     if (tripParam && tripParam !== selectedTripId) {
       setSelectedTripId(tripParam);
     } else if (!tripParam) {
-      // 여행이 선택되지 않았으면 홈으로 리다이렉트
-      if (trips.length === 0) {
-        router.push("/");
-      } else if (!selectedTripId) {
-        // 첫 번째 여행으로 자동 선택
-        router.push(`/dashboard?trip=${trips[0].id}`);
-      }
+      router.replace("/");
     }
-  }, [searchParams, trips, selectedTripId, router]);
+  }, [searchParams, selectedTripId, router]);
+
+  if (!selectedTripId) {
+    return (
+      <div className="app-screen flex items-center justify-center">
+        <div className="text-[var(--muted)]">내 여행으로 이동 중...</div>
+      </div>
+    );
+  }
+
+  if (accessResolved && !authorizedTripId) {
+    return <TripAccessDenied />;
+  }
 
   return (
     <div className="app-screen safe-area">
@@ -189,7 +207,7 @@ function DashboardContent() {
               <Link
                 href={
                   selectedTripId
-                    ? `/participants?trip=${selectedTripId}${isParticipantMode ? "&mode=participant" : ""}`
+                    ? `/participants?trip=${selectedTripId}`
                     : "/participants"
                 }
               >
@@ -235,7 +253,7 @@ function DashboardContent() {
             <Link
               href={
                 selectedTripId
-                  ? `/participants?trip=${selectedTripId}${isParticipantMode ? "&mode=participant" : ""}`
+                  ? `/participants?trip=${selectedTripId}`
                   : "/participants"
               }
             >

@@ -59,7 +59,9 @@ export default function JoinTripPage() {
 
         const { data, error } = await supabase
           .from("trips")
-          .select("*")
+          .select(
+            "id, name, start_date, end_date, description, cover_image_url, invite_key, created_at, updated_at"
+          )
           .eq("invite_key", inviteKey)
           .single();
 
@@ -237,7 +239,7 @@ export default function JoinTripPage() {
               type="button"
               variant="primary"
               className="mt-6 w-full gap-2"
-              onClick={() => router.push(`/dashboard?trip=${trip.id}&mode=participant`)}
+              onClick={() => router.push(`/dashboard?trip=${trip.id}`)}
             >
               정산 현황 보기
               <ArrowRight className="h-4 w-4" />

@@ -95,7 +95,7 @@ export default function AdminAccessPage() {
               type="button"
               variant="primary"
               className="mt-6 w-full gap-2"
-              onClick={() => router.push(`/dashboard?trip=${trip.id}&mode=admin`)}
+              onClick={() => router.push(`/dashboard?trip=${trip.id}`)}
             >
               관리자 대시보드 열기
               <ArrowRight className="h-4 w-4" />

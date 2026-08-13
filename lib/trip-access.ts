@@ -15,18 +15,40 @@ export interface TripAccessSession {
 
 const ACCESS_PREFIX = "jungchongmu-trip-access:";
 const LEGACY_PARTICIPANT_PREFIX = "jungchongmu-participant:";
+const LAST_MODE_KEY = "jungchongmu-last-access-mode";
 
-function canUseStorage() {
-  return typeof window !== "undefined" && Boolean(window.localStorage);
+function getStorage() {
+  if (typeof window === "undefined") return null;
+
+  try {
+    return window.localStorage;
+  } catch {
+    return null;
+  }
+}
+
+function isTripAccessSession(value: unknown): value is TripAccessSession {
+  if (!value || typeof value !== "object") return false;
+
+  const session = value as Partial<TripAccessSession>;
+  return (
+    typeof session.tripId === "string" &&
+    session.tripId.length > 0 &&
+    (session.mode === "admin" || session.mode === "participant")
+  );
 }
 
 export function getTripAccessSession(tripId?: string | null): TripAccessSession | null {
-  if (!tripId || !canUseStorage()) return null;
+  const storage = getStorage();
+  if (!tripId || !storage) return null;
 
   try {
-    const rawSession = localStorage.getItem(`${ACCESS_PREFIX}${tripId}`);
+    const rawSession = storage.getItem(`${ACCESS_PREFIX}${tripId}`);
     if (rawSession) {
-      return JSON.parse(rawSession) as TripAccessSession;
+      const parsedSession = JSON.parse(rawSession) as unknown;
+      if (isTripAccessSession(parsedSession) && parsedSession.tripId === tripId) {
+        return parsedSession;
+      }
     }
   } catch {
     return null;
@@ -36,12 +58,14 @@ export function getTripAccessSession(tripId?: string | null): TripAccessSession 
 }
 
 export function setTripAccessSession(session: TripAccessSession) {
-  if (!canUseStorage()) return;
+  const storage = getStorage();
+  if (!storage) return;
 
   try {
-    localStorage.setItem(`${ACCESS_PREFIX}${session.tripId}`, JSON.stringify(session));
+    storage.setItem(`${ACCESS_PREFIX}${session.tripId}`, JSON.stringify(session));
+    storage.setItem(LAST_MODE_KEY, session.mode);
     if (session.mode === "participant" && session.participantId) {
-      localStorage.setItem(`${LEGACY_PARTICIPANT_PREFIX}${session.tripId}`, session.participantId);
+      storage.setItem(`${LEGACY_PARTICIPANT_PREFIX}${session.tripId}`, session.participantId);
     }
   } catch {
     // 참가/관리자 진입 자체는 localStorage 실패와 독립적으로 동작해야 합니다.
@@ -60,18 +84,90 @@ export function rememberAdminTrip(trip: Trip) {
 }
 
 export function getParticipantIdForTrip(tripId?: string | null) {
-  if (!tripId || !canUseStorage()) return "";
+  const storage = getStorage();
+  if (!tripId || !storage) return "";
 
   const session = getTripAccessSession(tripId);
-  if (session?.mode === "participant" && session.participantId) {
-    return session.participantId;
+  if (session) {
+    return session.mode === "participant" && session.participantId
+      ? session.participantId
+      : "";
   }
 
   try {
-    return localStorage.getItem(`${LEGACY_PARTICIPANT_PREFIX}${tripId}`) || "";
+    return storage.getItem(`${LEGACY_PARTICIPANT_PREFIX}${tripId}`) || "";
   } catch {
     return "";
   }
+}
+
+export function getStoredTripAccessSessions(): TripAccessSession[] {
+  const storage = getStorage();
+  if (!storage) return [];
+
+  const sessions = new Map<string, TripAccessSession>();
+
+  try {
+    for (let index = 0; index < storage.length; index += 1) {
+      const key = storage.key(index);
+      if (!key?.startsWith(ACCESS_PREFIX)) continue;
+
+      const rawSession = storage.getItem(key);
+      if (!rawSession) continue;
+
+      try {
+        const parsedSession = JSON.parse(rawSession) as unknown;
+        if (isTripAccessSession(parsedSession)) {
+          sessions.set(parsedSession.tripId, parsedSession);
+        }
+      } catch {
+        // 손상된 로컬 항목은 다른 여행의 접근 정보에 영향을 주지 않습니다.
+      }
+    }
+
+    // 초기 버전에서 저장한 참가자 정보도 접근 목록으로 마이그레이션합니다.
+    for (let index = 0; index < storage.length; index += 1) {
+      const key = storage.key(index);
+      if (!key?.startsWith(LEGACY_PARTICIPANT_PREFIX)) continue;
+
+      const tripId = key.slice(LEGACY_PARTICIPANT_PREFIX.length);
+      const participantId = storage.getItem(key);
+      if (!tripId || !participantId || sessions.has(tripId)) continue;
+
+      sessions.set(tripId, {
+        tripId,
+        mode: "participant",
+        participantId,
+        joinedAt: "",
+      });
+    }
+  } catch {
+    return [];
+  }
+
+  return Array.from(sessions.values());
+}
+
+export function getPreferredHomeMode(
+  sessions: TripAccessSession[] = getStoredTripAccessSessions()
+): TripAccessMode {
+  const storage = getStorage();
+  const hasAdminSession = sessions.some((session) => session.mode === "admin");
+  const hasParticipantSession = sessions.some(
+    (session) => session.mode === "participant"
+  );
+
+  try {
+    const lastMode = storage?.getItem(LAST_MODE_KEY);
+    if (lastMode === "admin" && hasAdminSession) return "admin";
+    if (lastMode === "participant" && hasParticipantSession) return "participant";
+  } catch {
+    // 저장된 모드를 읽지 못하면 보유한 접근 권한으로 결정합니다.
+  }
+
+  if (hasAdminSession) return "admin";
+  if (hasParticipantSession) return "participant";
+  return "admin";
 }
 
 export function hasParticipantAccess(tripId?: string | null) {
